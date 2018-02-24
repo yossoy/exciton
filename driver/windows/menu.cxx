@@ -77,7 +77,7 @@ struct RoleInfo {
   RoleInfo(RoledCommandId cmd, const char *l, const char *a = nullptr)
       : command(cmd), label(l), accel(a) {}
 };
-const RoleInfo *getDefaultRoleInfo(const std::string &role) {
+namespace {
   static std::map<std::string, RoleInfo> labelMap = {
       {"about", {RoledCommandId::About, "&About %s"}},
       {"front", {RoledCommandId::Front, "Bring All to Front"}}, //
@@ -99,6 +99,8 @@ const RoleInfo *getDefaultRoleInfo(const std::string &role) {
        {RoledCommandId::ToggleFullscreen, "Toggle Full Screen"}}, //
       {"viewsource", {RoledCommandId::ViewSource, "View Source..."}},
   };
+}
+const RoleInfo *getDefaultRoleInfo(const std::string &role) {
   auto fiter = labelMap.find(role);
   if (fiter == labelMap.end()) {
     return nullptr;
@@ -474,8 +476,13 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
 CMenuModel::CMenuModel() { ::InitializeCriticalSection(&cs_); }
 CMenuModel::~CMenuModel() { ::DeleteCriticalSection(&cs_); }
 
+namespace {
+  CMenuModel s_instance;
+}
+
 CMenuModel &CMenuModel::Instance() {
-  static CMenuModel s_instance;
+  //static CMenuModel s_instance;
+  
   return s_instance;
 }
 

@@ -78,7 +78,6 @@ struct MenuData {
 } // namespace exciton
 
 class CMenuModel {
-  CMenuModel();
   std::map<std::string, std::shared_ptr<exciton::menu::MenuData>> menus_;
   std::string applicationMenuId_;
   std::map<std::string, int> menuCommands_;
@@ -89,6 +88,7 @@ public:
   static CMenuModel &Instance();
 
 public:
+  CMenuModel();
   ~CMenuModel();
 
 public:

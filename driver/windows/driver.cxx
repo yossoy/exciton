@@ -21,9 +21,12 @@ Driver::HostHolder::~HostHolder() {
     ptr_->Release();
 }
 
+namespace {
+  Driver s_driver;
+}
 Driver &Driver::Current() {
-  static Driver driver;
-  return driver;
+  //static Driver driver;
+  return s_driver;
 }
 Driver::Driver() : mainThreadId_(0) { ::InitializeCriticalSection(&m_cs); }
 Driver::~Driver() { ::DeleteCriticalSection(&m_cs); }
