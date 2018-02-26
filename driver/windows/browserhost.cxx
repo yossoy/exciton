@@ -27,11 +27,11 @@ MY_DEFINE_GUID(CGID_DocHostCommandHandler, 0xf38bc242, 0xb950, 0x11d1, 0x89,
 #define DISPID_EXTERNAL_GOLANGREQUEST (1)
 
 CWebBrowserHost::CWebBrowserHost(
-    std::shared_ptr<CWebBrowserContainer> container)
+    std::shared_ptr<CWebBrowserContainer> container, const std::string& strInitialHtml)
     : m_pContainer(container), m_cRef(1), m_hwnd(NULL), m_pWebBrowser2(nullptr),
       m_nId(0), m_bEnableForward(FALSE), m_bEnableBack(FALSE),
       m_dwAmbientDLControl(DLCTL_DLIMAGES | DLCTL_VIDEOS | DLCTL_BGSOUNDS),
-      m_pEventSink(nullptr) /*, m_pBandSite(nullptr)*/ {}
+      m_pEventSink(nullptr), m_strInitialHtml(strInitialHtml) {}
 
 CWebBrowserHost::~CWebBrowserHost() {}
 
@@ -618,10 +618,11 @@ void CWebBrowserHost::ExecDocument(const GUID *pguid, DWORD nCmdID,
 
 void CWebBrowserHost::OnDocumentComplate(IDispatch *pDisp) {
   HRESULT hr;
-  auto initHTML = m_pContainer->GetInitialHTML();
+  auto initHTML = m_strInitialHtml;
   if (initHTML.empty()) {
     return;
   }
+  m_strInitialHtml.clear();
   IUnknown *lpUnkThis, *lpUnkDisp;
   m_pWebBrowser2->QueryInterface(IID_IUnknown, (void **)&lpUnkThis);
   pDisp->QueryInterface(IID_IUnknown, (void **)&lpUnkDisp);
@@ -739,7 +740,7 @@ void CWebBrowserHost::PutFullscreen(bool bEnter) {
   HRESULT hr = m_pWebBrowser2->put_FullScreen(b);
   // HRESULT hr = m_pWebBrowser2->put_TheaterMode(b);
   if (hr != S_OK) {
-    LOG_ERROR("[%d] CWebBrowserHost::PutFullscreen() failed:[0x%08x]",
-              __LINE__, hr);
+    LOG_ERROR("[%d] CWebBrowserHost::PutFullscreen() failed:[0x%08x]", __LINE__,
+              hr);
   }
 }

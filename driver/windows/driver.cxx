@@ -67,7 +67,7 @@ int Driver::emitEvent(const void *bytes, int length) {
   picojson::value jsonValue;
   auto err = picojson::parse(jsonValue, jsonStr);
   if (!err.empty()) {
-    ::OutputDebugStringA(("emitEvent: error: " + err).c_str());
+    LOG_ERROR("emitEvent: error: %s", err.c_str());
     return FALSE;
   }
   auto name = jsonValue.get("name").get<std::string>();
@@ -80,6 +80,7 @@ int Driver::emitEvent(const void *bytes, int length) {
 }
 
 int Driver::emitEvent(const std::string &name, const std::string &argument) {
+  LOG_INFO("[%d] Driver::emitEvent(%s, %s)", __LINE__, name.c_str(), argument.c_str());
   std::stringstream ss;
   ss << "{\"name\":\"";
   ss << name;
@@ -164,6 +165,12 @@ void Driver::Run() {
     auto ac = CWebBrowserContainer::GetActiveContainer();
     if (ac && ac->TranslateAccelerator(&msg)) {
       continue;
+    }
+    auto pActiveContainer = CWebBrowserContainer::GetActiveContainer();
+    if (pActiveContainer) {
+      if (pActiveContainer->TranslateAccelerator(&msg)) {
+        continue;
+      }
     }
     TranslateMessage(&msg);
     DispatchMessage(&msg);
