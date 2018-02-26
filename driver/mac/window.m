@@ -114,7 +114,7 @@
 
     [win showWindow:nil];
 
-    // TODO: test
+    // TODO: handle fixed url?
     //[win.webview loadRequest:[NSURLRequest requestWithURL:[NSURL
     // URLWithString:@"http://www.google.co.jp"]]];
     NSURL *baseURL = [NSURL fileURLWithPath:cfg[@"resources"]];
@@ -305,112 +305,6 @@
              }];);
 }
 
-#if 0
-+ (bridge_result)position:(NSURLComponents *)url payload:(NSString *)payload {
-  NSString *ID = [url queryValue:@"id"];
-  NSString *returnID = [url queryValue:@"return-id"];
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    Driver *driver = [Driver current];
-    Window *win = driver.elements[ID];
-
-    NSDictionary<NSString *, id> *pos = @{
-      @"x" : [NSNumber numberWithDouble:win.window.frame.origin.x],
-      @"y" : [NSNumber numberWithDouble:win.window.frame.origin.y]
-
-    };
-#if 0
-        [[NSMutableDictionary alloc] init];
-    pos[@"x"] = [NSNumber numberWithDouble:win.window.frame.origin.x];
-    pos[@"y"] = [NSNumber numberWithDouble:win.window.frame.origin.y];
-#endif
-
-    NSString *payload = [JSONEncoder encodeObject:pos];
-    [driver.objc asyncReturn:returnID result:make_bridge_result(payload, nil)];
-  });
-  return TRUE;
-}
-
-+ (bridge_result)move:(NSURLComponents *)url payload:(NSString *)payload {
-  NSString *ID = [url queryValue:@"id"];
-
-  NSDictionary *pos = [JSONDecoder decodeObject:payload];
-  NSNumber *x = pos[@"x"];
-  NSNumber *y = pos[@"y"];
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    Driver *driver = [Driver current];
-    Window *win = driver.elements[ID];
-
-    [win.window setFrameOrigin:NSMakePoint(x.doubleValue, y.doubleValue)];
-  });
-  return make_bridge_result(nil, nil);
-}
-
-- (void)windowDidMove:(NSNotification *)notification {
-  Driver *driver = [Driver current];
-
-  NSMutableDictionary<NSString *, id> *pos = [[NSMutableDictionary alloc] init];
-  pos[@"x"] = [NSNumber numberWithDouble:self.window.frame.origin.x];
-  pos[@"y"] = [NSNumber numberWithDouble:self.window.frame.origin.y];
-
-  [driver.golang
-      request:[NSString stringWithFormat:@"/window/move?id=%@", self.ID]
-      payload:[JSONEncoder encodeObject:pos]];
-}
-
-+ (bridge_result)center:(NSURLComponents *)url payload:(NSString *)payload {
-  NSString *ID = [url queryValue:@"id"];
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    Driver *driver = [Driver current];
-    Window *win = driver.elements[ID];
-
-    [win.window center];
-  });
-  return make_bridge_result(nil, nil);
-}
-
-+ (bridge_result)size:(NSURLComponents *)url payload:(NSString *)payload {
-  NSString *ID = [url queryValue:@"id"];
-  NSString *returnID = [url queryValue:@"return-id"];
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    Driver *driver = [Driver current];
-    Window *win = driver.elements[ID];
-
-    NSMutableDictionary<NSString *, id> *size =
-        [[NSMutableDictionary alloc] init];
-    size[@"width"] = [NSNumber numberWithDouble:win.window.frame.size.width];
-    size[@"height"] = [NSNumber numberWithDouble:win.window.frame.size.height];
-
-    NSString *payload = [JSONEncoder encodeObject:size];
-    [driver.objc asyncReturn:returnID result:make_bridge_result(payload, nil)];
-  });
-  return make_bridge_result(nil, nil);
-}
-
-+ (bridge_result)resize:(NSURLComponents *)url payload:(NSString *)payload {
-  NSString *ID = [url queryValue:@"id"];
-
-  NSDictionary *size = [JSONDecoder decodeObject:payload];
-  NSNumber *width = size[@"width"];
-  NSNumber *height = size[@"height"];
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    Driver *driver = [Driver current];
-    Window *win = driver.elements[ID];
-
-    CGRect frame = win.window.frame;
-    frame.size.width = width.doubleValue;
-    frame.size.height = height.doubleValue;
-
-    [win.window setFrame:frame display:YES];
-  });
-  return make_bridge_result(nil, nil);
-}
-#endif
-
 - (void)windowDidResize:(NSNotification *)notification {
   Driver *driver = [Driver current];
 
@@ -421,20 +315,6 @@
   [driver emitEvent:[NSString stringWithFormat:@"/window/%@/resize", self.ID]
            argument:size];
 }
-
-#if 0
-+ (bridge_result)focus:(NSURLComponents *)url payload:(NSString *)payload {
-  NSString *ID = [url queryValue:@"id"];
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    Driver *driver = [Driver current];
-    Window *win = driver.elements[ID];
-
-    [win showWindow:nil];
-  });
-  return make_bridge_result(nil, nil);
-}
-#endif
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
   Driver *driver = [Driver current];
@@ -447,21 +327,6 @@
 
   [driver emitEvent:[NSString stringWithFormat:@"/window/%@/blur", self.ID]];
 }
-
-#if 0
-+ (bridge_result)toggleFullScreen:(NSURLComponents *)url
-                          payload:(NSString *)payload {
-  NSString *ID = [url queryValue:@"id"];
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    Driver *driver = [Driver current];
-    Window *win = driver.elements[ID];
-
-    [win.window toggleFullScreen:nil];
-  });
-  return make_bridge_result(nil, nil);
-}
-#endif
 
 - (void)windowDidEnterFullScreen:(NSNotification *)notification {
   Driver *driver = [Driver current];
@@ -479,25 +344,6 @@
        argument:@NO];
 }
 
-#if 0
-+ (bridge_result)toggleMinimize:(NSURLComponents *)url
-                        payload:(NSString *)payload {
-  NSString *ID = [url queryValue:@"id"];
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    Driver *driver = [Driver current];
-    Window *win = driver.elements[ID];
-
-    if (!win.window.miniaturized) {
-      [win.window miniaturize:nil];
-    } else {
-      [win.window deminiaturize:nil];
-    }
-  });
-  return make_bridge_result(nil, nil);
-}
-#endif
-
 - (void)windowDidMiniaturize:(NSNotification *)notification {
   Driver *driver = [Driver current];
 
@@ -511,20 +357,6 @@
   [driver emitEvent:[NSString stringWithFormat:@"/window/%@/minimize", self.ID]
            argument:@NO];
 }
-
-#if 0
-+ (bridge_result)close:(NSURLComponents *)url payload:(NSString *)payload {
-  NSString *ID = [url queryValue:@"id"];
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    Driver *driver = [Driver current];
-    Window *win = driver.elements[ID];
-
-    [win.window performClose:nil];
-  });
-  return make_bridge_result(nil, nil);
-}
-#endif
 
 - (BOOL)windowShouldClose:(NSWindow *)sender {
   Driver *driver = [Driver current];
