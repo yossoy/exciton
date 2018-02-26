@@ -98,7 +98,7 @@ const (
 )
 
 type FileDialogFilter struct {
-	Name       string   `json:"name`
+	Name       string   `json:"name"`
 	Extensions []string `json:"extensions"`
 }
 
@@ -106,7 +106,7 @@ type FileDialogConfig struct {
 	Title       string             `json:"title"`
 	DefaultPath string             `json:"defaultPath"`
 	ButtonLabel string             `json:"buttonLabel"`
-	Filters     []string           `json:"filters,omitempty"`
+	Filters     []FileDialogFilter `json:"filters,omitempty"`
 	Properties  OpenDialogProperty `json:"properties"`
 }
 type openDialogOpt struct {
