@@ -20,8 +20,15 @@ type Window struct {
 	UserData          UserData
 	builder           *markup.Builder
 	isReady           bool
-	onClosed          func(e *event.Event)
+	OnClosed          func(e *event.Event)
+	OnResize          func(width, height float64)
 	mountRenderResult markup.RenderResult
+}
+
+var activeWindow *Window
+
+func ActiveWindow() *Window {
+	return activeWindow
 }
 
 func (w *Window) Builder() *markup.Builder {
@@ -97,6 +104,53 @@ func getWindowByID(id string) *Window {
 	return itm.(*Window)
 }
 
+func onWindowClosed(e *event.Event) {
+	w := getWindowByID(e.Params["id"])
+	if w == nil {
+		return
+	}
+	if activeWindow == w {
+		activeWindow = nil
+	}
+	if w.OnClosed != nil {
+		w.OnClosed(e)
+	}
+}
+
+func onWindowResized(e *event.Event) {
+	w := getWindowByID(e.Params["id"])
+	if w == nil {
+		return
+	}
+	sz := geom.Size{}
+	if err := e.Argument.Decode(&sz); err != nil {
+		log.PrintError("/window/:id/resize: parameter decode failed: %#v", e.Argument)
+		return
+	}
+	log.PrintDebug("Window: resized (%#v)", sz)
+	if w.OnResize != nil {
+		w.OnResize(sz.Width, sz.Height)
+	}
+}
+
+func onWindowFocus(e *event.Event) {
+	w := getWindowByID(e.Params["id"])
+	if w == nil {
+		return
+	}
+	activeWindow = w
+}
+
+func onWindowBlur(e *event.Event) {
+	w := getWindowByID(e.Params["id"])
+	if w == nil {
+		return
+	}
+	if activeWindow == w {
+		activeWindow = nil
+	}
+}
+
 func InitWindows() error {
 	if err := event.AddHandler("/window/:id/finalize", func(e *event.Event) {
 		id := e.Params["id"]
@@ -112,19 +166,16 @@ func InitWindows() error {
 	}); err != nil {
 		return err
 	}
-	if err := event.AddHandler("/window/:id/closed", func(e *event.Event) {
-		id := e.Params["id"]
-		log.PrintInfo("closed: %q", id)
-		wo := object.Windows.Get(object.ObjectKey(id))
-		if wo == nil {
-			//TODO: this is invalid sequence. need to debug
-			return
-		}
-		w := wo.(*Window)
-		if w.onClosed != nil {
-			w.onClosed(e)
-		}
-	}); err != nil {
+	if err := event.AddHandler("/window/:id/closed", onWindowClosed); err != nil {
+		return err
+	}
+	if err := event.AddHandler("/window/:id/resize", onWindowResized); err != nil {
+		return err
+	}
+	if err := event.AddHandler("/window/:id/focus", onWindowFocus); err != nil {
+		return err
+	}
+	if err := event.AddHandler("/window/:id/blur", onWindowBlur); err != nil {
 		return err
 	}
 
