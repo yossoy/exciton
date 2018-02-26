@@ -10,7 +10,7 @@ Linux is not yet implemented.
 
 ## Caution
 
-**Exciton is under construction. *NO documents*, *NO tests*, and *LESS api*.**
+**Exciton is currently developing furiously. *NO documents*, *NO tests*, and *LESS api*. API compatibility is not guaranteed.**
 
 The Windows driver is an experimental implementation.
 
@@ -89,3 +89,6 @@ import (
 	_ "github.com/yossoy/exciton/driver/windows"
 )
 ```
+
+## exciton-tool
+NO document.
