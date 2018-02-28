@@ -360,9 +360,12 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
         }
         // TODO: roleの場合にItemに設定する値は??
         if (role->label) {
-          mi->title_ = role->label;
+          auto appNameW = Driver::Current().GetProductName();
+          auto appName = exciton::util::ToUTF8String(appNameW.c_str());
+          auto labelStr = exciton::util::FormatString(role->label, appName.c_str());
+          mi->title_ = labelStr;
           if (mi->subMenu_) {
-            mi->subMenu_->title_ = role->label;
+            mi->subMenu_->title_ = labelStr;
           }
         }
         mi->cmdId_ = static_cast<int>(role->command);

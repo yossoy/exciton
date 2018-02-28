@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <shlwapi.h>
 
 #include <set>
 #include <sstream>
@@ -179,8 +180,61 @@ void Driver::Run() {
   ::OleUninitialize();
 }
 
-void Driver::Quit() {
+void Driver::Quit(void) {
   ::PostThreadMessage(mainThreadId_, WM_QUIT_MESSAGE, 0, 0);
+}
+
+void Driver::initAppVersionInfo() {
+  //TODO: cache data?
+  WCHAR strFilePath[MAX_PATH];
+  GetModuleFileNameW(hInstance_, strFilePath, MAX_PATH);
+  DWORD dwDummy = 0;
+  DWORD dwVersionInfoSize = ::GetFileVersionInfoSizeW(strFilePath, &dwDummy);
+  if (dwVersionInfoSize > 0) {
+    std::unique_ptr<unsigned char[]> pVersionInfos(new unsigned char[dwVersionInfoSize]);
+    if (::GetFileVersionInfoW(strFilePath, 0, dwVersionInfoSize, pVersionInfos.get())) {
+      LPVOID pvVersion;
+      UINT uVersionLen;
+      LPVOID pvName;
+      UINT uNameLen;
+      if (VerQueryValueW(pVersionInfos.get(), L"\\StringFileInfo\\000004b0\\ProductVersion", &pvVersion, &uVersionLen)) {
+        productVersion_ = std::wstring((const WCHAR*)pvVersion, uVersionLen);
+      }
+      if (VerQueryValueW(pVersionInfos.get(), L"\\StringFileInfo\\000004b0\\ProductName", &pvVersion, &uVersionLen)) {
+        productName_ = std::wstring((const WCHAR*)pvVersion, uVersionLen);
+      }
+    }
+  }
+  if (productVersion_.empty()) {
+    productVersion_ = L"1.0.0.0";
+  }
+  if (productName_.empty()) {
+    productName_ = ::PathFindFileNameW(strFilePath);
+  }
+}
+
+const std::wstring& Driver::GetProductName(void) {
+  if (productName_.empty()) {
+    initAppVersionInfo();
+  }
+  return productName_;
+}
+const std::wstring& Driver::GetProductVersion(void) {
+  if (productVersion_.empty()) {
+    initAppVersionInfo();
+  }
+  return productVersion_;
+}
+
+char* Driver_GetProductName(void) {
+  auto& appName = Driver::Current().GetProductName();
+  auto utf8AppName = exciton::util::ToUTF8String(appName.c_str());
+  return ::strdup(utf8AppName.c_str());
+}
+char* Driver_GetProductVersion(void) {
+  auto& appVersion = Driver::Current().GetProductVersion();
+  auto utf8AppVersion = exciton::util::ToUTF8String(appVersion.c_str());
+  return ::strdup(utf8AppVersion.c_str());
 }
 
 void Driver_Run(void) { Driver::Current().Run(); }

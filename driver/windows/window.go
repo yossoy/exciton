@@ -3,7 +3,7 @@ package windows
 /*
 #cgo CFLAGS: -DUNICODE -D_UNICODE -DWIN32 -D_WINDOWS -D_WIN32_IE=0x0A00 -D_WIN32_WINNT=0x0A00
 #cgo CXXFLAGS: -DUNICODE -D_UNICODE -DWIN32 -D_WINDOWS -D_WIN32_IE=0x0A00 -D_WIN32_WINNT=0x0A00 -std=c++17
-#cgo LDFLAGS: -static-libgcc -static-libstdc++ -lgdi32 -lole32 -lcomctl32 -loleaut32 -luuid -lurlmon -lwininet -lmshtml -lmshtml
+#cgo LDFLAGS: -static-libgcc -static-libstdc++ -lgdi32 -lole32 -lcomctl32 -loleaut32 -luuid -lurlmon -lwininet -lmshtml -lversion -lshlwapi
 
 #include "window.h"
 */
