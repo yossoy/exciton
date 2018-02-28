@@ -39,25 +39,17 @@ private:
   std::set<std::string> deferEventNames_;
   HINSTANCE hInstance_;
   DWORD mainThreadId_;
+  std::wstring productName_;
+  std::wstring productVersion_;
 
 public:
   static Driver &Current();
   HINSTANCE InstanceHandle() const { return hInstance_; }
-#if 0
-  std::map<ObjectKey, std::shared_ptr<CWebBrowserContainer>> &Browsers() {
-    return browsers_;
-  }
-  // TODO: change CWebBrowserContainer -> CWebBrowserHost for Tab
-  const std::map<ObjectKey, std::shared_ptr<CWebBrowserContainer>> &
-  Browsers() const {
-    return browsers_;
-  }
-#else
   std::map<ObjectKey, HostHolder>& Hosts() { return hosts_; }
   const std::map<ObjectKey, HostHolder>& Hosts() const { return hosts_; }
-#endif
   void PushDelayProc(DelayProcHandler proc);
-  
+  const std::wstring& GetProductName(void);
+  const std::wstring& GetProductVersion(void);
 
 public:
   Driver();
@@ -83,6 +75,7 @@ public:
 private:
   int emitEvent(const picojson::value &value);
   void procDelayEvent(/*int eventNo, int valueNo*/);
+  void initAppVersionInfo(void);
 };
 extern "C" {
 #endif
@@ -90,6 +83,8 @@ extern "C" {
 extern void Driver_Run(void);
 extern void Driver_Terminate(void);
 extern int Driver_EmitEvent(void *bytes, int length);
+extern char* Driver_GetProductName(void);
+extern char* Driver_GetProductVersion(void);
 
 #ifdef __cplusplus
 };

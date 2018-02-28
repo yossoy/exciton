@@ -82,7 +82,7 @@ public:
   STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet);
 
 public:
-  CWebBrowserHost(std::shared_ptr<CWebBrowserContainer> pContainer);
+  CWebBrowserHost(std::shared_ptr<CWebBrowserContainer> pContainer, const std::string& strInitialHtml);
   CWebBrowserHost(const CWebBrowserHost &) = delete;
   CWebBrowserHost(CWebBrowserHost &&) = delete;
   ~CWebBrowserHost();
@@ -113,7 +113,6 @@ public:
   void PutFullscreen(bool bEnter);
 private:
   std::shared_ptr<CWebBrowserContainer> m_pContainer;
-  std::string m_strInitialHtml;
   LONG m_cRef;
   HWND m_hwnd;
   IWebBrowser2 *m_pWebBrowser2;
@@ -123,5 +122,6 @@ private:
   DWORD m_dwAmbientDLControl;
   CEventSink *m_pEventSink;
   // CBandSite *m_pBandSite;
+  std::string m_strInitialHtml;
 };
 #endif

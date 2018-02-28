@@ -224,16 +224,16 @@ void CMenuMgr::OnMenuCommand(
     // TODO: fix implement
 
     ZeroMemory(&config, sizeof(TASKDIALOGCONFIG));
+    auto appNameStr = Driver::Current().GetProductName();
+    auto appVerStr = L"Version: " + Driver::Current().GetProductVersion();
     config.cbSize = sizeof(TASKDIALOGCONFIG);
     config.hwndParent = hwndParent;
     config.hInstance = NULL;
     config.dwFlags = TDF_ENABLE_HYPERLINKS;
-    config.pszWindowTitle = L"バージョン情報";
+    config.pszWindowTitle = L"Version information";
     config.pszMainIcon = TD_INFORMATION_ICON;
-    config.pszMainInstruction = L"Sample WebBrowser 1.0";
-    config.pszContent = L"配布元 <A "
-                        L"HREF=\"http://eternalwindows.jp/\">http://"
-                        L"eternalwindows.jp/</A>";
+    config.pszMainInstruction = appNameStr.c_str();
+    config.pszContent = appVerStr.c_str();
     config.pfCallback = TaskDialogCallbackProc;
 
     TaskDialogIndirect(&config, &nResult, NULL, NULL);

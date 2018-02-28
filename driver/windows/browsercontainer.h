@@ -1,18 +1,19 @@
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+
 
 class CWebBrowserHost;
 class CMenuMgr;
 
-class CWebBrowserContainer : public std::enable_shared_from_this<CWebBrowserContainer>
-{
+class CWebBrowserContainer
+    : public std::enable_shared_from_this<CWebBrowserContainer> {
 public:
   CWebBrowserContainer();
   ~CWebBrowserContainer();
-  BOOL NewWindow(HINSTANCE hinst /*, int nCmdShow*/);
-  CWebBrowserHost* NewBrowser(const std::string& initialHtml);
+  BOOL NewWindow(HINSTANCE hinst, int width, int height);
+  CWebBrowserHost *NewBrowser(const std::string &initialHtml);
   LRESULT WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
   HWND GetWindow();
   CWebBrowserHost *GetActiveBrowser();
@@ -27,18 +28,17 @@ public:
   // void OnNewWindow3(BSTR URL);
   // void OnStatusTextChange(BSTR Text);
   BOOL TranslateAccelerator(LPMSG lpMsg);
-  public:
-  void SetInitialHTML(const std::string& str) {
-	  m_strInitialHTML = str;
-  }
-  std::string GetInitialHTML() {
-	  std::string ret;
-	  if (!m_strInitialHTML.empty()) {
-		  std::swap(ret, m_strInitialHTML);
-	  }
-	  return ret;
-  }
-  void UpdateMenu(const std::string& menuId);
+
+public:
+  // void SetInitialHTML(const std::string &str) { m_strInitialHTML = str; }
+  // std::string GetInitialHTML() {
+  //   std::string ret;
+  //   if (!m_strInitialHTML.empty()) {
+  //     std::swap(ret, m_strInitialHTML);
+  //   }
+  //   return ret;
+  // }
+  void UpdateMenu(const std::string &menuId);
 
 private:
   void SetUserAgent();
@@ -52,5 +52,5 @@ private:
   HWND m_hwnd;
   CWebBrowserHost *m_pActiveWebBrowserHost;
   CMenuMgr *m_pMenuMgr;
-  std::string m_strInitialHTML;
+  // std::string m_strInitialHTML;
 };

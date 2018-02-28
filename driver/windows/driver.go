@@ -98,6 +98,7 @@ func (d *windows) relayEventWithResultToNative(e *event.Event, respCallback even
 	if err != nil {
 		panic(err)
 	}
+	driverLogDebug(string(jb))
 	if C.Driver_EmitEvent(C.CBytes(jb), C.int(len(jb))) == 0 {
 		driverLogError("Error: Driver_EmitEvent")
 	}

@@ -28,6 +28,7 @@ public:
   void Destroy();
   static void OnMenuCommand(int nId, CWebBrowserHost* pWebBrowserHost, std::shared_ptr<exciton::menu::Menu> pMenu, std::shared_ptr<exciton::menu::MenuItem> menuItem);
   void SetMenuState(HMENU hmenu, int nPos);
+  HWND GetWindow() const { return m_hwndRebar; }
 
 public:
   static bool InitClass();

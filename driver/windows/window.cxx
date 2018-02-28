@@ -8,11 +8,11 @@
 #include "browsercontainer.h"
 #include "browserhost.h"
 #include "driver.h"
+#include "log.h"
+#include "menumgr.h"
 #include "myjson.h"
 #include "util.h"
 #include "window.h"
-#include "menumgr.h"
-#include "log.h"
 
 namespace {
 std::string
@@ -23,9 +23,9 @@ getIdFromParam(const std::map<std::string, std::string> &parameter) {
   }
   return (*fiter).second;
 }
+
 void evaluateJavaScript(const std::string &id, const std::string &funcName,
-						const picojson::value &argument, 
-					int responceNo = -1) {
+                        const picojson::value &argument, int responceNo = -1) {
   std::string json = argument.serialize();
   std::wstring wFuncName = exciton::util::ToUTF16String(funcName);
   std::wstring jsonArg = exciton::util::ToUTF16String(json);
@@ -38,26 +38,26 @@ void evaluateJavaScript(const std::string &id, const std::string &funcName,
     }
     CWebBrowserHost *p = (*fiter).second.ptr_;
     p->AddRef();
-    // p->EvaluateJavasScript(eval_str);
-	VARIANT vResult;
-	VARIANT* pvResult = nullptr;
-	if (0 <= responceNo) {
-		::VariantInit(&vResult);
-		pvResult = &vResult;
-	}
+    VARIANT vResult;
+    VARIANT *pvResult = nullptr;
+    if (0 <= responceNo) {
+      ::VariantInit(&vResult);
+      pvResult = &vResult;
+    }
     p->EvaluateJavasScript(wFuncName, jsonArg, pvResult);
     p->Release();
-	if (0 <= responceNo) {
-		std::string retValue;
-		if (vResult.vt == VT_BSTR) {
-			retValue = exciton::util::ToUTF8String(vResult.bstrVal);
-		} else {
-			LOG_ERROR("requestAnimationFrame: invalid result type: %d\n", vResult.vt);
-			retValue = "undefined";
-		}
-		::VariantClear(&vResult);
-		d.responceEventJsonResult(responceNo, retValue);
-	}
+    if (0 <= responceNo) {
+      std::string retValue;
+      if (vResult.vt == VT_BSTR) {
+        retValue = exciton::util::ToUTF8String(vResult.bstrVal);
+      } else {
+        LOG_ERROR("requestAnimationFrame: invalid result type: %d\n",
+                  vResult.vt);
+        retValue = "undefined";
+      }
+      ::VariantClear(&vResult);
+      d.responceEventJsonResult(responceNo, retValue);
+    }
   });
 }
 
@@ -74,8 +74,9 @@ void newWindow(const picojson::value &argument,
   LOG_INFO("newWindow called: %s\n", id.c_str());
   auto container = std::make_shared<CWebBrowserContainer>();
   std::string html = argument.get("html").get<std::string>();
-  container->SetInitialHTML(html);
-  if (!container->NewWindow(d.InstanceHandle())) {
+  auto width = argument.get("size").get("width").get<int64_t>();
+  auto height = argument.get("size").get("height").get<int64_t>();
+  if (!container->NewWindow(d.InstanceHandle(), width, height)) {
     LOG_ERROR("Container: newWindow failed\n");
     Driver::Current().responceEventBoolResult(responceNo, false);
     return;

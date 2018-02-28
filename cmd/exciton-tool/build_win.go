@@ -71,7 +71,7 @@ BEGIN
 END
 `
 
-func generateWinResourceFile(te *targetEnv, targetPath string, resFilePath string) error {
+func generateWinResourceFile(te *targetEnv, outFile string, resFilePath string) error {
 	pkg := te.pkg
 	src := pkg.ImportPath
 	workdir := te.BuildWorkDir()
@@ -126,8 +126,8 @@ func generateWinResourceFile(te *targetEnv, targetPath string, resFilePath strin
 	}{
 		ManifestName: filepath.Base(manFile.Name()),
 	}
-	args.Name = targetPath + ".exe"
-	args.ProductName = targetPath
+	args.Name = outFile + ".exe"
+	args.ProductName = outFile
 
 	err = tmpl.Execute(rcFile, &args)
 	if err != nil {
@@ -168,7 +168,7 @@ func goWindowsBuild(te *targetEnv, outFile string) (map[string]bool, error) {
 	be := te.env
 	workdir := te.BuildWorkDir()
 	src := pkg.ImportPath
-	if flagBuildO != "" && strings.HasSuffix(outFile, ".exe") {
+	if strings.HasSuffix(outFile, ".exe") {
 		return nil, fmt.Errorf("-o must suppress an .exe")
 	}
 
@@ -177,14 +177,18 @@ func goWindowsBuild(te *targetEnv, outFile string) (map[string]bool, error) {
 	envStrs := be.envStrings()
 	ctx.BuildTags = append(ctx.BuildTags, be.Target.String())
 
+	if outFile == "" {
+		outFile = path.Base(pkg.ImportPath)
+	}
+
 	var args []string
 	var targetPath string
 	if flagBuildRelease {
 		mkdir(te.he, filepath.Join(workdir, "output"))
-		targetPath = filepath.Join(workdir, "output", path.Base(pkg.ImportPath))
-		args = append(args, "-o="+targetPath+".exe")
+		targetPath = filepath.Join(workdir, "output", outFile+".exe")
+		args = append(args, "-o="+targetPath)
 	} else {
-		targetPath = path.Base(pkg.ImportPath)
+		targetPath = outFile + ".exe"
 	}
 
 	// generate syso if need
@@ -194,7 +198,7 @@ func goWindowsBuild(te *targetEnv, outFile string) (map[string]bool, error) {
 	}
 	resFileName := filepath.Join(cwd, "resources.syso")
 	if _, err := os.Stat(resFileName); err != nil {
-		err := generateWinResourceFile(te, path.Base(pkg.ImportPath), resFileName)
+		err := generateWinResourceFile(te, outFile, resFileName)
 		if err != nil {
 			return nil, err
 		}
@@ -210,7 +214,7 @@ func goWindowsBuild(te *targetEnv, outFile string) (map[string]bool, error) {
 		return nil, err
 	}
 
-	nmpkgs, err := extractPkgs(te.he, be.NM, targetPath+".exe")
+	nmpkgs, err := extractPkgs(te.he, be.NM, targetPath)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +223,7 @@ func goWindowsBuild(te *targetEnv, outFile string) (map[string]bool, error) {
 	}
 
 	// copy resources
-	copyFile(te.he, filepath.Join(te.he.cwd, path.Base(targetPath+".exe")), targetPath+".exe")
+	copyFile(te.he, filepath.Join(te.he.cwd, path.Base(targetPath)), targetPath)
 
 	return nmpkgs, nil
 }

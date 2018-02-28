@@ -133,11 +133,14 @@ func makeGccBuildEnv(target buildTarget, arch string) (*BuildEnv, error) {
 		Arch:      arch,
 		CC:        gccTriplet + "-gcc",
 		CXX:       gccTriplet + "-g++",
-		NM:        gccTriplet + "-nm",
+		NM:        gccTriplet + "-gcc-nm",
 		CgoEnable: true,
 	}
 	if target == buildTargetWindows {
 		be.WINDRES = gccTriplet + "-windres"
+		if _, err := exec.LookPath(be.WINDRES); err != nil {
+			be.WINDRES = "windres" // fallback
+		}
 		if flagBuildRelease {
 			be.GoLdFlags = []string{"-H windowsgui"}
 		}

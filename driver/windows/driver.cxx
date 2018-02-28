@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <shlwapi.h>
 
 #include <set>
 #include <sstream>
@@ -21,9 +22,12 @@ Driver::HostHolder::~HostHolder() {
     ptr_->Release();
 }
 
+namespace {
+  Driver s_driver;
+}
 Driver &Driver::Current() {
-  static Driver driver;
-  return driver;
+  //static Driver driver;
+  return s_driver;
 }
 Driver::Driver() : mainThreadId_(0) { ::InitializeCriticalSection(&m_cs); }
 Driver::~Driver() { ::DeleteCriticalSection(&m_cs); }
@@ -64,7 +68,7 @@ int Driver::emitEvent(const void *bytes, int length) {
   picojson::value jsonValue;
   auto err = picojson::parse(jsonValue, jsonStr);
   if (!err.empty()) {
-    ::OutputDebugStringA(("emitEvent: error: " + err).c_str());
+    LOG_ERROR("emitEvent: error: %s", err.c_str());
     return FALSE;
   }
   auto name = jsonValue.get("name").get<std::string>();
@@ -77,6 +81,7 @@ int Driver::emitEvent(const void *bytes, int length) {
 }
 
 int Driver::emitEvent(const std::string &name, const std::string &argument) {
+  LOG_INFO("[%d] Driver::emitEvent(%s, %s)", __LINE__, name.c_str(), argument.c_str());
   std::stringstream ss;
   ss << "{\"name\":\"";
   ss << name;
@@ -162,6 +167,12 @@ void Driver::Run() {
     if (ac && ac->TranslateAccelerator(&msg)) {
       continue;
     }
+    auto pActiveContainer = CWebBrowserContainer::GetActiveContainer();
+    if (pActiveContainer) {
+      if (pActiveContainer->TranslateAccelerator(&msg)) {
+        continue;
+      }
+    }
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
@@ -169,8 +180,61 @@ void Driver::Run() {
   ::OleUninitialize();
 }
 
-void Driver::Quit() {
+void Driver::Quit(void) {
   ::PostThreadMessage(mainThreadId_, WM_QUIT_MESSAGE, 0, 0);
+}
+
+void Driver::initAppVersionInfo() {
+  //TODO: cache data?
+  WCHAR strFilePath[MAX_PATH];
+  GetModuleFileNameW(hInstance_, strFilePath, MAX_PATH);
+  DWORD dwDummy = 0;
+  DWORD dwVersionInfoSize = ::GetFileVersionInfoSizeW(strFilePath, &dwDummy);
+  if (dwVersionInfoSize > 0) {
+    std::unique_ptr<unsigned char[]> pVersionInfos(new unsigned char[dwVersionInfoSize]);
+    if (::GetFileVersionInfoW(strFilePath, 0, dwVersionInfoSize, pVersionInfos.get())) {
+      LPVOID pvVersion;
+      UINT uVersionLen;
+      LPVOID pvName;
+      UINT uNameLen;
+      if (VerQueryValueW(pVersionInfos.get(), L"\\StringFileInfo\\000004b0\\ProductVersion", &pvVersion, &uVersionLen)) {
+        productVersion_ = std::wstring((const WCHAR*)pvVersion, uVersionLen);
+      }
+      if (VerQueryValueW(pVersionInfos.get(), L"\\StringFileInfo\\000004b0\\ProductName", &pvVersion, &uVersionLen)) {
+        productName_ = std::wstring((const WCHAR*)pvVersion, uVersionLen);
+      }
+    }
+  }
+  if (productVersion_.empty()) {
+    productVersion_ = L"1.0.0.0";
+  }
+  if (productName_.empty()) {
+    productName_ = ::PathFindFileNameW(strFilePath);
+  }
+}
+
+const std::wstring& Driver::GetProductName(void) {
+  if (productName_.empty()) {
+    initAppVersionInfo();
+  }
+  return productName_;
+}
+const std::wstring& Driver::GetProductVersion(void) {
+  if (productVersion_.empty()) {
+    initAppVersionInfo();
+  }
+  return productVersion_;
+}
+
+char* Driver_GetProductName(void) {
+  auto& appName = Driver::Current().GetProductName();
+  auto utf8AppName = exciton::util::ToUTF8String(appName.c_str());
+  return ::strdup(utf8AppName.c_str());
+}
+char* Driver_GetProductVersion(void) {
+  auto& appVersion = Driver::Current().GetProductVersion();
+  auto utf8AppVersion = exciton::util::ToUTF8String(appVersion.c_str());
+  return ::strdup(utf8AppVersion.c_str());
 }
 
 void Driver_Run(void) { Driver::Current().Run(); }

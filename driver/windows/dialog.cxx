@@ -306,10 +306,11 @@ DWORD setOpenFileDialogOptions(DWORD dwOptions,
 }
 
 void setupAllowedFileTypes(IFileDialog *pfd,
-                           std::vector<picojson::value> &args) {
+                           const picojson::array &args) {
   std::vector<COMDLG_FILTERSPEC> vecFileSpecs;
   std::vector<std::wstring> vecStrs;
   for (auto &filter : args) {
+    LOG_DEBUG("[%d] filter = '%s'", __LINE__,  filter.get("name").to_str().c_str());
     auto name =
         exciton::util::ToUTF16String(filter.get("name").get<std::string>());
     auto extensions = filter.get("extensions").get<picojson::array>();
@@ -407,10 +408,7 @@ void createFileDialog(bool forOpen, const picojson::value &argument,
     }
   }
   if (argument.contains("filters")) {
-    auto args = argument.get("filters").get<picojson::array>();
-    if (!args.empty()) {
-      setupAllowedFileTypes(pfd, args);
-    }
+     setupAllowedFileTypes(pfd, argument.get("filters").get<picojson::array>());
   }
 
   {

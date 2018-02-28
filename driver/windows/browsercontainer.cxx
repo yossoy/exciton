@@ -52,7 +52,7 @@ CWebBrowserContainer::CWebBrowserContainer() {
 
 CWebBrowserContainer::~CWebBrowserContainer() {}
 
-BOOL CWebBrowserContainer::NewWindow(HINSTANCE hinst) {
+BOOL CWebBrowserContainer::NewWindow(HINSTANCE hinst, int width, int height) {
   HWND hwnd;
   //  MSG msg;
   if (!s_bClassInitialized) {
@@ -87,9 +87,12 @@ BOOL CWebBrowserContainer::NewWindow(HINSTANCE hinst) {
     s_bClassInitialized = TRUE;
   }
 
+  RECT r = {0, 0, width, height};
+  AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, TRUE);
+
   hwnd = CreateWindowEx(0, g_szContainerClassName, g_szWinodowName,
                         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT,
-                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL,
+                        CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL,
                         hinst, this);
   if (hwnd == NULL) {
     return FALSE;
@@ -131,7 +134,7 @@ BOOL CWebBrowserContainer::Create(HWND hwnd) {
 
 CWebBrowserHost *
 CWebBrowserContainer::NewBrowser(const std::string &initialHtml) {
-  m_pActiveWebBrowserHost = new CWebBrowserHost(shared_from_this());
+  m_pActiveWebBrowserHost = new CWebBrowserHost(shared_from_this(), initialHtml);
   if (!m_pActiveWebBrowserHost->Create(m_hwnd, L"about:blank", 30000)) {
     return FALSE;
   }
@@ -210,9 +213,11 @@ void CWebBrowserContainer::ResizeWindow() {
   ::GetClientRect(m_hwnd, &rc);
   nWidthClient = rc.right - rc.left;
   nHeightClient = rc.bottom - rc.top;
+  ::GetWindowRect(m_pMenuMgr->GetWindow(), &rc);
+  int nHeightMenu = rc.bottom - rc.top;
 
   if (m_pActiveWebBrowserHost != NULL)
-    m_pActiveWebBrowserHost->SetWindowSize(0, 0, nWidthClient, nHeightClient);
+    m_pActiveWebBrowserHost->SetWindowSize(0, nHeightMenu, nWidthClient, nHeightClient - nHeightMenu);
 }
 
 void CWebBrowserContainer::SetUserAgent() {
@@ -246,7 +251,10 @@ void CWebBrowserContainer::SetActiveBrowser(CWebBrowserHost *pWebBrowserHost) {
 }
 
 CWebBrowserContainer *CWebBrowserContainer::GetActiveContainer() {
-  return s_pActiveContainer;
+  if (s_pActiveContainer && ::IsWindow(s_pActiveContainer->m_hwnd)) {
+    return s_pActiveContainer;
+  }
+  return nullptr;
 }
 
 void CWebBrowserContainer::Navigate(LPWSTR lpszUrl, BOOL bNewTab) {
