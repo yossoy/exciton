@@ -84,7 +84,7 @@ void newWindow(const picojson::value &argument,
   d.PushDelayProc([=]() {
     Driver &d = Driver::Current();
     // TODO: tab browse
-    auto p = container->NewBrowser(html);
+    auto p = container->NewBrowser(html, id);
     d.Hosts()[id] = Driver::HostHolder(p);
     p->Release();
     d.responceEventBoolResult(responceNo, true);

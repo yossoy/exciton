@@ -5,11 +5,7 @@
 #include "browsercontainer.h"
 #include "browserhost.h"
 
-//#include "sidebar.h"
 #include "menumgr.h"
-//#include "rebarmgr.h"
-//#include "statusbar.h"
-//#include "opensearch.h"
 #include "global.h"
 #include "log.h"
 #include "util.h"
@@ -133,8 +129,8 @@ BOOL CWebBrowserContainer::Create(HWND hwnd) {
 }
 
 CWebBrowserHost *
-CWebBrowserContainer::NewBrowser(const std::string &initialHtml) {
-  m_pActiveWebBrowserHost = new CWebBrowserHost(shared_from_this(), initialHtml);
+CWebBrowserContainer::NewBrowser(const std::string &initialHtml, const std::string id) {
+  m_pActiveWebBrowserHost = new CWebBrowserHost(shared_from_this(), initialHtml, id);
   if (!m_pActiveWebBrowserHost->Create(m_hwnd, L"about:blank", 30000)) {
     return FALSE;
   }

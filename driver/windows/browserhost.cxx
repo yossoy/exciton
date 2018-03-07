@@ -9,14 +9,15 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 
-//#include "bandsite.h"
 #include "browsercontainer.h"
 #include "browserhost.h"
 #include "driver.h"
 #include "eventsink.h"
 #include "global.h"
+#include "htmlmoniker.h"
 #include "log.h"
 #include "util.h"
+
 
 #define MY_DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8)        \
   EXTERN_C const GUID DECLSPEC_SELECTANY name = {                              \
@@ -27,13 +28,19 @@ MY_DEFINE_GUID(CGID_DocHostCommandHandler, 0xf38bc242, 0xb950, 0x11d1, 0x89,
 #define DISPID_EXTERNAL_GOLANGREQUEST (1)
 
 CWebBrowserHost::CWebBrowserHost(
-    std::shared_ptr<CWebBrowserContainer> container, const std::string& strInitialHtml)
+    std::shared_ptr<CWebBrowserContainer> container,
+    const std::string &strInitialHtml, const std::string& id)
     : m_pContainer(container), m_cRef(1), m_hwnd(NULL), m_pWebBrowser2(nullptr),
       m_nId(0), m_bEnableForward(FALSE), m_bEnableBack(FALSE),
       m_dwAmbientDLControl(DLCTL_DLIMAGES | DLCTL_VIDEOS | DLCTL_BGSOUNDS),
-      m_pEventSink(nullptr), m_strInitialHtml(strInitialHtml) {}
+      m_pEventSink(nullptr), m_strInitialHtml(strInitialHtml), m_pHtmlMoniker(nullptr), m_strID(id) {}
 
-CWebBrowserHost::~CWebBrowserHost() {}
+CWebBrowserHost::~CWebBrowserHost() {
+  if (m_pHtmlMoniker) {
+    m_pHtmlMoniker->Release();
+    m_pHtmlMoniker = nullptr;
+  }
+}
 
 STDMETHODIMP CWebBrowserHost::QueryInterface(REFIID riid, void **ppvObject) {
   *ppvObject = NULL;
@@ -251,7 +258,7 @@ STDMETHODIMP CWebBrowserHost::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
       pvaOut->vt = VT_BOOL;
       pvaOut->boolVal = VARIANT_FALSE;
       std::string errorMsg = "[";
-      hr = pvaIn->punkVal->QueryInterface(IID_IHTMLDocument2, (void **)&pDoc);
+      hr = pvaIn->punkVal->QueryInterface(IID_PPV_ARGS(&pDoc));
       if (hr == S_OK) {
         IHTMLWindow2 *pWindow = nullptr;
         hr = pDoc->get_parentWindow(&pWindow);
@@ -379,11 +386,6 @@ STDMETHODIMP CWebBrowserHost::GetDropTarget(IDropTarget *pDropTarget,
 }
 
 STDMETHODIMP CWebBrowserHost::GetExternal(IDispatch **ppDispatch) {
-#if 0
-  *ppDispatch = NULL;
-
-  return E_NOTIMPL;
-#endif
   return QueryInterface(IID_PPV_ARGS(ppDispatch));
 }
 
@@ -397,8 +399,7 @@ STDMETHODIMP CWebBrowserHost::FilterDataObject(IDataObject *pDO,
   return E_NOTIMPL;
 }
 
-BOOL CWebBrowserHost::Create(HWND hwndParent /*, HWND hwndRebar*/,
-                             LPCWSTR lpszUrl, int nId) {
+BOOL CWebBrowserHost::Create(HWND hwndParent, LPCWSTR lpszUrl, int nId) {
   IOleObject *pOleObject;
   HRESULT hr;
   MSG msg;
@@ -430,9 +431,6 @@ BOOL CWebBrowserHost::Create(HWND hwndParent /*, HWND hwndRebar*/,
     return FALSE;
   }
 
-  //   m_pBandSite = new CBandSite();
-  //   m_pBandSite->Create(m_pWebBrowser2, hwndRebar);
-
   m_pEventSink = new CEventSink(*m_pContainer);
   m_pEventSink->Create(this, pOleObject);
 
@@ -448,11 +446,6 @@ BOOL CWebBrowserHost::Destroy() {
     m_pEventSink->Destroy();
     m_pEventSink->Release();
   }
-
-  //   if (m_pBandSite != NULL) {
-  //     m_pBandSite->Destroy();
-  //     m_pBandSite->Release();
-  //   }
 
   if (m_pWebBrowser2 != NULL) {
     IOleObject *pOleObject;
@@ -480,10 +473,18 @@ LRESULT CWebBrowserHost::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
   case WM_SIZE: {
     RECT rc = {0, 0, LOWORD(lParam), HIWORD(lParam)};
     IOleInPlaceObject *pOleInPlaceObject;
-
+    m_pWebBrowser2->put_Width(LOWORD(lParam));
+    m_pWebBrowser2->put_Height(HIWORD(lParam));
     m_pWebBrowser2->QueryInterface(IID_PPV_ARGS(&pOleInPlaceObject));
     pOleInPlaceObject->SetObjectRects(&rc, &rc);
     pOleInPlaceObject->Release();
+    picojson::object arg;
+    arg.emplace("width", static_cast<int64_t>(LOWORD(lParam)));
+    arg.emplace("hdight", static_cast<int64_t>(HIWORD(lParam)));
+    picojson::value val(arg);
+    auto json = val.serialize();
+    auto name = exciton::util::FormatString("/window/%s/resize", m_strID.c_str());
+    Driver::Current().emitEvent(name, json);
     return 0;
   }
 
@@ -501,10 +502,8 @@ void CWebBrowserHost::SetWindowSize(int x, int y, int nWidth, int nHeight) {
 void CWebBrowserHost::Show(BOOL bShow) {
   if (bShow) {
     ShowWindow(m_hwnd, SW_SHOW);
-    // m_pBandSite->ShowAllRebarBand(TRUE);
   } else {
     ShowWindow(m_hwnd, SW_HIDE);
-    // m_pBandSite->ShowAllRebarBand(FALSE);
   }
 }
 
@@ -578,20 +577,15 @@ void CWebBrowserHost::SetTravelState(BOOL bEnableForward, BOOL bEnableBack) {
   m_bEnableBack = bEnableBack;
 }
 
-// BOOL CWebBrowserHost::ShowBandMenu() { return m_pBandSite->ShowBandMenu(); }
-
 HRESULT CWebBrowserHost::TranslateAccelerator(LPMSG lpMsg) {
   HRESULT hr = S_OK;
-
-  //   if (m_pBandSite != NULL)
-  //     hr = m_pBandSite->TranslateAccelerator(lpMsg);
-
-  //   if (hr != S_OK) {
   IOleInPlaceActiveObject *pOleInPlaceActiveObject;
-  m_pWebBrowser2->QueryInterface(IID_PPV_ARGS(&pOleInPlaceActiveObject));
-  hr = pOleInPlaceActiveObject->TranslateAccelerator(lpMsg);
-  pOleInPlaceActiveObject->Release();
-  //   }
+
+  hr = m_pWebBrowser2->QueryInterface(IID_PPV_ARGS(&pOleInPlaceActiveObject));
+  if (hr == S_OK) {
+    hr = pOleInPlaceActiveObject->TranslateAccelerator(lpMsg);
+    pOleInPlaceActiveObject->Release();
+  }
 
   return hr;
 }
@@ -616,47 +610,44 @@ void CWebBrowserHost::ExecDocument(const GUID *pguid, DWORD nCmdID,
   pDocument->Release();
 }
 
-void CWebBrowserHost::OnDocumentComplate(IDispatch *pDisp) {
-  HRESULT hr;
-  auto initHTML = m_strInitialHtml;
-  if (initHTML.empty()) {
+void CWebBrowserHost::OnDocumentComplate(IDispatch *pDisp, const std::wstring& strURL) {
+  if (strURL != L"about:blank") {
     return;
   }
-  m_strInitialHtml.clear();
-  IUnknown *lpUnkThis, *lpUnkDisp;
-  m_pWebBrowser2->QueryInterface(IID_IUnknown, (void **)&lpUnkThis);
-  pDisp->QueryInterface(IID_IUnknown, (void **)&lpUnkDisp);
-  if (lpUnkThis == lpUnkDisp) {
-    auto size = initHTML.length() + 1;
-    HGLOBAL hGlobal = ::GlobalAlloc(GPTR, initHTML.length() + 1);
-    IStream *pStream = nullptr;
-    strcpy((char *)hGlobal, initHTML.c_str());
-    hr = ::CreateStreamOnHGlobal(hGlobal, FALSE, &pStream);
-    if (hr == S_OK) {
-      IDispatch *pHtmlDocDisp = nullptr;
-      hr = m_pWebBrowser2->get_Document(&pHtmlDocDisp);
-      if (hr == S_OK) {
-        IPersistStreamInit *pPersistStreamInit = nullptr;
-        hr = pHtmlDocDisp->QueryInterface(IID_IPersistStreamInit,
-                                          (void **)&pPersistStreamInit);
-        if (hr == S_OK) {
-          hr = pPersistStreamInit->InitNew();
-          if (hr == S_OK) {
-            hr = pPersistStreamInit->Load(pStream);
-            if (hr == S_OK) {
-            }
-          }
-          pPersistStreamInit->Release();
-        }
-        pHtmlDocDisp->Release();
-      }
-
-      pStream->Release();
-    }
-    ::GlobalFree(hGlobal);
+  if (m_strInitialHtml.empty()) {
+    return;
   }
-  lpUnkThis->Release();
-  lpUnkDisp->Release();
+  auto initHTML = m_strInitialHtml;
+  m_strInitialHtml.clear();
+  if (m_pHtmlMoniker) {
+    m_pHtmlMoniker->Release();
+    m_pHtmlMoniker = nullptr;
+  }
+  m_pHtmlMoniker = new HtmlMoniker();
+  m_pHtmlMoniker->SetHtml(initHTML);
+  m_pHtmlMoniker->SetBaseURL(strURL);
+
+  IDispatch* pDocDisp;
+  HRESULT hr = m_pWebBrowser2->get_Document(&pDocDisp);
+  if (hr == S_OK && pDocDisp) {
+    IHTMLDocument2* pDoc;
+    hr = pDocDisp->QueryInterface(IID_PPV_ARGS(&pDoc));
+    if (hr == S_OK && pDoc) {
+      IPersistMoniker* pPersistMoniker;
+      hr = pDoc->QueryInterface(IID_PPV_ARGS(&pPersistMoniker));
+      if (hr == S_OK && pPersistMoniker) {
+        IMoniker* pMoniker;
+        hr = m_pHtmlMoniker->QueryInterface(IID_PPV_ARGS(&pMoniker));
+        if (hr == S_OK && pMoniker) {
+          hr = pPersistMoniker->Load(TRUE, pMoniker, nullptr, STGM_READ);
+          pMoniker->Release();
+        }
+        pPersistMoniker->Release();
+      }
+      pDoc->Release();
+    }
+    pDocDisp->Release();
+  }
 }
 
 void CWebBrowserHost::EvaluateJavasScript(const std::wstring &evalFuncName,
@@ -668,7 +659,7 @@ void CWebBrowserHost::EvaluateJavasScript(const std::wstring &evalFuncName,
   hr = m_pWebBrowser2->get_Document(&pDocDisp);
   if (hr == S_OK) {
     IHTMLDocument2 *pDocument;
-    hr = pDocDisp->QueryInterface(IID_IHTMLDocument2, (void **)&pDocument);
+    hr = pDocDisp->QueryInterface(IID_PPV_ARGS(&pDocument));
     if (hr == S_OK) {
       IDispatch *pScript;
       hr = pDocument->get_Script(&pScript);
@@ -737,8 +728,8 @@ void CWebBrowserHost::EvaluateJavasScript(const std::wstring &evalFuncName,
 
 void CWebBrowserHost::PutFullscreen(bool bEnter) {
   VARIANT_BOOL b = bEnter ? VARIANT_TRUE : VARIANT_FALSE;
-  HRESULT hr = m_pWebBrowser2->put_FullScreen(b);
-  // HRESULT hr = m_pWebBrowser2->put_TheaterMode(b);
+  // HRESULT hr = m_pWebBrowser2->put_FullScreen(b);
+  HRESULT hr = m_pWebBrowser2->put_TheaterMode(b);
   if (hr != S_OK) {
     LOG_ERROR("[%d] CWebBrowserHost::PutFullscreen() failed:[0x%08x]", __LINE__,
               hr);
