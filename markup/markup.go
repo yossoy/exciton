@@ -80,10 +80,8 @@ type propApplyer struct {
 	value interface{}
 }
 
-func (aa propApplyer) isMarkup()                 {}
-func (aa propApplyer) isMarkupOrChild()          {}
-func (aa propApplyer) isComponentMarkupOrChild() {}
-func (aa propApplyer) isComponentMarkup()        {}
+func (aa propApplyer) isMarkup()        {}
+func (aa propApplyer) isMarkupOrChild() {}
 func (aa propApplyer) applyToNode(b *Builder, n *node, on *node) {
 	ov, ok := on.properties[aa.name]
 	if ok {
@@ -106,7 +104,7 @@ func (aa propApplyer) applyToComponent(c Component) {
 	}
 }
 
-func Property(name string, value interface{}) propApplyer {
+func Property(name string, value interface{}) MarkupOrChild {
 	return propApplyer{
 		name:  name,
 		value: value,
@@ -134,7 +132,7 @@ func (da dataApplyer) applyToNode(b *Builder, n *node, on *node) {
 	}
 }
 
-func Data(name string, value string) dataApplyer {
+func Data(name string, value string) MarkupOrChild {
 	return dataApplyer{
 		name:  name,
 		value: value,
@@ -161,7 +159,7 @@ func (ca classApplyer) applyToNode(b *Builder, n *node, on *node) {
 	}
 }
 
-func Classes(class ...string) classApplyer {
+func Classes(class ...string) MarkupOrChild {
 	return classApplyer(class)
 }
 
@@ -186,7 +184,7 @@ func (sa styleApplyer) applyToNode(b *Builder, n *node, on *node) {
 	}
 }
 
-func Style(name string, value string) styleApplyer {
+func Style(name string, value string) MarkupOrChild {
 	return styleApplyer{
 		name:  name,
 		value: value,
@@ -205,6 +203,6 @@ func (iha innerHTMLApplyer) applyToNode(b *Builder, n *node, on *node) {
 		b.diffSet.AddInnerHTML(n, nv)
 	}
 }
-func UnsafeHTML(html string) innerHTMLApplyer {
+func UnsafeHTML(html string) MarkupOrChild {
 	return innerHTMLApplyer(html)
 }
