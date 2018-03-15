@@ -16,15 +16,16 @@ var (
 	commands        = []*command{
 		// cmdInit,
 		cmdBuild,
+		cmdTargets,
 		// cmdVersion,
 	}
 	usageTmpl = template.Must(template.New("usage").Parse(
 		`exciton-tool is a tool for building and running gui apps written in Go.
 
-To install:
+To build:
 
 	$ go get TODO...
-	$ exciton-tool init
+	$ exciton-tool build
 
 At least Go 1.9 is required.
 
@@ -48,10 +49,10 @@ func printUsage(w io.Writer) {
 	bufw.Flush()
 }
 
-func help(args []string) {
+func help(args []string) int {
 	if len(args) == 0 {
 		printUsage(os.Stdout)
-		return // succeeded at helping
+		return 0 // succeeded at helping
 	}
 	if len(args) != 1 {
 		fmt.Fprintf(os.Stderr, "usage: %s help command\n\nToo many arguments given.\n", excitonToolName)
@@ -62,19 +63,19 @@ func help(args []string) {
 	for _, cmd := range commands {
 		if cmd.Name == arg {
 			cmd.usage()
-			return // succeeded at helping
+			return 0 // succeeded at helping
 		}
 	}
 
 	fmt.Fprintf(os.Stderr, "Unknown help topic %#q.  Run '%s help'.\n", arg, excitonToolName)
-	os.Exit(2)
+	return 2
 }
 
-func main() {
+func doMain() int {
 	excitonToolName = os.Args[0]
 	flag.Usage = func() {
 		printUsage(os.Stderr)
-		os.Exit(2)
+		return
 	}
 	flag.Parse()
 	log.SetFlags(0)
@@ -85,33 +86,36 @@ func main() {
 	}
 
 	if args[0] == "help" {
-		help(args[1:])
-		return
+		return help(args[1:])
 	}
 
 	for _, cmd := range commands {
 		if cmd.Name == args[0] {
 			cmd.flag.Usage = func() {
 				cmd.usage()
-				os.Exit(1)
+				return
 			}
 			cmd.flag.Parse(args[1:])
 			he, err := initHostEnv()
-			defer he.finalize()
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%s: %q\n", os.Args[0], err)
-				os.Exit(1)
+				return 1
 			}
+			defer he.finalize()
 			if err := cmd.run(he, cmd); err != nil {
 				msg := err.Error()
 				if msg != "" {
 					fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
 				}
-				os.Exit(1)
+				return 1
 			}
-			return
+			return 0
 		}
 	}
 	fmt.Fprintf(os.Stderr, "%s: unknown subcommand %q\nRun 'gomobile help' for usage.\n", os.Args[0], args[0])
-	os.Exit(2)
+	return 2
+}
+
+func main() {
+	os.Exit(doMain())
 }

@@ -186,6 +186,15 @@ func writeFile(he *hostEnv, filename string, generate func(io.Writer) error) err
 	return generate(f)
 }
 
+func findInSlice(array []string, str string) int {
+	for i, s := range array {
+		if s == str {
+			return i
+		}
+	}
+	return -1
+}
+
 // func pkgdir(env []string) string {
 // 	return gomobilepath + "/pkg_" + getenv(env, "GOOS") + "_" + getenv(env, "GOARCH")
 // }

@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -29,7 +30,7 @@ func (te *targetEnv) BuildWorkDir() string {
 var cmdBuild = &command{
 	run:   runBuild,
 	Name:  "build",
-	Usage: "[-target android|ios] [-o output] [build flags] [package]",
+	Usage: "[build flags] [package]",
 	Short: "compile exciton app",
 	Long: `
 	Build compiles and encodes the app named by the import path.
@@ -96,8 +97,8 @@ func addBuildFlags(cmd *command) {
 	cmd.flag.StringVar(&flagBuildWorkDir, "w", "", "specify working directory.")
 
 	cmd.flag.BoolVar(&flagBuildForceRebuild, "a", false, "force rebuilding of packages that are already up-to-date.")
-	cmd.flag.BoolVar(&flagBuildI, "i", false, "???")
-	cmd.flag.BoolVar(&flagBuildRelease, "release", false, "release build")
+	cmd.flag.BoolVar(&flagBuildI, "i", false, "???")                       //TODO: no need this option?
+	cmd.flag.BoolVar(&flagBuildRelease, "release", false, "release build") //TODO: option => command?
 
 	cmd.flag.Var((*stringsFlag)(&flagBuildTarget), "target", "a space-separated list of build target.")
 	cmd.flag.Var((*stringsFlag)(&flagBuildTags), "tags", `a space-separated list of build tags to consider satisfied during the build.
@@ -113,12 +114,23 @@ func addBuildFlagsNVXWork(cmd *command) {
 }
 
 func parseBuildTarget() (ret []*buildTargetArch, err error) {
-
-	//TODO: modify target
-	// current: => if empty, all target
-	// modify: => if empty, current os target, add "all" target
-	// all terget
+	// for current os target
 	if len(flagBuildTarget) == 0 {
+		for bt := buildTarget(0); bt < buildTargetMax; bt++ {
+			if bt.OSName() == runtime.GOOS {
+				for _, arch := range bt.archList() {
+					if arch == runtime.GOARCH {
+						ret = append(ret, &buildTargetArch{target: bt, arch: arch})
+					}
+				}
+			}
+		}
+		return
+	}
+
+	// for all target
+	if findInSlice(flagBuildTarget, "all") >= 0 {
+		//TODO: need to change ouput file (or folder)
 		for bt := buildTarget(0); bt < buildTargetMax; bt++ {
 			archs := bt.archList()
 			for _, arch := range archs {
@@ -212,6 +224,29 @@ func runBuildOne(he *hostEnv, bta *buildTargetArch, cmd *command) error {
 	if pkg.Name != "main" {
 		return errors.New("required main package")
 	}
+	// fmt.Printf("*** Import Files: \n")
+	// for i, s := range pkg.Imports {
+	// 	pctx := build.Default
+	// 	fmt.Printf("[%d] %s\n", i, s)
+	// 	p2, err := pctx.Import(s, he.cwd, build.ImportComment)
+	// 	if err != nil {
+	// 		fmt.Printf("[%d] Import Err: %q", i, err)
+	// 	} else {
+	// 		importMarkup := false
+	// 		for _, pp := range p2.Imports {
+	// 			if strings.HasSuffix(pp, "github.com/yossoy/exciton/markup") {
+	// 				importMarkup = true
+	// 				break
+	// 			}
+	// 		}
+	// 		if !importMarkup {
+	// 			fmt.Printf("\t==> x\n")
+	// 		} else {
+	// 			fmt.Printf("\t==> %s\n", p2.Dir)
+	// 		}
+	// 	}
+	// }
+	// fmt.Printf("\n")
 
 	var nmpkgs map[string]bool
 	switch bta.target {
