@@ -1,6 +1,9 @@
 ﻿#include <windows.h>
 
+#include <exdispid.h>
 #include <mshtmcid.h>
+#include <mshtmhst.h>
+#include <mshtml.h>
 #include <shdeprecated.h>
 #include <shlobj.h>
 #include <wininet.h>
@@ -9,11 +12,12 @@
 #include "browserhost.h"
 #include "driver.h"
 #include "global.h"
+#include "log.h"
 #include "menu.h"
 #include "menumgr.h"
 #include "myjson.h"
 #include "util.h"
-#include "log.h"
+
 
 namespace {
 const WCHAR MenuMgrWndClassName[] = L"exciton.MenuBar";
@@ -243,16 +247,20 @@ void CMenuMgr::OnMenuCommand(
     LOG_ERROR("[%d] OnMenuCommand(Fornt) not implement yet", __LINE__);
     break;
   case RoledCommandId::Cut:
-    pWebBrowserHost->Exec(OLECMDID_COPY, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    pWebBrowserHost->ExecDocument(&CMDSETID_Forms3, IDM_CUT,
+                                  OLECMDEXECOPT_DODEFAULT, NULL, NULL);
     break;
   case RoledCommandId::Copy:
-    pWebBrowserHost->Exec(OLECMDID_CUT, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    pWebBrowserHost->ExecDocument(&CMDSETID_Forms3, IDM_COPY,
+                                  OLECMDEXECOPT_DODEFAULT, NULL, NULL);
     break;
   case RoledCommandId::Paste:
-    pWebBrowserHost->Exec(OLECMDID_PASTE, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    pWebBrowserHost->ExecDocument(&CMDSETID_Forms3, IDM_PASTE,
+                                  OLECMDEXECOPT_DODEFAULT, NULL, NULL);
     break;
   case RoledCommandId::Delete:
-    pWebBrowserHost->Exec(OLECMDID_DELETE, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    pWebBrowserHost->ExecDocument(&CMDSETID_Forms3, IDM_DELETE,
+                                  OLECMDEXECOPT_DODEFAULT, NULL, NULL);
     break;
   case RoledCommandId::SelectAll:
     pWebBrowserHost->Exec(OLECMDID_SELECTALL, OLECMDEXECOPT_DODEFAULT, NULL,
@@ -323,10 +331,28 @@ void CMenuMgr::SetMenuState(HMENU hMenu, int nPos) {
       CWebBrowserHost *pWebBrowserHost = m_container.GetActiveBrowser();
       BOOL bEnable = pWebBrowserHost != NULL;
       BOOL bChecked = FALSE;
-#if 0
-      switch (static_cast<RoledCommandId>(nId)) {
+      if (pWebBrowserHost) {
+        switch (static_cast<RoledCommandId>(nId)) {
+        case RoledCommandId::Cut:
+          pWebBrowserHost->QueryExecDocument(&CMDSETID_Forms3, IDM_CUT,
+                                             &bEnable, &bChecked);
+          break;
+        case RoledCommandId::Copy:
+          pWebBrowserHost->QueryExecDocument(&CMDSETID_Forms3, IDM_COPY,
+                                             &bEnable, &bChecked);
+          break;
+        case RoledCommandId::Paste:
+          pWebBrowserHost->QueryExecDocument(&CMDSETID_Forms3, IDM_PASTE,
+                                             &bEnable, &bChecked);
+          break;
+        case RoledCommandId::Delete:
+          pWebBrowserHost->QueryExecDocument(&CMDSETID_Forms3, IDM_DELETE,
+                                             &bEnable, &bChecked);
+          break;
+        default:
+          break;
+        }
       }
-#endif
       ::SetMenuItem(hMenu, nId, bEnable, bChecked);
     }
   }
@@ -1028,7 +1054,8 @@ void CMenuMgr::EnableHotTrace() {
   ::EnterCriticalSection(&s_htCS);
 
   if (s_htMenuMgr) {
-    LOG_DEBUG("[%d] CMenuMgr::EnableHotTrace: Another menubar hot tracking???", __LINE__);
+    LOG_DEBUG("[%d] CMenuMgr::EnableHotTrace: Another menubar hot tracking???",
+              __LINE__);
     PerformDisableHotTrace();
   }
 
@@ -1036,7 +1063,8 @@ void CMenuMgr::EnableHotTrace() {
                                  Driver::Current().InstanceHandle(),
                                  GetCurrentThreadId());
   if (!s_htHook) {
-    LOG_ERROR("[%d] CMenuMgr::EnableHotTrace: SetWindowsHookEx() failed", __LINE__);
+    LOG_ERROR("[%d] CMenuMgr::EnableHotTrace: SetWindowsHookEx() failed",
+              __LINE__);
     goto err_hook;
   }
 
@@ -1052,7 +1080,8 @@ void CMenuMgr::DisableHotTrace() {
   ::EnterCriticalSection(&s_htCS);
 
   if (s_htMenuMgr != this) {
-    LOG_DEBUG("[%d] CMenuMgr::DisableHotTrace: Another menubar hot tracking???", __LINE__);
+    LOG_DEBUG("[%d] CMenuMgr::DisableHotTrace: Another menubar hot tracking???",
+              __LINE__);
   } else {
     PerformDisableHotTrace();
   }

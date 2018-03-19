@@ -463,12 +463,13 @@ enum {
       }
       break;
     }
+    case ditAddClassList:
+    case ditDelClassList:
+      break;
     case ditCreateNodeWithNS:
     case ditCreateTextNode:
     case ditPropertyValue:
     case ditDelProperty:
-    case ditAddClassList:
-    case ditDelClassList:
     case ditAddStyle:
     case ditDelStyle:
     case ditNodeValue:

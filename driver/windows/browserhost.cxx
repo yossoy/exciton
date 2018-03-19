@@ -18,22 +18,24 @@
 #include "log.h"
 #include "util.h"
 
-
 #define MY_DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8)        \
   EXTERN_C const GUID DECLSPEC_SELECTANY name = {                              \
       l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
 MY_DEFINE_GUID(CGID_DocHostCommandHandler, 0xf38bc242, 0xb950, 0x11d1, 0x89,
                0x18, 0x00, 0xc0, 0x4f, 0xc2, 0xc8, 0x36);
+MY_DEFINE_GUID(CGID_MSHTML, 0xDE4BA900, 0x59CA, 0x11CF, 0x95, 0x92, 0x44, 0x45,
+               0x53, 0x54, 0x00, 0x00);
 
 #define DISPID_EXTERNAL_GOLANGREQUEST (1)
 
 CWebBrowserHost::CWebBrowserHost(
     std::shared_ptr<CWebBrowserContainer> container,
-    const std::string &strInitialHtml, const std::string& id)
+    const std::string &strInitialHtml, const std::string &id)
     : m_pContainer(container), m_cRef(1), m_hwnd(NULL), m_pWebBrowser2(nullptr),
       m_nId(0), m_bEnableForward(FALSE), m_bEnableBack(FALSE),
       m_dwAmbientDLControl(DLCTL_DLIMAGES | DLCTL_VIDEOS | DLCTL_BGSOUNDS),
-      m_pEventSink(nullptr), m_strInitialHtml(strInitialHtml), m_pHtmlMoniker(nullptr), m_strID(id) {}
+      m_pEventSink(nullptr), m_strInitialHtml(strInitialHtml),
+      m_pHtmlMoniker(nullptr), m_strID(id) {}
 
 CWebBrowserHost::~CWebBrowserHost() {
   if (m_pHtmlMoniker) {
@@ -483,7 +485,8 @@ LRESULT CWebBrowserHost::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
     arg.emplace("hdight", static_cast<int64_t>(HIWORD(lParam)));
     picojson::value val(arg);
     auto json = val.serialize();
-    auto name = exciton::util::FormatString("/window/%s/resize", m_strID.c_str());
+    auto name =
+        exciton::util::FormatString("/window/%s/resize", m_strID.c_str());
     Driver::Current().emitEvent(name, json);
     return 0;
   }
@@ -598,19 +601,71 @@ void CWebBrowserHost::Exec(OLECMDID nCmdID, OLECMDEXECOPT nCmdexecopt,
 void CWebBrowserHost::ExecDocument(const GUID *pguid, DWORD nCmdID,
                                    DWORD nCmdexecopt, VARIANT *pvaIn,
                                    VARIANT *pvaOut) {
-  IDispatch *pDocument;
-  IOleCommandTarget *pOleCommandTarget;
+  IDispatch *pDocument = nullptr;
+  IOleCommandTarget *pOleCommandTarget = nullptr;
+  HRESULT hr;
 
-  m_pWebBrowser2->get_Document(&pDocument);
+  hr = m_pWebBrowser2->get_Document(&pDocument);
+  if (hr != S_OK || !pDocument) {
+    return;
+  }
 
-  pDocument->QueryInterface(IID_PPV_ARGS(&pOleCommandTarget));
-  pOleCommandTarget->Exec(pguid, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-  pOleCommandTarget->Release();
+  hr = pDocument->QueryInterface(IID_PPV_ARGS(&pOleCommandTarget));
+  if (pOleCommandTarget) {
+    OLECMD cmdInfo;
+    cmdInfo.cmdID = nCmdID;
+    cmdInfo.cmdf = 0;
+    pOleCommandTarget->QueryStatus(pguid, 1, &cmdInfo, nullptr);
+    if ((cmdInfo.cmdf & OLECMDF_SUPPORTED) &&
+        (cmdInfo.cmdf & OLECMDF_ENABLED)) {
+      pOleCommandTarget->Exec(pguid, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+    }
+    pOleCommandTarget->Release();
+  }
 
   pDocument->Release();
 }
 
-void CWebBrowserHost::OnDocumentComplate(IDispatch *pDisp, const std::wstring& strURL) {
+void CWebBrowserHost::QueryExecDocument(const GUID *pguid, DWORD nCmdID,
+                                        BOOL *pbEnabled, BOOL *pbChecked) {
+  IDispatch *pDocument;
+  HRESULT hr;
+
+  BOOL bEnabled = FALSE;
+  BOOL bChecked = FALSE;
+
+  hr = m_pWebBrowser2->get_Document(&pDocument);
+  if (S_OK == hr) {
+    IOleCommandTarget *pOleCommandTarget;
+    hr = pDocument->QueryInterface(IID_PPV_ARGS(&pOleCommandTarget));
+    if (S_OK == hr) {
+      OLECMD cmdInfo;
+      cmdInfo.cmdID = nCmdID;
+      cmdInfo.cmdf = 0;
+      hr = pOleCommandTarget->QueryStatus(pguid, 1, &cmdInfo, nullptr);
+      if (S_OK == hr) {
+        if (cmdInfo.cmdf & OLECMDF_SUPPORTED) {
+          if (cmdInfo.cmdf & OLECMDF_ENABLED) {
+            bEnabled = TRUE;
+          }
+          if (cmdInfo.cmdf & OLECMDF_LATCHED) {
+            bChecked = TRUE;
+          }
+        }
+      }
+      pOleCommandTarget->Release();
+    }
+    pDocument->Release();
+  }
+
+  if (pbEnabled)
+    *pbEnabled = bEnabled;
+  if (pbChecked)
+    *pbChecked = bChecked;
+}
+
+void CWebBrowserHost::OnDocumentComplate(IDispatch *pDisp,
+                                         const std::wstring &strURL) {
   if (strURL != L"about:blank") {
     return;
   }
@@ -627,16 +682,16 @@ void CWebBrowserHost::OnDocumentComplate(IDispatch *pDisp, const std::wstring& s
   m_pHtmlMoniker->SetHtml(initHTML);
   m_pHtmlMoniker->SetBaseURL(strURL);
 
-  IDispatch* pDocDisp;
+  IDispatch *pDocDisp;
   HRESULT hr = m_pWebBrowser2->get_Document(&pDocDisp);
   if (hr == S_OK && pDocDisp) {
-    IHTMLDocument2* pDoc;
+    IHTMLDocument2 *pDoc;
     hr = pDocDisp->QueryInterface(IID_PPV_ARGS(&pDoc));
     if (hr == S_OK && pDoc) {
-      IPersistMoniker* pPersistMoniker;
+      IPersistMoniker *pPersistMoniker;
       hr = pDoc->QueryInterface(IID_PPV_ARGS(&pPersistMoniker));
       if (hr == S_OK && pPersistMoniker) {
-        IMoniker* pMoniker;
+        IMoniker *pMoniker;
         hr = m_pHtmlMoniker->QueryInterface(IID_PPV_ARGS(&pMoniker));
         if (hr == S_OK && pMoniker) {
           hr = pPersistMoniker->Load(TRUE, pMoniker, nullptr, STGM_READ);

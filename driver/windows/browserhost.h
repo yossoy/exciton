@@ -3,9 +3,10 @@
 #include <windows.h>
 
 #include <exdisp.h>
-#include <mshtmhst.h>
 #include <memory>
+#include <mshtmhst.h>
 #include <string>
+
 
 class CEventSink;
 class CWebBrowserContainer;
@@ -82,7 +83,8 @@ public:
   STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet);
 
 public:
-  CWebBrowserHost(std::shared_ptr<CWebBrowserContainer> pContainer, const std::string& strInitialHtml, const std::string& id);
+  CWebBrowserHost(std::shared_ptr<CWebBrowserContainer> pContainer,
+                  const std::string &strInitialHtml, const std::string &id);
   CWebBrowserHost(const CWebBrowserHost &) = delete;
   CWebBrowserHost(CWebBrowserHost &&) = delete;
   ~CWebBrowserHost();
@@ -101,16 +103,21 @@ public:
   void ForwardOrBack(BOOL bForward);
   void SetTravelState(BOOL bEnableForward, BOOL bEnableBack);
   void GetTravelState(LPBOOL lpbEnableForward, LPBOOL lpbEnableBack);
-  // BOOL ShowBandMenu();
   HRESULT TranslateAccelerator(LPMSG lpMsg);
   void Exec(OLECMDID nCmdID, OLECMDEXECOPT nCmdexecopt, VARIANT *pvaIn,
             VARIANT *pvaOut);
   void ExecDocument(const GUID *pguid, DWORD nCmdID, DWORD nCmdexecopt,
                     VARIANT *pvaIn, VARIANT *pvaOut);
-  void OnDocumentComplate(IDispatch* lpDisp, const std::wstring& strURL);
-  void EvaluateJavasScript(const std::wstring& funcName, const std::wstring& jsonArg, VARIANT* pRetValue);
-  std::shared_ptr<CWebBrowserContainer> GetHostContainer() const { return m_pContainer; }
+  void QueryExecDocument(const GUID *pguid, DWORD nCmdID, BOOL *pbEnabled,
+                         BOOL *pbChecked);
+  void OnDocumentComplate(IDispatch *lpDisp, const std::wstring &strURL);
+  void EvaluateJavasScript(const std::wstring &funcName,
+                           const std::wstring &jsonArg, VARIANT *pRetValue);
+  std::shared_ptr<CWebBrowserContainer> GetHostContainer() const {
+    return m_pContainer;
+  }
   void PutFullscreen(bool bEnter);
+
 private:
   std::shared_ptr<CWebBrowserContainer> m_pContainer;
   LONG m_cRef;
@@ -122,7 +129,7 @@ private:
   DWORD m_dwAmbientDLControl;
   CEventSink *m_pEventSink;
   std::string m_strInitialHtml;
-  HtmlMoniker* m_pHtmlMoniker;
+  HtmlMoniker *m_pHtmlMoniker;
   std::string m_strID;
 };
 #endif
