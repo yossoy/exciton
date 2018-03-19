@@ -1,14 +1,8 @@
-(function(global, id, callnative) {
+(function(global, nsobj, callnative) {
 'use strict';
-// Functions in this file belong to the exciton namespace
-// function (global, ns, id)
+nsobj.system = this;
 
-const ns = 'exciton';
-global[ns] = global[ns] || {};
-const nsobj = global[ns];
-const ID = id;
 const ExcitonEventData = 'exciton-event-data';
-nsobj.ID = ID;
 
 // event emitter
 function EventEmitter() {
@@ -158,10 +152,10 @@ function translateEvent(e) {
               if ((typeof pv) !== 'undefined' && pv != null) {
                 // console.log(rp, pv);
                 if (rp === 'view') {
-                  result[rp] = { windowId: pv[ns].ID }
+                  result[rp] = { windowId: pv.exciton.ID }
                 } else {
                   result[rp] = {
-                    windowId: pv.ownerDocument.defaultView[ns].ID,
+                    windowId: pv.ownerDocument.defaultView.exciton.ID,
                     elementId: pv.dataset['excitonId']
                   };
                 }
@@ -184,7 +178,7 @@ function translateEvent(e) {
 }
 
 function callNativeMethod(method, arg) {
-  callnative({path: '/window/' + ID + '/' + method, arg: JSON.stringify(arg)});
+  callnative({path: '/window/' + nsobj.ID + '/' + method, arg: JSON.stringify(arg)});
 }
 
 const exciton = new EventEmitter();

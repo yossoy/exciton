@@ -6,6 +6,7 @@
     <base href="{{.ResourcesURL}}">
     <script>
         (function () {
+            window.exciton = { ID: "{{.ID}}" };
             //pollyfill CustomEvent
             if ( typeof window.CustomEvent === "function" ) return false;
             function CustomEvent( event, params ) {
@@ -45,7 +46,7 @@
 </head>
 <body>
     <div id="app" data-murlok-root="{{.ID}}"></div>
-    <script>{{.MesonJS }}(window, "{{.ID}}", function(a){ {{.NativeRequestJSMethod }}(a); });</script>
+    <script>window.exciton={ID: {{.ID}}, components:{}}; {{.MesonJS }}(window, window.exciton, function(a){ {{.NativeRequestJSMethod }}(a); });</script>
     {{range .JS}}<script src="js/{{.}}"></script>{{end}}
     {{range .ComponentJS}}<script>{{.}}</script>{{end}}
 </body>
