@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/yossoy/exciton/markup"
+
 	"github.com/yossoy/exciton/assets"
 	"github.com/yossoy/exciton/driver"
 )
@@ -21,6 +23,8 @@ type htmlContext struct {
 	NativeRequestJSMethod template.JS
 	JS                    []string
 	CSS                   []string
+	ComponentCSS          []template.CSS
+	ComponentJS           []template.JS
 }
 
 func setupHTML(cfg *WindowConfig) error {
@@ -29,11 +33,11 @@ func setupHTML(cfg *WindowConfig) error {
 		return err
 	}
 	// make resources folder's file url
-	resources, err := driver.Resources()
+	resPath, err := driver.Resources()
 	if err != nil {
 		return err
 	}
-	resources = filepath.ToSlash(resources)
+	resources := filepath.ToSlash(resPath)
 	if !strings.HasPrefix(resources, "/") {
 		resources = "/" + resources
 	}
@@ -45,6 +49,25 @@ func setupHTML(cfg *WindowConfig) error {
 	resurl.Host = ""
 	resurl.Path = resources
 
+	var cssFiles []template.CSS
+	var jsFiles []template.JS
+	if csss, err := markup.GetComponentCSSFiles(resPath); err != nil {
+		return err
+	} else {
+		cssFiles = make([]template.CSS, len(csss))
+		for i, css := range csss {
+			cssFiles[i] = template.CSS(css)
+		}
+	}
+	if jss, err := markup.GetComponentJSFiles(resPath); err != nil {
+		return err
+	} else {
+		jsFiles = make([]template.JS, len(jss))
+		for i, js := range jss {
+			jsFiles[i] = template.JS(js)
+		}
+	}
+
 	ctx := htmlContext{
 		ID:                    cfg.ID,
 		Title:                 cfg.Title,
@@ -53,7 +76,10 @@ func setupHTML(cfg *WindowConfig) error {
 		ResourcesURL:          template.URL(resurl.String()),
 		MesonJS:               template.JS(string(js)),
 		NativeRequestJSMethod: template.JS(driver.NativeRequestJSMethod()),
+		ComponentCSS:          cssFiles,
+		ComponentJS:           jsFiles,
 	}
+
 	a, err := assets.Asset("assets/default.gohtml")
 	if err != nil {
 		return err

@@ -16,6 +16,9 @@ type Klass struct {
 	Name       string
 	Type       reflect.Type
 	Properties map[string]int
+	dir        string
+	cssFile    string
+	jsFile     string
 }
 
 func (k *Klass) NewInstance() Component {
@@ -29,7 +32,7 @@ func (k *Klass) NewInstance() Component {
 	return cc
 }
 
-func makeKlass(c Component) (*Klass, error) {
+func makeKlass(c Component, dir string) (*Klass, error) {
 	// need lock?
 	componentsLock.Lock()
 	defer componentsLock.Unlock()
@@ -48,6 +51,7 @@ func makeKlass(c Component) (*Klass, error) {
 	k := &Klass{
 		Name: p,
 		Type: ct,
+		dir:  dir,
 	}
 	fn := ct.NumField()
 	for i := 0; i < fn; i++ {

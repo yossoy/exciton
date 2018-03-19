@@ -1,8 +1,9 @@
 package markup
 
 import (
-	"github.com/yossoy/exciton/event"
 	"github.com/pkg/errors"
+	"github.com/yossoy/exciton/event"
+	"github.com/yossoy/exciton/internal/object"
 )
 
 type EventTarget struct {
@@ -15,6 +16,31 @@ type browserCommand struct {
 	Command   string `json:"cmd"`
 	ElementID string `json:"elemId"`
 	Property  string `json:"propName"`
+}
+
+func (et *EventTarget) Builder() *Builder {
+	var buildable Buildable
+	switch {
+	case et.WindowID != "":
+		buildable = object.Windows.Get(et.WindowID).(Buildable)
+	case et.MenuID != "":
+		buildable = object.Menus.Get(et.MenuID).(Buildable)
+	default:
+		return nil
+	}
+	return buildable.Builder()
+}
+
+func (et *EventTarget) Node() *node {
+	builder := et.Builder()
+	if builder == nil {
+		return nil
+	}
+	itm := builder.elements.Get(et.ElementID)
+	if n, ok := itm.(*node); ok {
+		return n
+	}
+	return nil
 }
 
 func (et *EventTarget) GetProperty(name string) (interface{}, error) {

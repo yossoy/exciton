@@ -1,9 +1,15 @@
 package markup
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
+	"net/url"
+	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
+	"text/template"
 )
 
 type Core struct {
@@ -74,10 +80,127 @@ type Initializer interface {
 	Initialize()
 }
 
-func registerComponent(c Component, dir string) (ComponentInstance, error) {
-	k, err := makeKlass(c)
+type ComponentRegisterParameter func(k *Klass)
+
+func WithComponentStyleSheet(css string) ComponentRegisterParameter {
+	return func(k *Klass) {
+		k.cssFile = css
+	}
+}
+
+func WithComponentScript(js string) ComponentRegisterParameter {
+	return func(k *Klass) {
+		k.jsFile = js
+	}
+}
+
+func filePathToFileURI(path string) *url.URL {
+	path = filepath.ToSlash(path)
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	if !strings.HasSuffix(path, "/") {
+		path = path + "/"
+	}
+	url := &url.URL{}
+	url.Scheme = "file"
+	url.Host = ""
+	url.Path = path
+	return url
+}
+
+func escapeClassName(name string) string {
+	var ret string
+	for _, c := range name {
+		switch {
+		case '0' <= c && c <= '9':
+			fallthrough
+		case 'A' <= c && c <= 'Z':
+			fallthrough
+		case 'a' <= c && c <= 'z':
+			fallthrough
+		case c == '_':
+			ret = ret + string(c)
+		case c < 256:
+			ret = ret + "\\" + string(c)
+		default:
+			ret = ret + fmt.Sprintf("\\u%08x", c)
+		}
+	}
+	return ret
+}
+
+func GetComponentCSSFiles(resPath string) ([]string, error) {
+	var cssFiles []string
+	for _, k := range componentKlasses {
+		if k.cssFile != "" {
+			basePath := k.getResourcePath(resPath)
+			cssPath := filepath.Join(basePath, k.cssFile)
+			f, err := ioutil.ReadFile(cssPath)
+			if err != nil {
+				return nil, err
+			}
+			//TODO: ResourcePath is relative path?
+			ctx := struct {
+				ComponentClass string
+				ResourcePath   *url.URL
+			}{
+				ComponentClass: escapeClassName(k.Name),
+				ResourcePath:   filePathToFileURI(basePath),
+			}
+
+			t, err := template.New("").Parse(string(f))
+			if err != nil {
+				fmt.Printf("error1: %s\n", err)
+				return nil, err
+			}
+			var b bytes.Buffer
+			if err = t.Execute(&b, ctx); err != nil {
+				return nil, err
+			}
+
+			cssFiles = append(cssFiles, b.String())
+		}
+	}
+	return cssFiles, nil
+}
+
+func GetComponentJSFiles(resPath string) ([]string, error) {
+	var jsFiles []string
+	for _, k := range componentKlasses {
+		if k.jsFile != "" {
+			basePath := k.getResourcePath(resPath)
+			jsPath := filepath.Join(basePath, k.jsFile)
+			if _, err := os.Stat(jsPath); err != nil {
+				return nil, err
+			}
+			ctx := struct {
+				ComponentClass string
+				ResourcePath   *url.URL
+			}{
+				ComponentClass: k.Name,
+				ResourcePath:   filePathToFileURI(basePath),
+			}
+			t, err := template.New("").ParseFiles(jsPath)
+			if err != nil {
+				return nil, err
+			}
+			var b bytes.Buffer
+			if err = t.Execute(&b, ctx); err == nil {
+				jsFiles = append(jsFiles, b.String())
+			}
+		}
+	}
+	return jsFiles, nil
+}
+
+func registerComponent(c Component, dir string, params []ComponentRegisterParameter) (ComponentInstance, error) {
+	k, err := makeKlass(c, dir)
 	if err != nil {
 		return nil, err
+	}
+	for _, p := range params {
+		p(k)
 	}
 	return ComponentInstance(func(m ...MarkupOrChild) RenderResult {
 		markups, children, err := splitMarkupOrChild(m)
@@ -88,6 +211,7 @@ func registerComponent(c Component, dir string) (ComponentInstance, error) {
 		if err != nil {
 			panic(err)
 		}
+		markups = append(markups, classApplyer([]string{k.Name}))
 		rr := &renderResult{
 			name:     k.Name,
 			markups:  markups,
@@ -98,20 +222,20 @@ func registerComponent(c Component, dir string) (ComponentInstance, error) {
 	}), nil
 }
 
-func RegisterComponent(c Component) (ComponentInstance, error) {
+func RegisterComponent(c Component, params ...ComponentRegisterParameter) (ComponentInstance, error) {
 	_, fp, _, ok := runtime.Caller(1)
 	if !ok {
 		return nil, fmt.Errorf("invalid caller")
 	}
-	return registerComponent(c, filepath.Dir(fp))
+	return registerComponent(c, filepath.Dir(fp), params)
 }
 
-func MustRegisterComponent(c Component) ComponentInstance {
+func MustRegisterComponent(c Component, params ...ComponentRegisterParameter) ComponentInstance {
 	_, fp, _, ok := runtime.Caller(1)
 	if !ok {
 		panic(fmt.Errorf("invalid caller"))
 	}
-	ci, err := registerComponent(c, filepath.Dir(fp))
+	ci, err := registerComponent(c, filepath.Dir(fp), params)
 	if err != nil {
 		panic(err)
 	}
