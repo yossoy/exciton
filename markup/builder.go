@@ -17,7 +17,7 @@ type Builder struct {
 	elements         *object.ObjectMap
 	rafHandler       RequestAnimationFrameHandler
 	updateHandler    UpdateDiffSetHandler
-	scheduled        bool
+	scheduled        bool //TODO: need atomic proc?
 	rootRenderResult RenderResult
 	rootRenderNode   *node
 	rootComponent    Component
@@ -92,9 +92,11 @@ func (b *Builder) Rerender(c ...Component) {
 			b.enqueueRender(cc)
 		}
 	}
-	if b.rafHandler != nil && !b.scheduled {
-		b.scheduled = true
-		b.rafHandler()
+	if b.rafHandler != nil {
+		if !b.scheduled {
+			b.scheduled = true
+			b.rafHandler()
+		}
 		return
 	}
 	b.rerender()

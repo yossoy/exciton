@@ -130,36 +130,49 @@ func escapeClassName(name string) string {
 	return ret
 }
 
+func GetComponentCSSFile(basePath string, cssFileName string, klassName string) ([]byte, error) {
+	ext := strings.ToLower(filepath.Ext(cssFileName))
+	if ext != ".css" && ext != ".gocss" {
+		return nil, fmt.Errorf("invalid filename: %q", cssFileName)
+	}
+	cssPath := filepath.Join(basePath, cssFileName)
+	f, err := ioutil.ReadFile(cssPath)
+	if err != nil {
+		return nil, err
+	}
+	if ext == ".css" {
+		return f, nil
+	}
+	ctx := struct {
+		ComponentClass string
+		ResourcePath   *url.URL //TODO: ResourcePath is relative path?
+	}{
+		ComponentClass: escapeClassName(klassName),
+		ResourcePath:   filePathToFileURI(basePath),
+	}
+
+	t, err := template.New("").Parse(string(f))
+	if err != nil {
+		fmt.Printf("error1: %s\n", err)
+		return nil, err
+	}
+	var b bytes.Buffer
+	if err = t.Execute(&b, ctx); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
+}
+
 func GetComponentCSSFiles(resPath string) ([]string, error) {
 	var cssFiles []string
 	for _, k := range componentKlasses {
 		if k.cssFile != "" {
 			basePath := k.getResourcePath(resPath)
-			cssPath := filepath.Join(basePath, k.cssFile)
-			f, err := ioutil.ReadFile(cssPath)
+			b, err := GetComponentCSSFile(basePath, k.cssFile, k.Name)
 			if err != nil {
 				return nil, err
 			}
-			//TODO: ResourcePath is relative path?
-			ctx := struct {
-				ComponentClass string
-				ResourcePath   *url.URL
-			}{
-				ComponentClass: escapeClassName(k.Name),
-				ResourcePath:   filePathToFileURI(basePath),
-			}
-
-			t, err := template.New("").Parse(string(f))
-			if err != nil {
-				fmt.Printf("error1: %s\n", err)
-				return nil, err
-			}
-			var b bytes.Buffer
-			if err = t.Execute(&b, ctx); err != nil {
-				return nil, err
-			}
-
-			cssFiles = append(cssFiles, b.String())
+			cssFiles = append(cssFiles, string(b))
 		}
 	}
 	return cssFiles, nil
@@ -211,7 +224,9 @@ func registerComponent(c Component, dir string, params []ComponentRegisterParame
 		if err != nil {
 			panic(err)
 		}
-		markups = append(markups, classApplyer([]string{k.Name}))
+		if k.jsFile != "" || k.cssFile != "" {
+			markups = append(markups, classApplyer([]string{k.Name}))
+		}
 		rr := &renderResult{
 			name:     k.Name,
 			markups:  markups,
