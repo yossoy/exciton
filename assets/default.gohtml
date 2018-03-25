@@ -47,7 +47,7 @@
 <body>
     <div id="{{.ID}}"></div>
     <script>window.exciton={ID: {{.ID}}, components:{}}; {{.MesonJS }}(window, window.exciton, function(a){ {{.NativeRequestJSMethod }}(a); });</script>
-    {{if .IsReleaseBuild}}{{range .ComponentJSFiles}}<script src="js/{{.}}" />{{end}}{{else}}{{range .JS}}<script src="js/{{.}}"></script>{{end}}{{end}}
-    {{range .ComponentJS}}<script>{{.}}</script>{{end}}
+    {{range .JS}}<script src="js/{{.}}"></script>{{end}}
+    {{if .IsReleaseBuild}}{{range .ComponentJSFiles}}<script src="{{.}}"></script>{{end}}{{else}}{{range .ComponentJS}}<script>{{.}}</script>{{end}}{{end}}
 </body>
 </html>
