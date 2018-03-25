@@ -24,7 +24,10 @@ type htmlContext struct {
 	JS                    []string
 	CSS                   []string
 	ComponentCSS          []template.CSS
+	ComponentCSSFiles     []template.URL
 	ComponentJS           []template.JS
+	ComponentJSFiles      []template.URL
+	IsReleaseBuild        bool
 }
 
 func setupHTML(cfg *WindowConfig) error {
@@ -49,25 +52,6 @@ func setupHTML(cfg *WindowConfig) error {
 	resurl.Host = ""
 	resurl.Path = resources
 
-	var cssFiles []template.CSS
-	var jsFiles []template.JS
-	if csss, err := markup.GetComponentCSSFiles(resPath); err != nil {
-		return err
-	} else {
-		cssFiles = make([]template.CSS, len(csss))
-		for i, css := range csss {
-			cssFiles[i] = template.CSS(css)
-		}
-	}
-	if jss, err := markup.GetComponentJSFiles(resPath); err != nil {
-		return err
-	} else {
-		jsFiles = make([]template.JS, len(jss))
-		for i, js := range jss {
-			jsFiles[i] = template.JS(js)
-		}
-	}
-
 	ctx := htmlContext{
 		ID:                    cfg.ID,
 		Title:                 cfg.Title,
@@ -76,8 +60,35 @@ func setupHTML(cfg *WindowConfig) error {
 		ResourcesURL:          template.URL(resurl.String()),
 		MesonJS:               template.JS(string(js)),
 		NativeRequestJSMethod: template.JS(driver.NativeRequestJSMethod()),
-		ComponentCSS:          cssFiles,
-		ComponentJS:           jsFiles,
+		IsReleaseBuild:        releaseBuild,
+	}
+
+	csss, err := markup.GetComponentCSSFiles(resPath)
+	if err != nil {
+		return err
+	}
+	jss, err := markup.GetComponentJSFiles(resPath)
+	if err != nil {
+		return err
+	}
+	if releaseBuild {
+		ctx.ComponentCSSFiles = make([]template.URL, len(csss))
+		for i, p := range csss {
+			ctx.ComponentCSSFiles[i] = template.URL(p)
+		}
+		ctx.ComponentJSFiles = make([]template.URL, len(jss))
+		for i, p := range jss {
+			ctx.ComponentJSFiles[i] = template.URL(p)
+		}
+	} else {
+		ctx.ComponentCSS = make([]template.CSS, len(csss))
+		for i, css := range csss {
+			ctx.ComponentCSS[i] = template.CSS(css)
+		}
+		ctx.ComponentJS = make([]template.JS, len(jss))
+		for i, js := range jss {
+			ctx.ComponentJS[i] = template.JS(js)
+		}
 	}
 
 	a, err := assets.Asset("assets/default.gohtml")

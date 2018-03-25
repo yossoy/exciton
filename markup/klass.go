@@ -13,12 +13,17 @@ var (
 )
 
 type Klass struct {
-	Name       string
+	name       string
+	Path       string
 	Type       reflect.Type
 	Properties map[string]int
 	dir        string
 	cssFile    string
 	jsFile     string
+}
+
+func (k *Klass) Name() string {
+	return k.Path + "/" + k.name
 }
 
 func (k *Klass) NewInstance() Component {
@@ -49,7 +54,8 @@ func makeKlass(c Component, dir string) (*Klass, error) {
 		return k, fmt.Errorf("RegisterComponent: already registerd Component: %q", p)
 	}
 	k := &Klass{
-		Name: p,
+		name: ct.Name(),
+		Path: ct.PkgPath(),
 		Type: ct,
 		dir:  dir,
 	}
@@ -70,7 +76,8 @@ func makeKlass(c Component, dir string) (*Klass, error) {
 func deleteKlass(k *Klass) {
 	componentsLock.Lock()
 	defer componentsLock.Unlock()
-	if _, ok := componentKlasses[k.Name]; ok {
-		delete(componentKlasses, k.Name)
+	n := k.Name()
+	if _, ok := componentKlasses[n]; ok {
+		delete(componentKlasses, n)
 	}
 }

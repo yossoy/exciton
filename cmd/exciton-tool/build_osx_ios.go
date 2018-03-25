@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"go/build"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -111,7 +110,7 @@ func goDarwinBuild(te *targetEnv, outFile string) (map[string]bool, error) {
 	}
 
 	// TODO(jbd): Set the launcher icon.
-	if err := darwinCopyAssets(te.he, pkg, workdir); err != nil {
+	if err := darwinCopyAssets(te, workdir); err != nil {
 		return nil, err
 	}
 
@@ -167,13 +166,14 @@ func xcodeAvailable() bool {
 	return err == nil
 }
 
-func darwinCopyAssets(he *hostEnv, pkg *build.Package, xcodeProjDir string) error {
+func darwinCopyAssets(te *targetEnv, xcodeProjDir string) error {
+	he := te.he
 	dstAssets := xcodeProjDir + "/main/assets"
 	if err := mkdir(he, dstAssets); err != nil {
 		return err
 	}
 
-	srcAssets := filepath.Join(pkg.Dir, "resources")
+	srcAssets := filepath.Join(te.pkg.Dir, "resources")
 	fi, err := os.Stat(srcAssets)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -191,7 +191,7 @@ func darwinCopyAssets(he *hostEnv, pkg *build.Package, xcodeProjDir string) erro
 	if err != nil {
 		return err
 	}
-	return filepath.Walk(srcAssets, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(srcAssets, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -205,6 +205,10 @@ func darwinCopyAssets(he *hostEnv, pkg *build.Package, xcodeProjDir string) erro
 		dst := dstAssets + "/" + path[len(srcAssets)+1:]
 		return copyFile(he, dst, path)
 	})
+
+	collectPackageResourceFiles(te, dstAssets)
+
+	return err
 }
 
 type infoplistTmplData struct {

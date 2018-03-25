@@ -12,6 +12,8 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/yossoy/exciton/markup"
 )
 
 type targetEnv struct {
@@ -191,6 +193,66 @@ func parseBuildTarget() (ret []*buildTargetArch, err error) {
 	return
 }
 
+func collectPackageResourceFiles(te *targetEnv, resDstPath string) error {
+	for _, s := range te.pkg.Imports {
+		pctx := build.Default
+		p2, err := pctx.Import(s, te.he.cwd, build.ImportComment)
+		if err == nil {
+			importMarkup := false
+			for _, pp := range p2.Imports {
+				if strings.HasSuffix(pp, "github.com/yossoy/exciton/markup") {
+					importMarkup = true
+					break
+				}
+			}
+			if !importMarkup {
+				continue
+			}
+			resFolder := filepath.Join(p2.Dir, "resources")
+			fi, err := os.Stat(resFolder)
+			if os.IsNotExist(err) {
+				continue
+			}
+			if !fi.IsDir() {
+				continue
+			}
+
+			pkgFilePath := filepath.FromSlash(p2.ImportPath)
+			err = filepath.Walk(resFolder, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if name := filepath.Base(path); strings.HasPrefix(name, ".") {
+					// Do not include the hidden files.
+					return nil
+				}
+				if info.IsDir() {
+					return nil
+				}
+				relSrcPath := path[len(resFolder)+1:]
+
+				dstFolder := filepath.Join(resDstPath, pkgFilePath, filepath.Dir(relSrcPath))
+				if _, err := os.Stat(dstFolder); os.IsNotExist(err) {
+					mkdir(te.he, dstFolder)
+				}
+				dstFilePath := filepath.Join(dstFolder, filepath.Base(relSrcPath))
+				if filepath.Ext(path) == ".gocss" || filepath.Ext(path) == ".gojs" {
+					b, err := markup.ReadComponentNamespaceFile(".", path, pkgFilePath)
+					if err != nil {
+						return err
+					}
+					return writeFile(te.he, dstFilePath, func(w io.Writer) error {
+						_, err := w.Write(b)
+						return err
+					})
+				}
+				return copyFile(te.he, dstFilePath, path)
+			})
+		}
+	}
+	return nil
+}
+
 func runBuildOne(he *hostEnv, bta *buildTargetArch, cmd *command) error {
 	args := cmd.flag.Args()
 	ctxt := build.Default
@@ -224,29 +286,6 @@ func runBuildOne(he *hostEnv, bta *buildTargetArch, cmd *command) error {
 	if pkg.Name != "main" {
 		return errors.New("required main package")
 	}
-	// fmt.Printf("*** Import Files: \n")
-	// for i, s := range pkg.Imports {
-	// 	pctx := build.Default
-	// 	fmt.Printf("[%d] %s\n", i, s)
-	// 	p2, err := pctx.Import(s, he.cwd, build.ImportComment)
-	// 	if err != nil {
-	// 		fmt.Printf("[%d] Import Err: %q", i, err)
-	// 	} else {
-	// 		importMarkup := false
-	// 		for _, pp := range p2.Imports {
-	// 			if strings.HasSuffix(pp, "github.com/yossoy/exciton/markup") {
-	// 				importMarkup = true
-	// 				break
-	// 			}
-	// 		}
-	// 		if !importMarkup {
-	// 			fmt.Printf("\t==> x\n")
-	// 		} else {
-	// 			fmt.Printf("\t==> %s\n", p2.Dir)
-	// 		}
-	// 	}
-	// }
-	// fmt.Printf("\n")
 
 	var nmpkgs map[string]bool
 	switch bta.target {

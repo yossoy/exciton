@@ -261,6 +261,7 @@ function removeEventCallback(n, name) {
 }
 
 exciton.addEventListener('updateDiffData', function(e) {
+  const rootObj = document.getElementById(nsobj.ID);
   const diff = e.detail;
   let curNode = null;
   let arg1Node = null;
@@ -283,29 +284,29 @@ exciton.addEventListener('updateDiffData', function(e) {
         break;
       case ditSelectCurNode:
         if (item.v === null || item.v === undefined) {
-          curNode = document.getElementById("app");
+          curNode = rootObj;
         } else if (typeof(item.v) === 'number') {
           curNode = creNodes[item.v];
         } else {
-          curNode = resolvePathNode(document.getElementById("app"), item.v);
+          curNode = resolvePathNode(rootObj, item.v);
         }
         break;
       case ditSelectArg1Node:
         if (item.v === null || item.v === undefined) {
-          arg1Node = document.getElementById("app");
+          arg1Node = rootObj;
         } else if (typeof(item.v) === 'number') {
           arg1Node = creNodes[item.v];
         } else {
-          arg1Node = resolvePathNode(document.getElementById('app'), item.v);
+          arg1Node = resolvePathNode(rootObj, item.v);
         }
         break;
       case ditSelectArg2Node:
         if (item.v === null || item.v === undefined) {
-          arg2Node = document.getElementById('app');
+          arg2Node = rootObj;
         } if (typeof(item.v) === 'number') {
           arg2Node = creNodes[item.v];
         } else {
-          arg2Node = resolvePathNode(document.getElementById('app'), item.v);
+          arg2Node = resolvePathNode(rootObj, item.v);
         }
         break;
       case ditPropertyValue:

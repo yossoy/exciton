@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -130,25 +129,27 @@ func escapeClassName(name string) string {
 	return ret
 }
 
-func GetComponentCSSFile(basePath string, cssFileName string, klassName string) ([]byte, error) {
-	ext := strings.ToLower(filepath.Ext(cssFileName))
-	if ext != ".css" && ext != ".gocss" {
-		return nil, fmt.Errorf("invalid filename: %q", cssFileName)
+func ReadComponentNamespaceFile(basePath string, cssPath string, klassPath string) ([]byte, error) {
+	ext := strings.ToLower(filepath.Ext(cssPath))
+	if ext != ".gocss" && ext != ".gojs" {
+		return nil, fmt.Errorf("invalid filename: %q", cssPath)
 	}
-	cssPath := filepath.Join(basePath, cssFileName)
 	f, err := ioutil.ReadFile(cssPath)
 	if err != nil {
 		return nil, err
 	}
-	if ext == ".css" {
-		return f, nil
+	var componentClassName string
+	if ext == ".gocss" {
+		componentClassName = escapeClassName(klassPath)
+	} else {
+		componentClassName = klassPath
 	}
 	ctx := struct {
 		ComponentClass string
-		ResourcePath   *url.URL //TODO: ResourcePath is relative path?
+		ResourcePath   string
 	}{
-		ComponentClass: escapeClassName(klassName),
-		ResourcePath:   filePathToFileURI(basePath),
+		ComponentClass: componentClassName,
+		ResourcePath:   basePath,
 	}
 
 	t, err := template.New("").Parse(string(f))
@@ -161,50 +162,6 @@ func GetComponentCSSFile(basePath string, cssFileName string, klassName string) 
 		return nil, err
 	}
 	return b.Bytes(), nil
-}
-
-func GetComponentCSSFiles(resPath string) ([]string, error) {
-	var cssFiles []string
-	for _, k := range componentKlasses {
-		if k.cssFile != "" {
-			basePath := k.getResourcePath(resPath)
-			b, err := GetComponentCSSFile(basePath, k.cssFile, k.Name)
-			if err != nil {
-				return nil, err
-			}
-			cssFiles = append(cssFiles, string(b))
-		}
-	}
-	return cssFiles, nil
-}
-
-func GetComponentJSFiles(resPath string) ([]string, error) {
-	var jsFiles []string
-	for _, k := range componentKlasses {
-		if k.jsFile != "" {
-			basePath := k.getResourcePath(resPath)
-			jsPath := filepath.Join(basePath, k.jsFile)
-			if _, err := os.Stat(jsPath); err != nil {
-				return nil, err
-			}
-			ctx := struct {
-				ComponentClass string
-				ResourcePath   *url.URL
-			}{
-				ComponentClass: k.Name,
-				ResourcePath:   filePathToFileURI(basePath),
-			}
-			t, err := template.New("").ParseFiles(jsPath)
-			if err != nil {
-				return nil, err
-			}
-			var b bytes.Buffer
-			if err = t.Execute(&b, ctx); err == nil {
-				jsFiles = append(jsFiles, b.String())
-			}
-		}
-	}
-	return jsFiles, nil
 }
 
 func registerComponent(c Component, dir string, params []ComponentRegisterParameter) (ComponentInstance, error) {
@@ -225,10 +182,10 @@ func registerComponent(c Component, dir string, params []ComponentRegisterParame
 			panic(err)
 		}
 		if k.jsFile != "" || k.cssFile != "" {
-			markups = append(markups, classApplyer([]string{k.Name}))
+			markups = append(markups, classApplyer([]string{k.Path}))
 		}
 		rr := &renderResult{
-			name:     k.Name,
+			name:     k.Name(),
 			markups:  markups,
 			children: children2,
 			klass:    k,
