@@ -163,7 +163,9 @@
   WKWebViewConfiguration *conf = [[WKWebViewConfiguration alloc] init];
   conf.userContentController = userContentController;
 
+#if defined(DEBUG)
   [conf.preferences setValue:@YES forKey:@"developerExtrasEnabled"];
+#endif
 
   WKWebView *webview = [[WKWebView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)
                                           configuration:conf];
