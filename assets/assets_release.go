@@ -6,4 +6,4 @@ import (
 	"net/http"
 )
 
-var FileSytem http.FileSystem = assetsData
+var FileSystem http.FileSystem = assetsData

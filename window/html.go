@@ -88,6 +88,5 @@ func initHTML(info *driver.StartupInfo) error {
 	info.Router.HandleFunc("/window/{id}/", rootHTMLHandler)
 	//TODO: assetsのマウントは別の場所で行う?
 	info.Router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(assets.FileSystem)))
-	//info.Router.HandleFunc("/", func(w http.Res))
 	return nil
 }
