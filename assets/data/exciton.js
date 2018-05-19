@@ -1,4 +1,4 @@
-(function(global, nsobj, callnative) {
+(function(nsobj) {
 'use strict';
 nsobj.system = this;
 
@@ -178,14 +178,14 @@ function translateEvent(e) {
 }
 
 function callNativeMethod(method, arg) {
-  callnative({path: '/window/' + nsobj.ID + '/' + method, arg: JSON.stringify(arg)});
+  nsobj.callnative({path: '/window/' + nsobj.ID + '/' + method, arg: JSON.stringify(arg)});
 }
 
 const exciton = new EventEmitter();
 
 exciton.addEventListener('requestAnimationFrame', function(e) {
   const timestamp = e.detail;
-  global.requestAnimationFrame(function(timestamp) {
+  window.requestAnimationFrame(function(timestamp) {
     callNativeMethod('onRequestAnimationFrame', timestamp);
   });
 }, false);
@@ -408,4 +408,4 @@ nsobj.requestBrowerEventSync = function(method, jsonArg) {
 };
 
 callNativeMethod('ready', null);
-})
+})(window.exciton)

@@ -117,8 +117,7 @@
     // TODO: handle fixed url?
     //[win.webview loadRequest:[NSURLRequest requestWithURL:[NSURL
     // URLWithString:@"http://www.google.co.jp"]]];
-    NSURL *baseURL = [NSURL fileURLWithPath:cfg[@"resources"]];
-    [win.webview loadHTMLString:cfg[@"html"] baseURL:baseURL];
+    [win.webview loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:cfg[@"url"]]]];
   };
 
   if ([NSThread isMainThread]) {

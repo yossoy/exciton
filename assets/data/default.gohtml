@@ -3,7 +3,6 @@
 <head>
     {{if .IsIE}}<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="UTF-8">
-    <base href="{{.ResourcesURL}}">
     <script>
         (function () {
             window.exciton = { ID: "{{.ID}}" };
@@ -40,14 +39,15 @@
             font-family: "Helvetica Neue", "Segoe UI";
         }
     </style>
-    {{range .CSS}}<link type="text/css" rel="stylesheet" href="css/{{.}}" />{{end}}
+    {{range .CSS}}<link type="text/css" rel="stylesheet" href="/resources/css/{{.}}" />{{end}}
     {{if .IsReleaseBuild}}{{range .ComponentCSSFiles}}<link type="text/css" rel="stylesheet" href="{{.}}" />{{end}}{{else}}{{range .ComponentCSS}}<style type="text/css">{{.}}</style>{{end}}{{end}}
     <title>{{.Title}}</title>
 </head>
 <body>
     <div id="{{.ID}}"></div>
-    <script>window.exciton={ID: {{.ID}}, components:{}}; {{.MesonJS }}(window, window.exciton, function(a){ {{.NativeRequestJSMethod }}(a); });</script>
-    {{range .JS}}<script src="js/{{.}}"></script>{{end}}
+    <script>window.exciton={ID: {{.ID}}, components:{}, callnative: function(a){ {{.NativeRequestJSMethod }}(a);}};</script>
+    <script src="/assets/exciton.js"></script>
+    {{range .JS}}<script src="/resources/js/{{.}}"></script>{{end}}
     {{if .IsReleaseBuild}}{{range .ComponentJSFiles}}<script src="{{.}}"></script>{{end}}{{else}}{{range .ComponentJS}}<script>{{.}}</script>{{end}}{{end}}
 </body>
 </html>

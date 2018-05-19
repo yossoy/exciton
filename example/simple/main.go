@@ -220,7 +220,7 @@ func (c *testComponent) checkHandler(e *html.MouseEvent) {
 func (c *testComponent) Render() markup.RenderResult {
 	return html.Div(
 		html.Image(
-			markup.Attribute("src", "liberty.svg"),
+			markup.Attribute("src", "/resources/liberty.svg"),
 			markup.Attribute("width", 200),
 			markup.Style("float", "right"),
 		),
@@ -262,13 +262,10 @@ func (c *testComponent) Render() markup.RenderResult {
 
 var TestComponent = markup.MustRegisterComponent((*testComponent)(nil))
 
-func onAppStart(app *exciton.App) {
+func onAppStart() {
 	log.PrintInfo("onAppStart")
 	contextMenuInst = menu.MustNew(ContextMenu())
 	menu.SetApplicationMenu(menu.MustNew(MenuBar()))
-	app.OnQuit(func() {
-		log.PrintInfo("app is terminated...")
-	})
 
 	cfg := window.WindowConfig{
 		Title: "Exciton Sample",
@@ -280,7 +277,13 @@ func onAppStart(app *exciton.App) {
 	w.Mount(TestComponent())
 }
 
-func main() {
-	log.PrintInfo("Run")
-	exciton.Run(onAppStart)
+func ExcitonStartup(info *exciton.StartupInfo) error {
+	info.OnAppStart = onAppStart
+	info.OnAppQuit = func() {
+		log.PrintInfo("app is terminated...")
+	}
+	if err := exciton.Init(info); err != nil {
+		return err
+	}
+	return nil
 }

@@ -2,6 +2,7 @@ package mac
 
 import (
 	"encoding/json"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -180,6 +181,14 @@ func (d *mac) IsIE() bool {
 	return false
 }
 
+func (d *mac) ResourcesFileSystem() (http.FileSystem, error) {
+	resources, err := d.Resources()
+	if err != nil {
+		return nil, err
+	}
+	return http.Dir(resources), nil
+}
+
 func (d *mac) Resources() (string, error) {
 	exePathStr, err := os.Executable()
 	if err != nil {
@@ -226,11 +235,6 @@ func newDriver() *mac {
 	return platform
 }
 
-func init() {
-	runtime.LockOSThread()
-	driver.SetupDriver(newDriver())
-}
-
 //export requestEventEmit
 func requestEventEmit(cstr unsafe.Pointer, clen C.int) {
 	jsonstr := C.GoBytes(cstr, clen)
@@ -255,4 +259,15 @@ func responceEventResult(crespNo C.int, cstr unsafe.Pointer, clen C.int) {
 	respNo := int(crespNo)
 
 	platform.responceCallback(jsonstr, respNo)
+}
+
+func Startup(startup driver.StartupFunc) error {
+	runtime.LockOSThread()
+	event.StartEventMgr()
+	defer event.StopEventMgr()
+	d := newDriver()
+	if err := d.Init(); err != nil {
+		return err
+	}
+	return driver.Startup(d, startup)
 }
