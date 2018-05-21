@@ -157,6 +157,7 @@ func (d *windows) IsIE() bool {
 	return true
 }
 
+//TODO: remove this method.
 func (d *windows) Resources() (string, error) {
 	exePathStr, err := os.Executable()
 	if err != nil {
@@ -191,10 +192,10 @@ func newDriver() *windows {
 	return platform
 }
 
-func init() {
-	runtime.LockOSThread()
-	driver.SetupDriver(newDriver())
-}
+// func init() {
+// 	runtime.LockOSThread()
+// 	driver.SetupDriver(newDriver())
+// }
 
 //export requestEventEmit
 func requestEventEmit(cstr unsafe.Pointer, clen C.int) {
@@ -219,4 +220,16 @@ func responceEventResult(crespNo C.int, cstr unsafe.Pointer, clen C.int) {
 	respNo := int(crespNo)
 
 	platform.responceCallback(jsonstr, respNo)
+}
+
+// Startup is startup function in windows.
+func Startup(startup driver.StartupFunc) error {
+	runtime.LockOSThread()
+	event.StartEventMgr()
+	defer event.StopEventMgr()
+	d := newDriver()
+	if err := d.Init(); err != nil {
+		return err
+	}
+	return driver.Startup(d, startup)
 }

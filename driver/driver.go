@@ -30,7 +30,6 @@ type DriverEvent struct {
 type Driver interface {
 	Run()
 	IsIE() bool
-	Resources() (string, error)
 	ResourcesFileSystem() (http.FileSystem, error)
 	NativeRequestJSMethod() string
 	Log(lvl LogLevel, msg string, args ...interface{})
@@ -50,10 +49,6 @@ func IsIE() bool {
 
 func Log(lvl LogLevel, fmt string, args ...interface{}) {
 	platform.Log(lvl, fmt, args...)
-}
-
-func Resources() (string, error) {
-	return platform.Resources()
 }
 
 func NativeRequestJSMethod() string {

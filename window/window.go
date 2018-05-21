@@ -90,8 +90,6 @@ type WindowConfig struct {
 	FixedSize       bool        `json:"fixedSize"`
 	NoClosable      bool        `json:"noClosable"`
 	NoMinimizable   bool        `json:"noMinimizable"`
-	HTML            string      `json:"html"`
-	Resources       string      `json:"resources"`
 	Lang            string      `json:"lang"`
 	URL             string      `json:"url"`
 }
@@ -215,13 +213,6 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 	}
 	id := object.Windows.NewKey()
 	cfg.ID = id
-	if cfg.Resources == "" {
-		p, err := driver.Resources()
-		if err != nil {
-			return nil, err
-		}
-		cfg.Resources = p
-	}
 	if cfg.URL == "" {
 		cfg.URL = fmt.Sprintf("%s/window/%s/", driver.BaseURL, id)
 	}

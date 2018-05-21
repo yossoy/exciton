@@ -182,14 +182,14 @@ func (d *mac) IsIE() bool {
 }
 
 func (d *mac) ResourcesFileSystem() (http.FileSystem, error) {
-	resources, err := d.Resources()
+	resources, err := resourcesPath()
 	if err != nil {
 		return nil, err
 	}
 	return http.Dir(resources), nil
 }
 
-func (d *mac) Resources() (string, error) {
+func resourcesPath() (string, error) {
 	exePathStr, err := os.Executable()
 	if err != nil {
 		return "", err
@@ -206,6 +206,7 @@ func (d *mac) Resources() (string, error) {
 
 	}
 	resourcesName := filepath.Join(filepath.Dir(exePathStr), "resources")
+	//TODO: ??? need to create folder?
 	createDirIfNotExists(resourcesName)
 	return resourcesName, nil
 }
