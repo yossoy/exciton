@@ -26,6 +26,10 @@ func (k *Klass) Name() string {
 	return k.Path + "/" + k.name
 }
 
+func (k *Klass) ClassName() string {
+	return escapeClassName(k.Name())
+}
+
 func (k *Klass) NewInstance() Component {
 	//log.PrintDebug("Klass:NewInstance: %q", k.Type.PkgPath()+"/"+k.Type.Name())
 	v := reflect.New(k.Type)

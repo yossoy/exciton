@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/yossoy/exciton/markup"
+
 	"github.com/gorilla/mux"
 
 	"github.com/yossoy/exciton/assets"
@@ -23,9 +25,7 @@ type htmlContext struct {
 	NativeRequestJSMethod template.JS
 	JS                    []string
 	CSS                   []string
-	ComponentCSS          []template.CSS
 	ComponentCSSFiles     []template.URL
-	ComponentJS           []template.JS
 	ComponentJSFiles      []template.URL
 	IsReleaseBuild        bool
 }
@@ -37,6 +37,14 @@ func loadFromAssets(fn string) ([]byte, error) {
 	}
 	defer f.Close()
 	return ioutil.ReadAll(f)
+}
+
+func toTemplateURL(ss []string) []template.URL {
+	var r []template.URL
+	for _, s := range ss {
+		r = append(r, template.URL(s))
+	}
+	return r
 }
 
 func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +72,8 @@ func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
 			IsIE:  driver.IsIE(),
 			NativeRequestJSMethod: template.JS(driver.NativeRequestJSMethod()),
 			IsReleaseBuild:        driver.ReleaseBuild,
+			ComponentCSSFiles:     toTemplateURL(markup.GetComponentCSSURLs()),
+			ComponentJSFiles:      toTemplateURL(markup.GetComponentJSURLs()),
 		}
 		t, err := template.New("").Parse(string(a))
 		if err != nil {
@@ -85,6 +95,7 @@ func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func initHTML(info *driver.StartupInfo) error {
+	markup.HandleComponentResource(info.Router)
 	info.Router.HandleFunc("/window/{id}/", rootHTMLHandler)
 	//TODO: assetsのマウントは別の場所で行う?
 	info.Router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(assets.FileSystem)))

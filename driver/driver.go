@@ -72,6 +72,10 @@ func newStartupInfo() *StartupInfo {
 
 var BaseURL string
 
+func ResourcesFileSystem() (http.FileSystem, error) {
+	return platform.ResourcesFileSystem()
+}
+
 func Startup(driver Driver, startup StartupFunc) error {
 	platform = driver
 	si := newStartupInfo()
@@ -88,7 +92,7 @@ func Startup(driver Driver, startup StartupFunc) error {
 
 	Log(LogLevelDebug, "**** Internal Web server port: %d", si.PortNo)
 
-	fs, err := platform.ResourcesFileSystem()
+	fs, err := ResourcesFileSystem()
 	if err != nil {
 		return err
 	}

@@ -3,44 +3,11 @@
 <head>
     {{if .IsIE}}<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="UTF-8">
-    <script>
-        (function () {
-            window.exciton = { ID: "{{.ID}}" };
-            //pollyfill CustomEvent
-            if ( typeof window.CustomEvent === "function" ) return false;
-            function CustomEvent( event, params ) {
-                params = params || { bubbles: false, cancelable: false, detail: undefined };
-                var evt = document.createEvent( 'CustomEvent' );
-                evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
-                return evt;
-            }
-            CustomEvent.prototype = window.Event.prototype;
-            //pollyfill string.startsWith
-            window.CustomEvent = CustomEvent;
-            if (!String.prototype.startsWith) {
-                String.prototype.startsWith = function(searchString, position) {
-                    position = position || 0;
-                    return this.indexOf(searchString, position) === position;
-                };
-            }
-        })();    
-    </script>{{end}}
-    <style media="all" type="text/css">
-        html {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-        }
-
-        body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            font-family: "Helvetica Neue", "Segoe UI";
-        }
-    </style>
-    {{range .CSS}}<link type="text/css" rel="stylesheet" href="/resources/css/{{.}}" />{{end}}
-    {{if .IsReleaseBuild}}{{range .ComponentCSSFiles}}<link type="text/css" rel="stylesheet" href="{{.}}" />{{end}}{{else}}{{range .ComponentCSS}}<style type="text/css">{{.}}</style>{{end}}{{end}}
+    <script src="/assets/pollyfill-ie.js"></script>
+    {{end}}
+    <link type="text/css" rel="stylesheet" href="/assets/default.css"></link>
+    {{range .CSS}}<link type="text/css" rel="stylesheet" href="/resources/css/{{.}}"></link>{{end}}
+    {{range .ComponentCSSFiles}}<link type="text/css" rel="stylesheet" href="{{.}}"></link>{{end}}
     <title>{{.Title}}</title>
 </head>
 <body>
@@ -48,6 +15,6 @@
     <script>window.exciton={ID: {{.ID}}, components:{}, callnative: function(a){ {{.NativeRequestJSMethod }}(a);}};</script>
     <script src="/assets/exciton.js"></script>
     {{range .JS}}<script src="/resources/js/{{.}}"></script>{{end}}
-    {{if .IsReleaseBuild}}{{range .ComponentJSFiles}}<script src="{{.}}"></script>{{end}}{{else}}{{range .ComponentJS}}<script>{{.}}</script>{{end}}{{end}}
+    {{range .ComponentJSFiles}}<script src="{{.}}"></script>{{end}}
 </body>
 </html>

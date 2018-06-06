@@ -44,6 +44,7 @@ func (c *Core) Context() *Core           { return c }
 func (c *Core) Key() interface{}         { return c.key }
 func (c *Core) Builder() *Builder        { return c.builder }
 func (c *Core) Children() []RenderResult { return c.children }
+func (c *Core) ClassName() string        { return c.klass.Name() }
 
 type ComponentInstance func(m ...MarkupOrChild) RenderResult
 
@@ -164,10 +165,10 @@ func ReadComponentNamespaceFile(basePath string, cssPath string, klassPath strin
 	return b.Bytes(), nil
 }
 
-func registerComponent(c Component, dir string, params []ComponentRegisterParameter) (ComponentInstance, error) {
+func registerComponent(c Component, dir string, params []ComponentRegisterParameter) (ComponentInstance, *Klass, error) {
 	k, err := makeKlass(c, dir)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	for _, p := range params {
 		p(k)
@@ -191,27 +192,27 @@ func registerComponent(c Component, dir string, params []ComponentRegisterParame
 			klass:    k,
 		}
 		return rr
-	}), nil
+	}), k, nil
 }
 
-func RegisterComponent(c Component, params ...ComponentRegisterParameter) (ComponentInstance, error) {
+func RegisterComponent(c Component, params ...ComponentRegisterParameter) (ComponentInstance, *Klass, error) {
 	_, fp, _, ok := runtime.Caller(1)
 	if !ok {
-		return nil, fmt.Errorf("invalid caller")
+		return nil, nil, fmt.Errorf("invalid caller")
 	}
 	return registerComponent(c, filepath.Dir(fp), params)
 }
 
-func MustRegisterComponent(c Component, params ...ComponentRegisterParameter) ComponentInstance {
+func MustRegisterComponent(c Component, params ...ComponentRegisterParameter) (ComponentInstance, *Klass) {
 	_, fp, _, ok := runtime.Caller(1)
 	if !ok {
 		panic(fmt.Errorf("invalid caller"))
 	}
-	ci, err := registerComponent(c, filepath.Dir(fp), params)
+	ci, k, err := registerComponent(c, filepath.Dir(fp), params)
 	if err != nil {
 		panic(err)
 	}
-	return ci
+	return ci, k
 }
 
 func unregisterComponent(ci ComponentInstance) {
