@@ -159,8 +159,8 @@ func (ca classApplyer) applyToNode(b *Builder, n *node, on *node) {
 	}
 }
 
-func Classes(class ...string) MarkupOrChild {
-	return classApplyer(class)
+func Classes(classes ...string) MarkupOrChild {
+	return classApplyer(classes)
 }
 
 type styleApplyer struct {

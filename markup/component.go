@@ -1,14 +1,11 @@
 package markup
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"text/template"
 )
 
 type Core struct {
@@ -38,13 +35,26 @@ type Component interface {
 	Builder() *Builder
 	Key() interface{}
 	Render() RenderResult
+	Classes(...string) MarkupOrChild
 }
 
 func (c *Core) Context() *Core           { return c }
 func (c *Core) Key() interface{}         { return c.key }
 func (c *Core) Builder() *Builder        { return c.builder }
 func (c *Core) Children() []RenderResult { return c.children }
-func (c *Core) ClassName() string        { return c.klass.Name() }
+
+func (c *Core) Classes(classes ...string) MarkupOrChild {
+	k := c.klass
+	if k.cssFile == "" {
+		return Classes(classes...)
+	}
+	ccs := make(classApplyer, len(classes))
+	prefix := k.pathInfo.id + "-" + strings.TrimSuffix(k.cssFile, filepath.Ext(k.cssFile)) + "-"
+	for i, class := range classes {
+		ccs[i] = prefix + class
+	}
+	return ccs
+}
 
 type ComponentInstance func(m ...MarkupOrChild) RenderResult
 
@@ -80,17 +90,25 @@ type Initializer interface {
 	Initialize()
 }
 
-type ComponentRegisterParameter func(k *Klass)
+type ComponentRegisterParameter func(k *Klass) error
 
 func WithComponentStyleSheet(css string) ComponentRegisterParameter {
-	return func(k *Klass) {
+	return func(k *Klass) error {
+		if k.cssFile != "" {
+			return fmt.Errorf("component %q already has component css file (%q)", k.Name(), k.cssFile)
+		}
 		k.cssFile = css
+		return nil
 	}
 }
 
 func WithComponentScript(js string) ComponentRegisterParameter {
-	return func(k *Klass) {
+	return func(k *Klass) error {
+		if k.jsFile != "" {
+			return fmt.Errorf("component %q already has component js file (%q)", k.Name(), k.jsFile)
+		}
 		k.jsFile = js
+		return nil
 	}
 }
 
@@ -110,7 +128,7 @@ func filePathToFileURI(path string) *url.URL {
 }
 
 func escapeClassName(name string) string {
-	var ret string
+	sb := strings.Builder{}
 	for _, c := range name {
 		switch {
 		case '0' <= c && c <= '9':
@@ -120,50 +138,51 @@ func escapeClassName(name string) string {
 		case 'a' <= c && c <= 'z':
 			fallthrough
 		case c == '_':
-			ret = ret + string(c)
+			sb.WriteRune(c)
 		case c < 256:
-			ret = ret + "\\" + string(c)
+			sb.WriteByte('\\')
+			sb.WriteRune(c)
 		default:
-			ret = ret + fmt.Sprintf("\\u%08x", c)
+			sb.WriteRune(c)
 		}
 	}
-	return ret
+	return sb.String()
 }
 
-func ReadComponentNamespaceFile(basePath string, cssPath string, klassPath string) ([]byte, error) {
-	ext := strings.ToLower(filepath.Ext(cssPath))
-	if ext != ".gocss" && ext != ".gojs" {
-		return nil, fmt.Errorf("invalid filename: %q", cssPath)
-	}
-	f, err := ioutil.ReadFile(cssPath)
-	if err != nil {
-		return nil, err
-	}
-	var componentClassName string
-	if ext == ".gocss" {
-		componentClassName = escapeClassName(klassPath)
-	} else {
-		componentClassName = klassPath
-	}
-	ctx := struct {
-		ComponentClass string
-		ResourcePath   string
-	}{
-		ComponentClass: componentClassName,
-		ResourcePath:   basePath,
-	}
+// func ReadComponentNamespaceFile(basePath string, cssPath string, klassPath string) ([]byte, error) {
+// 	ext := strings.ToLower(filepath.Ext(cssPath))
+// 	if ext != ".gocss" && ext != ".gojs" {
+// 		return nil, fmt.Errorf("invalid filename: %q", cssPath)
+// 	}
+// 	f, err := ioutil.ReadFile(cssPath)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	var componentClassName string
+// 	if ext == ".gocss" {
+// 		componentClassName = escapeClassName(klassPath)
+// 	} else {
+// 		componentClassName = klassPath
+// 	}
+// 	ctx := struct {
+// 		ComponentClass string
+// 		ResourcePath   string
+// 	}{
+// 		ComponentClass: componentClassName,
+// 		ResourcePath:   basePath,
+// 	}
 
-	t, err := template.New("").Parse(string(f))
-	if err != nil {
-		fmt.Printf("error1: %s\n", err)
-		return nil, err
-	}
-	var b bytes.Buffer
-	if err = t.Execute(&b, ctx); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
-}
+// 	t, err := template.New("").Parse(string(f))
+// 	if err != nil {
+// 		fmt.Printf("error1: %s\n", err)
+// 		return nil, err
+// 	}
+// 	var b bytes.Buffer
+// 	if err = t.Execute(&b, ctx); err != nil {
+// 		return nil, err
+// 	}
+// 	return b.Bytes(), nil
+// }
 
 func registerComponent(c Component, dir string, params []ComponentRegisterParameter) (ComponentInstance, *Klass, error) {
 	k, err := makeKlass(c, dir)
@@ -171,7 +190,9 @@ func registerComponent(c Component, dir string, params []ComponentRegisterParame
 		return nil, nil, err
 	}
 	for _, p := range params {
-		p(k)
+		if err := p(k); err != nil {
+			return nil, nil, err
+		}
 	}
 	return ComponentInstance(func(m ...MarkupOrChild) RenderResult {
 		markups, children, err := splitMarkupOrChild(m)
@@ -181,9 +202,6 @@ func registerComponent(c Component, dir string, params []ComponentRegisterParame
 		children2, err := flattenChildren(children)
 		if err != nil {
 			panic(err)
-		}
-		if k.jsFile != "" || k.cssFile != "" {
-			markups = append(markups, classApplyer([]string{k.Path}))
 		}
 		rr := &renderResult{
 			name:     k.Name(),

@@ -7,23 +7,30 @@ import (
 	"sync"
 )
 
+type klassPathInfo struct {
+	pkgPath string
+	klasses map[string]*Klass
+	id      string
+	dir     string
+}
+
 var (
-	componentsLock   = sync.RWMutex{}
-	componentKlasses = make(map[string]*Klass)
+	componentsLock = sync.RWMutex{}
+	klassPaths     = make(map[string]*klassPathInfo)
+	klassPathIDs   = make(map[string]*klassPathInfo)
 )
 
 type Klass struct {
 	name       string
-	Path       string
+	pathInfo   *klassPathInfo
 	Type       reflect.Type
 	Properties map[string]int
-	dir        string
 	cssFile    string
 	jsFile     string
 }
 
 func (k *Klass) Name() string {
-	return k.Path + "/" + k.name
+	return k.pathInfo.pkgPath + "/" + k.name
 }
 
 func (k *Klass) ClassName() string {
@@ -53,15 +60,30 @@ func makeKlass(c Component, dir string) (*Klass, error) {
 	if ct.Kind() != reflect.Struct {
 		return nil, errors.New("RegisterComponent: requiered pointer of struct")
 	}
-	p := ct.PkgPath() + "/" + ct.Name()
-	if k, ok := componentKlasses[p]; ok {
-		return k, fmt.Errorf("RegisterComponent: already registerd Component: %q", p)
+	var kpi *klassPathInfo
+	var ok bool
+	if kpi, ok = klassPaths[ct.PkgPath()]; ok {
+		if k, ok := kpi.klasses[ct.Name()]; ok {
+			return k, fmt.Errorf("RegisterComponent: already registerd Component: %q", ct.PkgPath()+"/"+ct.Name())
+		}
+		if kpi.dir != dir {
+			return nil, fmt.Errorf("RegisterComponent: invalid caller path: %q", dir)
+		}
+	} else {
+		kpid := fmt.Sprintf("eXcItOnCoMpOnEnT_%d", len(klassPathIDs))
+		kpi = &klassPathInfo{
+			klasses: make(map[string]*Klass),
+			id:      kpid,
+			pkgPath: ct.PkgPath(),
+			dir:     dir,
+		}
+		klassPaths[ct.PkgPath()] = kpi
+		klassPathIDs[kpid] = kpi
 	}
 	k := &Klass{
-		name: ct.Name(),
-		Path: ct.PkgPath(),
-		Type: ct,
-		dir:  dir,
+		name:     ct.Name(),
+		pathInfo: kpi,
+		Type:     ct,
 	}
 	fn := ct.NumField()
 	for i := 0; i < fn; i++ {
@@ -73,15 +95,20 @@ func makeKlass(c Component, dir string) (*Klass, error) {
 			k.Properties[ft] = i
 		}
 	}
-	componentKlasses[p] = k
+	kpi.klasses[ct.Name()] = k
 	return k, nil
 }
 
 func deleteKlass(k *Klass) {
 	componentsLock.Lock()
 	defer componentsLock.Unlock()
-	n := k.Name()
-	if _, ok := componentKlasses[n]; ok {
-		delete(componentKlasses, n)
+	if kb, ok := klassPaths[k.pathInfo.pkgPath]; ok {
+		if _, ok = kb.klasses[k.name]; ok {
+			delete(kb.klasses, k.name)
+		}
+		if len(kb.klasses) == 0 {
+			delete(klassPaths, k.pathInfo.pkgPath)
+			delete(klassPathIDs, k.pathInfo.id)
+		}
 	}
 }

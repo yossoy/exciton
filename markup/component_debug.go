@@ -10,12 +10,33 @@ import (
 
 func (k *Klass) GetResourceFile(fn string) (http.File, error) {
 	fp := path.Join("resources", fn)
-	return http.Dir(k.dir).Open(fp)
+	return http.Dir(k.pathInfo.dir).Open(fp)
 }
 
 func (k *Klass) getResourcePath(base string) string {
-	return filepath.Join(k.dir, "resources")
+	return filepath.Join(k.pathInfo.dir, "resources")
 }
+
+// var (
+// 	basePathToIDMap = make(map[string]string)
+// 	idToBasePathMap = make(map[string]string)
+// )
+
+// func pathToComponentBaseID(k *Klass) string {
+// 	p := k.Path
+// 	if id, ok := basePathToIDMap[p]; ok {
+// 		return id
+// 	}
+// 	id := fmt.Sprintf("id%d", len(basePathToIDMap))
+// 	basePathToIDMap[p] = id
+// 	idToBasePathMap[id] = p
+// 	return id
+// }
+
+// func componentBaseIDToPath(id string) (string, bool) {
+// 	path, ok := idToBasePathMap[id]
+// 	return path, ok
+// }
 
 // func getComponentCSSJSFile(k *Klass, resPath string, file string, goext string) ([]byte, error) {
 // 	basePath := k.getResourcePath(resPath)
