@@ -12,8 +12,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-
-	"github.com/yossoy/exciton/markup"
 )
 
 type targetEnv struct {
@@ -236,16 +234,6 @@ func collectPackageResourceFiles(te *targetEnv, resDstPath string) error {
 					mkdir(te.he, dstFolder)
 				}
 				dstFilePath := filepath.Join(dstFolder, filepath.Base(relSrcPath))
-				if filepath.Ext(path) == ".gocss" || filepath.Ext(path) == ".gojs" {
-					b, err := markup.ReadComponentNamespaceFile(".", path, pkgFilePath)
-					if err != nil {
-						return err
-					}
-					return writeFile(te.he, dstFilePath, func(w io.Writer) error {
-						_, err := w.Write(b)
-						return err
-					})
-				}
 				return copyFile(te.he, dstFilePath, path)
 			})
 		}
