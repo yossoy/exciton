@@ -69,7 +69,7 @@ func (m *menuBar) OnSave(e *html.MouseEvent) {
 
 }
 
-func (m *menuBar) Render() markup.RenderResult {
+func (m *menuBar) Render() *markup.RenderResult {
 	return menu.ApplicationMenu(
 		markup.If(
 			isDarwin,
@@ -139,7 +139,7 @@ func (m *contextMenu) OnClickItem(e *html.MouseEvent) {
 	//TODO: Not implment menuitem.GetProp(), GetAttr(), etc...
 }
 
-func (m *contextMenu) Render() markup.RenderResult {
+func (m *contextMenu) Render() *markup.RenderResult {
 	return menu.ContextMenu(
 		menu.Item("Item1", m.OnClickItem),
 		menu.Item("Item2", m.OnClickItem),
@@ -156,7 +156,7 @@ type testChildComponent struct {
 	Text string `exciton:"text"`
 }
 
-func (c *testChildComponent) Render() markup.RenderResult {
+func (c *testChildComponent) Render() *markup.RenderResult {
 	return html.Span(
 		markup.Style("color", "red"),
 		markup.Style("background-color", "green"),
@@ -217,7 +217,7 @@ func (c *testComponent) checkHandler(e *html.MouseEvent) {
 	c.Context().Builder().Rerender(c)
 }
 
-func (c *testComponent) Render() markup.RenderResult {
+func (c *testComponent) Render() *markup.RenderResult {
 	return html.Div(
 		html.Image(
 			markup.Attribute("src", "/resources/liberty.svg"),

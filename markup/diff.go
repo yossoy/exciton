@@ -1,6 +1,6 @@
 package markup
 
-func diff(b *Builder, dom *node, vnode RenderResult, parent *node, componentRoot bool) *node {
+func diff(b *Builder, dom *node, vnode *RenderResult, parent *node, componentRoot bool) *node {
 	if b.nestLevel == 0 {
 		if dom != nil && dom.uuid == "" {
 			b.hydrating = true
@@ -29,7 +29,7 @@ func diff(b *Builder, dom *node, vnode RenderResult, parent *node, componentRoot
 	return ret
 }
 
-func idiff(b *Builder, dom *node, vnode RenderResult, componentRoot bool) *node {
+func idiff(b *Builder, dom *node, vnode *RenderResult, componentRoot bool) *node {
 	out := dom
 	//prevSvgMode = isSvgMode;
 
@@ -114,7 +114,7 @@ func idiff(b *Builder, dom *node, vnode RenderResult, componentRoot bool) *node 
 	return out
 }
 
-func innerDiffNode(b *Builder, dom *node, vchildren []RenderResult, isHydrating bool) {
+func innerDiffNode(b *Builder, dom *node, vchildren []*RenderResult, isHydrating bool) {
 	//originalChildren := dom.children
 	children := make([]*node, 0, len(dom.children))
 	keyed := make(map[interface{}]*node)
@@ -195,7 +195,7 @@ func innerDiffNode(b *Builder, dom *node, vchildren []RenderResult, isHydrating 
 	}
 }
 
-func isSameNodeType(n *node, vnode RenderResult, hydrating bool) bool {
+func isSameNodeType(n *node, vnode *RenderResult, hydrating bool) bool {
 	if vnode.isTextNode() {
 		return n.isTextNode()
 	}

@@ -18,7 +18,7 @@ type Builder struct {
 	rafHandler       RequestAnimationFrameHandler
 	updateHandler    UpdateDiffSetHandler
 	scheduled        bool //TODO: need atomic proc?
-	rootRenderResult RenderResult
+	rootRenderResult *RenderResult
 	rootRenderNode   *node
 	rootComponent    Component
 	UserData         interface{}
@@ -55,7 +55,7 @@ func NewAsyncBuilder(raf RequestAnimationFrameHandler, udh UpdateDiffSetHandler)
 	return b
 }
 
-func (b *Builder) RenderBody(rr RenderResult) {
+func (b *Builder) RenderBody(rr *RenderResult) {
 	b.diffSet.reset()
 	b.rootRenderResult = rr
 
@@ -160,7 +160,7 @@ func (b *Builder) deleteElement(n *node) {
 	}
 }
 
-func (b *Builder) createNode(v RenderResult) *node {
+func (b *Builder) createNode(v *RenderResult) *node {
 	n := &node{
 		tag: v.name,
 	}

@@ -98,7 +98,6 @@ func (n *node) insertBefore(c *node, pos *node) {
 	c.parent = n
 	idx := pos.index
 	c.index = idx
-	//n.children = append(n.children[:idx+1], n.children[idx:]...)
 	n.children = append(n.children, c)
 	copy(n.children[idx+1:], n.children[idx:])
 	n.children[idx] = c

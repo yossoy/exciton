@@ -13,7 +13,7 @@ type Core struct {
 	self            Component
 	childComponent  Component
 	parentComponent Component
-	children        []*renderResult
+	children        []*RenderResult
 	base            *node
 	disabled        bool
 	builder         *Builder
@@ -34,14 +34,14 @@ type Component interface {
 	Context() *Core
 	Builder() *Builder
 	Key() interface{}
-	Render() RenderResult
+	Render() *RenderResult
 	Classes(...string) MarkupOrChild
 }
 
-func (c *Core) Context() *Core           { return c }
-func (c *Core) Key() interface{}         { return c.key }
-func (c *Core) Builder() *Builder        { return c.builder }
-func (c *Core) Children() []RenderResult { return c.children }
+func (c *Core) Context() *Core            { return c }
+func (c *Core) Key() interface{}          { return c.key }
+func (c *Core) Builder() *Builder         { return c.builder }
+func (c *Core) Children() []*RenderResult { return c.children }
 
 func (c *Core) Classes(classes ...string) MarkupOrChild {
 	k := c.klass
@@ -56,7 +56,7 @@ func (c *Core) Classes(classes ...string) MarkupOrChild {
 	return ccs
 }
 
-type ComponentInstance func(m ...MarkupOrChild) RenderResult
+type ComponentInstance func(m ...MarkupOrChild) *RenderResult
 
 // Mounter is an optional interface that a Component can implement in order
 // to receive component mount events.
@@ -194,7 +194,7 @@ func registerComponent(c Component, dir string, params []ComponentRegisterParame
 			return nil, nil, err
 		}
 	}
-	return ComponentInstance(func(m ...MarkupOrChild) RenderResult {
+	return ComponentInstance(func(m ...MarkupOrChild) *RenderResult {
 		markups, children, err := splitMarkupOrChild(m)
 		if err != nil {
 			panic(err)
@@ -203,7 +203,7 @@ func registerComponent(c Component, dir string, params []ComponentRegisterParame
 		if err != nil {
 			panic(err)
 		}
-		rr := &renderResult{
+		rr := &RenderResult{
 			name:     k.Name(),
 			markups:  markups,
 			children: children2,
@@ -238,7 +238,7 @@ func unregisterComponent(ci ComponentInstance) {
 	deleteKlass(rr.klass)
 }
 
-func createComponent(b *Builder, vnode RenderResult) Component {
+func createComponent(b *Builder, vnode *RenderResult) Component {
 	c := vnode.klass.NewInstance()
 	c.Context().builder = b
 
@@ -354,7 +354,7 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 	}
 }
 
-func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups []Markup, children []RenderResult) {
+func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups []Markup, children []*RenderResult) {
 	ctx := c.Context()
 	if ctx.disabled {
 		return
@@ -390,7 +390,7 @@ func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups
 	}
 }
 
-func buildComponentFromVNode(b *Builder, dom *node, vnode RenderResult) *node {
+func buildComponentFromVNode(b *Builder, dom *node, vnode *RenderResult) *node {
 	var c Component
 	if dom != nil {
 		c = dom.component

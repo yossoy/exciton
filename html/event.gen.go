@@ -766,6 +766,18 @@ func OnShow(listener func(e *MouseEvent)) *markup.EventListener {
 	}}
 }
 
+// OnSlotchange is an event fired when the node contents of a HTMLSlotElement
+// (<slot>) have changed.
+//
+// Category: DOM
+//
+// https://developer.mozilla.org/docs/Web/Events/slotchange
+func OnSlotchange(listener func(e *Event)) *markup.EventListener {
+	return &markup.EventListener{Name: "slotchange", Listener: func(le *event.Event) {
+		dispatchEventHelperEvent(le, listener)
+	}}
+}
+
 // OnStalled is an event fired when the user agent is trying to fetch media
 // data, but data is unexpectedly not forthcoming.
 //
