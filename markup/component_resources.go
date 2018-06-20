@@ -7,13 +7,20 @@ import (
 	"mime"
 	"net/http"
 	"path"
+	"regexp"
 	"strings"
+
+	"github.com/yossoy/exciton/log"
 
 	"github.com/gorilla/mux"
 )
 
+func (k *Klass) ResourcePathBase() string {
+	return fmt.Sprintf("/components/%s/%s", k.pathInfo.id, k.name)
+}
+
 func HandleComponentResource(r *mux.Router) {
-	r.HandleFunc("/components/{id}/{name}/resources/{filename}", componentResourceFileHandle)
+	r.PathPrefix("/components/{id}/{name}/resources/").HandlerFunc(componentResourceFileHandle)
 }
 
 func getKlassFromIDandName(id, name string) *Klass {
@@ -26,6 +33,11 @@ func getKlassFromIDandName(id, name string) *Klass {
 }
 
 func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
+	route := mux.CurrentRoute(r)
+	reg, _ := route.GetPathRegexp()
+	rc := regexp.MustCompile(reg)
+	fs := rc.FindString(r.URL.String())
+	fn := strings.TrimPrefix(r.URL.String(), fs)
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if !ok {
@@ -40,22 +52,20 @@ func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
 
 	k := getKlassFromIDandName(id, klassName)
 	if k == nil {
-		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
-		return
-	}
-	fn, ok := vars["filename"]
-	if !ok {
+		log.PrintDebug("getKlassFromIDandName class not found\n")
 		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
 		return
 	}
 	f, err := k.GetResourceFile(fn)
 	if err != nil {
+		log.PrintDebug("k.GetResourceFile() failed\n = %v\n", err)
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	defer f.Close()
 	fi, err := f.Stat()
 	if err != nil {
+		log.PrintDebug("k.GetResourceFile() failed\n = %v\n", err)
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
@@ -65,12 +75,15 @@ func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(path.Base(fn), "-global") {
 		switch ext {
 		case ".css":
+			if k.cssIsGlobal {
+				break
+			}
 			css, err := ioutil.ReadAll(f)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusProcessing)
 				return
 			}
-			clsPrefix := id + "-" + strings.TrimSuffix(fn, ext)
+			clsPrefix := id + "-" + escapeClassName(strings.TrimSuffix(fn, ext))
 			s, _, err := convertKlassCSS(string(css), clsPrefix)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusProcessing)

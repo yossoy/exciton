@@ -21,12 +21,13 @@ var (
 )
 
 type Klass struct {
-	name       string
-	pathInfo   *klassPathInfo
-	Type       reflect.Type
-	Properties map[string]int
-	cssFile    string
-	jsFile     string
+	name        string
+	pathInfo    *klassPathInfo
+	Type        reflect.Type
+	Properties  map[string]int
+	cssFile     string
+	jsFile      string
+	cssIsGlobal bool
 }
 
 func (k *Klass) Name() string {

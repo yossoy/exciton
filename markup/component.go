@@ -92,6 +92,13 @@ type Initializer interface {
 
 type ComponentRegisterParameter func(k *Klass) error
 
+func WithGlobalCSS() ComponentRegisterParameter {
+	return func(k *Klass) error {
+		k.cssIsGlobal = true
+		return nil
+	}
+}
+
 func WithComponentStyleSheet(css string) ComponentRegisterParameter {
 	return func(k *Klass) error {
 		if k.cssFile != "" {
@@ -148,41 +155,6 @@ func escapeClassName(name string) string {
 	}
 	return sb.String()
 }
-
-// func ReadComponentNamespaceFile(basePath string, cssPath string, klassPath string) ([]byte, error) {
-// 	ext := strings.ToLower(filepath.Ext(cssPath))
-// 	if ext != ".gocss" && ext != ".gojs" {
-// 		return nil, fmt.Errorf("invalid filename: %q", cssPath)
-// 	}
-// 	f, err := ioutil.ReadFile(cssPath)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var componentClassName string
-// 	if ext == ".gocss" {
-// 		componentClassName = escapeClassName(klassPath)
-// 	} else {
-// 		componentClassName = klassPath
-// 	}
-// 	ctx := struct {
-// 		ComponentClass string
-// 		ResourcePath   string
-// 	}{
-// 		ComponentClass: componentClassName,
-// 		ResourcePath:   basePath,
-// 	}
-
-// 	t, err := template.New("").Parse(string(f))
-// 	if err != nil {
-// 		fmt.Printf("error1: %s\n", err)
-// 		return nil, err
-// 	}
-// 	var b bytes.Buffer
-// 	if err = t.Execute(&b, ctx); err != nil {
-// 		return nil, err
-// 	}
-// 	return b.Bytes(), nil
-// }
 
 func registerComponent(c Component, dir string, params []ComponentRegisterParameter) (ComponentInstance, *Klass, error) {
 	k, err := makeKlass(c, dir)
