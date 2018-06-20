@@ -191,53 +191,81 @@ func parseBuildTarget() (ret []*buildTargetArch, err error) {
 	return
 }
 
-func collectPackageResourceFiles(te *targetEnv, resDstPath string) error {
-	for _, s := range te.pkg.Imports {
-		pctx := build.Default
-		p2, err := pctx.Import(s, te.he.cwd, build.ImportComment)
-		if err == nil {
-			importMarkup := false
-			for _, pp := range p2.Imports {
-				if strings.HasSuffix(pp, "github.com/yossoy/exciton/markup") {
-					importMarkup = true
-					break
-				}
-			}
-			if !importMarkup {
-				continue
-			}
-			resFolder := filepath.Join(p2.Dir, "resources")
-			fi, err := os.Stat(resFolder)
-			if os.IsNotExist(err) {
-				continue
-			}
-			if !fi.IsDir() {
-				continue
-			}
-
-			pkgFilePath := filepath.FromSlash(p2.ImportPath)
-			err = filepath.Walk(resFolder, func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if name := filepath.Base(path); strings.HasPrefix(name, ".") {
-					// Do not include the hidden files.
-					return nil
-				}
-				if info.IsDir() {
-					return nil
-				}
-				relSrcPath := path[len(resFolder)+1:]
-
-				dstFolder := filepath.Join(resDstPath, pkgFilePath, filepath.Dir(relSrcPath))
-				if _, err := os.Stat(dstFolder); os.IsNotExist(err) {
-					mkdir(te.he, dstFolder)
-				}
-				dstFilePath := filepath.Join(dstFolder, filepath.Base(relSrcPath))
-				return copyFile(te.he, dstFilePath, path)
-			})
+func collectPackageResourceFileSub(te *targetEnv, p2 *build.Package, resDstPath string) error {
+	importMarkup := false
+	for _, pp := range p2.Imports {
+		if strings.HasSuffix(pp, "github.com/yossoy/exciton/markup") {
+			importMarkup = true
+			break
 		}
 	}
+	if !importMarkup {
+		return nil
+	}
+	resFolder := filepath.Join(p2.Dir, "resources")
+	fi, err := os.Stat(resFolder)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if !fi.IsDir() {
+		return nil
+	}
+
+	pkgFilePath := filepath.FromSlash(p2.ImportPath)
+	err = filepath.Walk(resFolder, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if name := filepath.Base(path); strings.HasPrefix(name, ".") {
+			// Do not include the hidden files.
+			return nil
+		}
+		if info.IsDir() {
+			return nil
+		}
+		relSrcPath := path[len(resFolder)+1:]
+
+		dstFolder := filepath.Join(resDstPath, pkgFilePath, filepath.Dir(relSrcPath))
+		if _, err := os.Stat(dstFolder); os.IsNotExist(err) {
+			mkdir(te.he, dstFolder)
+		}
+		dstFilePath := filepath.Join(dstFolder, filepath.Base(relSrcPath))
+		return copyFile(te.he, dstFilePath, path)
+	})
+	return nil
+
+}
+
+func collectPackageResourceFiles(te *targetEnv, resDstPath string) error {
+	pctx := build.Default
+	processed := make(map[string]struct{})
+	imports := make([]string, len(te.pkg.Imports))
+	for i, s := range te.pkg.Imports {
+		imports[i] = s
+	}
+	for {
+		if len(imports) == 0 {
+			break
+		}
+		s := imports[len(imports)-1]
+		imports = imports[:len(imports)-1]
+		if _, ok := processed[s]; ok {
+			continue
+		}
+		p2, err := pctx.Import(s, te.he.cwd, build.ImportComment)
+		if err == nil {
+			if err := collectPackageResourceFileSub(te, p2, resDstPath); err != nil {
+				return err
+			}
+			processed[s] = struct{}{}
+			for _, ss := range p2.Imports {
+				if _, ok := processed[ss]; !ok {
+					imports = append(imports, ss)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
