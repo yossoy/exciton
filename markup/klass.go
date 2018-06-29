@@ -61,31 +61,11 @@ func makeKlass(c Component, dir string) (*Klass, error) {
 	if ct.Kind() != reflect.Struct {
 		return nil, errors.New("RegisterComponent: requiered pointer of struct")
 	}
-	var kpi *klassPathInfo
-	var ok bool
-	if kpi, ok = klassPaths[ct.PkgPath()]; ok {
-		if k, ok := kpi.klasses[ct.Name()]; ok {
-			return k, fmt.Errorf("RegisterComponent: already registerd Component: %q", ct.PkgPath()+"/"+ct.Name())
-		}
-		if kpi.dir != dir {
-			return nil, fmt.Errorf("RegisterComponent: invalid caller path: %q", dir)
-		}
-	} else {
-		kpid := fmt.Sprintf("eXcItOnCoMpOnEnT_%d", len(klassPathIDs))
-		kpi = &klassPathInfo{
-			klasses: make(map[string]*Klass),
-			id:      kpid,
-			pkgPath: ct.PkgPath(),
-			dir:     dir,
-		}
-		klassPaths[ct.PkgPath()] = kpi
-		klassPathIDs[kpid] = kpi
+	k, err := makeKlassCore(ct.PkgPath(), ct.Name(), dir)
+	if err != nil {
+		return nil, err
 	}
-	k := &Klass{
-		name:     ct.Name(),
-		pathInfo: kpi,
-		Type:     ct,
-	}
+	k.Type = ct
 	fn := ct.NumField()
 	for i := 0; i < fn; i++ {
 		f := ct.Field(i)
@@ -96,7 +76,35 @@ func makeKlass(c Component, dir string) (*Klass, error) {
 			k.Properties[ft] = i
 		}
 	}
-	kpi.klasses[ct.Name()] = k
+	return k, nil
+}
+
+func makeKlassCore(pkgPath, name, dir string) (*Klass, error) {
+	var kpi *klassPathInfo
+	var ok bool
+	if kpi, ok = klassPaths[pkgPath]; ok {
+		if k, ok := kpi.klasses[name]; ok {
+			return k, fmt.Errorf("RegisterComponent: already registerd Component: %q", pkgPath+"/"+name)
+		}
+		if kpi.dir != dir {
+			return nil, fmt.Errorf("RegisterComponent: invalid caller path: %q", dir)
+		}
+	} else {
+		kpid := fmt.Sprintf("eXcItOnCoMpOnEnT_%d", len(klassPathIDs))
+		kpi = &klassPathInfo{
+			klasses: make(map[string]*Klass),
+			id:      kpid,
+			pkgPath: pkgPath,
+			dir:     dir,
+		}
+		klassPaths[pkgPath] = kpi
+		klassPathIDs[kpid] = kpi
+	}
+	k := &Klass{
+		name:     name,
+		pathInfo: kpi,
+	}
+	kpi.klasses[name] = k
 	return k, nil
 }
 

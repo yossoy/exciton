@@ -217,17 +217,18 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		cfg.URL = fmt.Sprintf("%s/window/%s/", driver.BaseURL, id)
 	}
 
-	r := event.EmitWithResult("/window/"+string(id)+"/new", event.NewValue(cfg))
-	if r.Error() != nil {
-		return nil, r.Error()
-	}
 	w := &Window{
 		ID:    id,
 		title: cfg.Title,
 		lang:  cfg.Lang,
 	}
-	w.builder = markup.NewAsyncBuilder(w.requestAnimationFrame, w.updateDiffSetHandler)
 	object.Windows.Put(id, w)
+	r := event.EmitWithResult("/window/"+string(id)+"/new", event.NewValue(cfg))
+	if r.Error() != nil {
+		object.Windows.Delete(id)
+		return nil, r.Error()
+	}
+	w.builder = markup.NewAsyncBuilder(w.requestAnimationFrame, w.updateDiffSetHandler)
 
 	return w, nil
 }

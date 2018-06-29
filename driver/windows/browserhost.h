@@ -7,7 +7,6 @@
 #include <mshtmhst.h>
 #include <string>
 
-
 class CEventSink;
 class CWebBrowserContainer;
 class HtmlMoniker;
@@ -84,7 +83,7 @@ public:
 
 public:
   CWebBrowserHost(std::shared_ptr<CWebBrowserContainer> pContainer,
-                  const std::string &strInitialHtml, const std::string &id);
+                  const std::string &id);
   CWebBrowserHost(const CWebBrowserHost &) = delete;
   CWebBrowserHost(CWebBrowserHost &&) = delete;
   ~CWebBrowserHost();
@@ -128,8 +127,6 @@ private:
   BOOL m_bEnableBack;
   DWORD m_dwAmbientDLControl;
   CEventSink *m_pEventSink;
-  std::string m_strInitialHtml;
-  HtmlMoniker *m_pHtmlMoniker;
   std::string m_strID;
 };
 #endif

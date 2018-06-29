@@ -13,7 +13,7 @@ public:
   CWebBrowserContainer();
   ~CWebBrowserContainer();
   BOOL NewWindow(HINSTANCE hinst, int width, int height);
-  CWebBrowserHost *NewBrowser(const std::string &initialHtml, const std::string id);
+  CWebBrowserHost *NewBrowser(const std::string &url, const std::string id);
   LRESULT WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
   HWND GetWindow();
   CWebBrowserHost *GetActiveBrowser();

@@ -73,7 +73,7 @@ void newWindow(const picojson::value &argument,
   }
   LOG_INFO("newWindow called: %s\n", id.c_str());
   auto container = std::make_shared<CWebBrowserContainer>();
-  std::string html = argument.get("html").get<std::string>();
+  std::string url = argument.get("url").get<std::string>();
   auto width = argument.get("size").get("width").get<int64_t>();
   auto height = argument.get("size").get("height").get<int64_t>();
   if (!container->NewWindow(d.InstanceHandle(), width, height)) {
@@ -84,7 +84,7 @@ void newWindow(const picojson::value &argument,
   d.PushDelayProc([=]() {
     Driver &d = Driver::Current();
     // TODO: tab browse
-    auto p = container->NewBrowser(html, id);
+    auto p = container->NewBrowser(url, id);
     d.Hosts()[id] = Driver::HostHolder(p);
     p->Release();
     d.responceEventBoolResult(responceNo, true);

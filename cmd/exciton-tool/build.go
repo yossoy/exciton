@@ -191,7 +191,54 @@ func parseBuildTarget() (ret []*buildTargetArch, err error) {
 	return
 }
 
-func collectPackageResourceFileSub(te *targetEnv, p2 *build.Package, resDstPath string) error {
+type collectFileItem struct {
+	srcDir    string
+	dstRelDir string
+	files     []string
+}
+
+func collectAppResourceFileItems(pkg *build.Package) (*collectFileItem, error) {
+	srcAssets := filepath.Join(pkg.Dir, "resources")
+	fi, err := os.Stat(srcAssets)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// skip walking through the directory to deep copy.
+			return nil, nil
+		}
+		return nil, err
+	}
+	if !fi.IsDir() {
+		// skip walking through to deep copy.
+		return nil, nil
+	}
+	// if assets is a symlink, follow the symlink.
+	srcAssets, err = filepath.EvalSymlinks(srcAssets)
+	if err != nil {
+		return nil, err
+	}
+	ret := &collectFileItem{
+		srcDir:    srcAssets,
+		dstRelDir: "",
+	}
+	err = filepath.Walk(srcAssets, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if name := filepath.Base(path); strings.HasPrefix(name, ".") {
+			// Do not include the hidden files.
+			return nil
+		}
+		if info.IsDir() {
+			return nil
+		}
+		ret.files = append(ret.files, path[len(srcAssets)+1:])
+		return nil
+	})
+
+	return ret, err
+}
+
+func collectPackageResourceFileItemSub(p2 *build.Package) (*collectFileItem, error) {
 	importMarkup := false
 	for _, pp := range p2.Imports {
 		if strings.HasSuffix(pp, "github.com/yossoy/exciton/markup") {
@@ -200,18 +247,23 @@ func collectPackageResourceFileSub(te *targetEnv, p2 *build.Package, resDstPath 
 		}
 	}
 	if !importMarkup {
-		return nil
+		return nil, nil
 	}
 	resFolder := filepath.Join(p2.Dir, "resources")
 	fi, err := os.Stat(resFolder)
 	if os.IsNotExist(err) {
-		return nil
+		return nil, nil
 	}
 	if !fi.IsDir() {
-		return nil
+		return nil, nil
 	}
 
-	pkgFilePath := filepath.FromSlash(p2.ImportPath)
+	ret := &collectFileItem{
+		srcDir:    resFolder,
+		dstRelDir: filepath.FromSlash(p2.ImportPath),
+	}
+
+	//	pkgFilePath := filepath.FromSlash(p2.ImportPath)
 	err = filepath.Walk(resFolder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -225,20 +277,22 @@ func collectPackageResourceFileSub(te *targetEnv, p2 *build.Package, resDstPath 
 		}
 		relSrcPath := path[len(resFolder)+1:]
 
-		dstFolder := filepath.Join(resDstPath, pkgFilePath, filepath.Dir(relSrcPath))
-		if _, err := os.Stat(dstFolder); os.IsNotExist(err) {
-			mkdir(te.he, dstFolder)
-		}
-		dstFilePath := filepath.Join(dstFolder, filepath.Base(relSrcPath))
-		return copyFile(te.he, dstFilePath, path)
+		ret.files = append(ret.files, relSrcPath)
+		return nil
+
 	})
-	return nil
+	return ret, nil
 
 }
 
-func collectPackageResourceFiles(te *targetEnv, resDstPath string) error {
+func collectPackageResourceFileItems(te *targetEnv) ([]*collectFileItem, error) {
 	pctx := build.Default
 	processed := make(map[string]struct{})
+	itm, err := collectAppResourceFileItems(te.pkg)
+	if err != nil {
+		return nil, err
+	}
+	ret := []*collectFileItem{itm}
 	imports := make([]string, len(te.pkg.Imports))
 	for i, s := range te.pkg.Imports {
 		imports[i] = s
@@ -254,8 +308,12 @@ func collectPackageResourceFiles(te *targetEnv, resDstPath string) error {
 		}
 		p2, err := pctx.Import(s, te.he.cwd, build.ImportComment)
 		if err == nil {
-			if err := collectPackageResourceFileSub(te, p2, resDstPath); err != nil {
-				return err
+			itm, err := collectPackageResourceFileItemSub(p2)
+			if err != nil {
+				return nil, err
+			}
+			if itm != nil {
+				ret = append(ret, itm)
 			}
 			processed[s] = struct{}{}
 			for _, ss := range p2.Imports {
@@ -266,7 +324,7 @@ func collectPackageResourceFiles(te *targetEnv, resDstPath string) error {
 		}
 	}
 
-	return nil
+	return ret, nil
 }
 
 func runBuildOne(he *hostEnv, bta *buildTargetArch, cmd *command) error {

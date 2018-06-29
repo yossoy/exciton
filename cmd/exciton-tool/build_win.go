@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,9 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
+
+	"github.com/yossoy/exciton/driver/windows/resfile"
 )
 
 const manifestFile = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -69,7 +73,99 @@ BEGIN
         VALUE "Translation", 0x0, 1200 // Neutral language, Unicode
 	END
 END
+
+{{range .AppendResFiles}}{{.ID}}	RCDATA 	"{{.Path}}"{{end}}
 `
+
+func addWin32ResFileItems(id int, items resfile.Items, paths []string, srcDir string) (string, error) {
+	if len(paths) == 0 {
+		return "", nil
+	}
+	p := paths[0]
+	paths = paths[1:]
+	srcDir = filepath.Join(srcDir, p)
+	fi, err := os.Stat(srcDir)
+	if err != nil {
+		return "", err
+	}
+	item, ok := items[p]
+	if !ok {
+		item = &resfile.Item{
+			ID:       0,
+			Name:     p,
+			Size:     fi.Size(),
+			Mode:     fi.Mode(),
+			ModTime:  fi.ModTime(),
+			IsDir:    fi.IsDir(),
+			Children: make(resfile.Items),
+		}
+		items[p] = item
+	}
+	if !fi.IsDir() {
+		if len(paths) == 0 {
+			item.ID = id
+			return srcDir, nil
+		}
+		return "", fmt.Errorf("invalid path %q(file) + %q", srcDir, filepath.Join(paths...))
+	}
+
+	return addWin32ResFileItems(id, item.Children, paths, srcDir)
+}
+
+type idAndFile struct {
+	ID   int
+	Path string
+}
+
+func toWin32ResFileItem(files []*collectFileItem) (resfile.Items, []idAndFile, error) {
+	items := make(resfile.Items)
+	var resFiles []idAndFile
+	//fmt.Println("*** Res Files ***")
+	id := resfile.FileIDStart
+	for _, file := range files {
+		rootItem := items
+		if file.dstRelDir != "" {
+			for _, ss := range strings.Split(file.dstRelDir, string(filepath.Separator)) {
+				item, ok := rootItem[ss]
+				if !ok {
+					item = &resfile.Item{
+						ID:       0,
+						Name:     ss,
+						Size:     0,
+						Mode:     0,
+						ModTime:  time.Now(),
+						IsDir:    true,
+						Children: make(resfile.Items),
+					}
+					rootItem[ss] = item
+				}
+				rootItem = item.Children
+			}
+		}
+		//fmt.Printf("toWind32ResFileItem: %q\n", file.dstRelDir)
+		for _, f := range file.files {
+			paths := strings.Split(f, string(os.PathSeparator))
+			fp, err := addWin32ResFileItems(id, rootItem, paths, file.srcDir)
+			if err != nil {
+				return nil, nil, err
+			}
+			if fp != "" {
+				resFiles = append(resFiles, idAndFile{
+					ID:   id,
+					Path: fp,
+				})
+				id++
+			}
+		}
+	}
+	if len(items) == 0 {
+		if len(resFiles) != 0 {
+			panic(false)
+		}
+		return nil, nil, nil
+	}
+	return items, resFiles, nil
+}
 
 func generateWinResourceFile(te *targetEnv, outFile string, resFilePath string) error {
 	pkg := te.pkg
@@ -116,6 +212,36 @@ func generateWinResourceFile(te *targetEnv, outFile string, resFilePath string) 
 		return err
 	}
 
+	resFiles, err := collectPackageResourceFileItems(te)
+	if err != nil {
+		return err
+	}
+	resItems, fileList, err := toWin32ResFileItem(resFiles)
+	if err != nil {
+		return err
+	}
+	//jsonResItem, err := json.Marshal(resItems)
+	jsonResItem, err := json.MarshalIndent(resItems, "", "  ")
+	if err != nil {
+		return err
+	}
+	jsonResFile, err := ioutil.TempFile(workdir, "jsonResItem")
+	if n, err := jsonResFile.Write(jsonResItem); err != nil {
+		return err
+	} else if n != len(jsonResItem) {
+		panic(false)
+	}
+	jsonResFile.Close()
+	fileList = append(fileList, idAndFile{
+		ID:   resfile.FileMapJsonID,
+		Path: jsonResFile.Name(),
+	})
+
+	// fmt.Printf("json:\n%s\n", string(jsonResItem))
+	// for _, itm := range fileList {
+	// 	fmt.Printf("[%d] %q\n", itm.ID, itm.Path)
+	// }
+
 	args := struct {
 		ManifestName    string
 		IconPath        string
@@ -123,8 +249,10 @@ func generateWinResourceFile(te *targetEnv, outFile string, resFilePath string) 
 		Name            string
 		Copyright       string
 		ProductName     string
+		AppendResFiles  []idAndFile
 	}{
-		ManifestName: filepath.Base(manFile.Name()),
+		ManifestName:   filepath.Base(manFile.Name()),
+		AppendResFiles: fileList,
 	}
 	args.Name = outFile + ".exe"
 	args.ProductName = outFile

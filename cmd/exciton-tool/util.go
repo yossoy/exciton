@@ -194,7 +194,3 @@ func findInSlice(array []string, str string) int {
 	}
 	return -1
 }
-
-// func pkgdir(env []string) string {
-// 	return gomobilepath + "/pkg_" + getenv(env, "GOOS") + "_" + getenv(env, "GOARCH")
-// }

@@ -9,11 +9,11 @@
 #include "browserhost.h"
 #include "driver.h"
 #include "global.h"
+#include "log.h"
 #include "menu.h"
 #include "menumgr.h"
 #include "myjson.h"
 #include "util.h"
-#include "log.h"
 
 namespace {
 std::string
@@ -78,27 +78,27 @@ struct RoleInfo {
       : command(cmd), label(l), accel(a) {}
 };
 namespace {
-  static std::map<std::string, RoleInfo> labelMap = {
-      {"about", {RoledCommandId::About, "&About %s"}},
-      {"front", {RoledCommandId::Front, "Bring All to Front"}}, //
-      //{"undo", { "Undo"}},                                //
-      //{"redo", {"Redo"}},                                //
-      {"cut", {RoledCommandId::Cut, "Cut"}},          //
-      {"copy", {RoledCommandId::Copy, "Copy"}},       //
-      {"paste", {RoledCommandId::Paste, "Paste"}},    //
-      {"delete", {RoledCommandId::Delete, "Delete"}}, //
-      //      {"pasteandmatchstyle", {"Paste and Match Style"}}, //
-      {"selectall", {RoledCommandId::SelectAll, "Select All"}}, //
-      //      {"startspeaking", {"Start Speaking"}},             //
-      //      {"stopspeaking", {"Stop Speaking"}},               //
-      {"minimize", {RoledCommandId::Minimize, "Minimize"}}, //
-      {"close", {RoledCommandId::Close, "Close Window"}},   //
-      {"zoom", {RoledCommandId::Zoom, "Zoom"}},             //
-      {"quit", {RoledCommandId::Quit, "Quit"}},             //
-      {"togglefullscreen",
-       {RoledCommandId::ToggleFullscreen, "Toggle Full Screen"}}, //
-      {"viewsource", {RoledCommandId::ViewSource, "View Source..."}},
-  };
+static std::map<std::string, RoleInfo> labelMap = {
+    {"about", {RoledCommandId::About, "&About %s"}},
+    {"front", {RoledCommandId::Front, "Bring All to Front"}}, //
+    //{"undo", { "Undo"}},                                //
+    //{"redo", {"Redo"}},                                //
+    {"cut", {RoledCommandId::Cut, "Cut"}},          //
+    {"copy", {RoledCommandId::Copy, "Copy"}},       //
+    {"paste", {RoledCommandId::Paste, "Paste"}},    //
+    {"delete", {RoledCommandId::Delete, "Delete"}}, //
+    //      {"pasteandmatchstyle", {"Paste and Match Style"}}, //
+    {"selectall", {RoledCommandId::SelectAll, "Select All"}}, //
+    //      {"startspeaking", {"Start Speaking"}},             //
+    //      {"stopspeaking", {"Stop Speaking"}},               //
+    {"minimize", {RoledCommandId::Minimize, "Minimize"}}, //
+    {"close", {RoledCommandId::Close, "Close Window"}},   //
+    {"zoom", {RoledCommandId::Zoom, "Zoom"}},             //
+    {"quit", {RoledCommandId::Quit, "Quit"}},             //
+    {"togglefullscreen",
+     {RoledCommandId::ToggleFullscreen, "Toggle Full Screen"}}, //
+    {"viewsource", {RoledCommandId::ViewSource, "View Source..."}},
+};
 }
 const RoleInfo *getDefaultRoleInfo(const std::string &role) {
   auto fiter = labelMap.find(role);
@@ -362,7 +362,8 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
         if (role->label) {
           auto appNameW = Driver::Current().GetProductName();
           auto appName = exciton::util::ToUTF8String(appNameW.c_str());
-          auto labelStr = exciton::util::FormatString(role->label, appName.c_str());
+          auto labelStr =
+              exciton::util::FormatString(role->label, appName.c_str());
           mi->title_ = labelStr;
           if (mi->subMenu_) {
             mi->subMenu_->title_ = labelStr;
@@ -383,7 +384,9 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
       break;
     }
     case ditDelDataSet:
-      LOG_WARNING("[%d] MenuData::populateWithDiffset: ditDelDataSet: Not implement yet.", __LINE__);
+      LOG_WARNING("[%d] MenuData::populateWithDiffset: ditDelDataSet: Not "
+                  "implement yet.",
+                  __LINE__);
       break;
     case ditAppendChild: {
       std::shared_ptr<Menu> target;
@@ -395,12 +398,16 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
         target = curNode.item->subMenu_;
       }
       if (!target) {
-        LOG_ERROR("[%d] MenuData::populateWithDiffset: ditAppendChild: invalid arg1.", __LINE__);
+        LOG_ERROR(
+            "[%d] MenuData::populateWithDiffset: ditAppendChild: invalid arg1.",
+            __LINE__);
         return false;
       }
       if (!arg1Node.isMenuItem()) {
         if (arg1Node.menu != target) {
-          LOG_ERROR("[%d] MenuData::populateWithDiffset: ditAppendChild: invalid arg1.", __LINE__);
+          LOG_ERROR("[%d] MenuData::populateWithDiffset: ditAppendChild: "
+                    "invalid arg1.",
+                    __LINE__);
           return false;
         }
       } else {
@@ -409,19 +416,26 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
       break;
     }
     case ditInsertBefore:
-      LOG_WARNING("[%d] MenuData::populateWithDiffset: ditInsertBefore: Not implement yet.", __LINE__);
+      LOG_WARNING("[%d] MenuData::populateWithDiffset: ditInsertBefore: Not "
+                  "implement yet.",
+                  __LINE__);
       break;
     case ditRemoveChild:
-      LOG_WARNING("[%d] MenuData::populateWithDiffset: ditRemoveChild: Not implement yet.", __LINE__);
+      LOG_WARNING("[%d] MenuData::populateWithDiffset: ditRemoveChild: Not "
+                  "implement yet.",
+                  __LINE__);
       break;
     case ditAddEventListener: {
       if (!curNode.isMenuItem()) {
-        LOG_ERROR("[%d] MenuData::populateWithDiffset: ditAddEventListener: invalid target.", __LINE__);
+        LOG_ERROR("[%d] MenuData::populateWithDiffset: ditAddEventListener: "
+                  "invalid target.",
+                  __LINE__);
         return false;
       }
       if (k != "click") {
-        LOG_ERROR("[%d] MenuData::populateWithDiffset: ditAddEventListener: unsupported event:[%s]", __LINE__,
-               k.c_str());
+        LOG_ERROR("[%d] MenuData::populateWithDiffset: ditAddEventListener: "
+                  "unsupported event:[%s]",
+                  __LINE__, k.c_str());
         return FALSE;
       }
       auto mi = curNode.item;
@@ -432,7 +446,9 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
       break;
     }
     case ditRemoveEventListener:
-      LOG_WARNING("[%d] MenuData::populateWithDiffset: ditRemoveEventListener: Not implement yet.", __LINE__);
+      LOG_WARNING("[%d] MenuData::populateWithDiffset: ditRemoveEventListener: "
+                  "Not implement yet.",
+                  __LINE__);
       break;
     case ditNodeUUID: {
       auto id = v.get<std::string>();
@@ -449,7 +465,9 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
         auto item = curNode.item;
         item->id_ = id;
       } else {
-        LOG_ERROR("[%d] MenuData::populateWithDiffset: ditNodeUUID: current node is invalid.", __LINE__);
+        LOG_ERROR("[%d] MenuData::populateWithDiffset: ditNodeUUID: current "
+                  "node is invalid.",
+                  __LINE__);
         return false;
       }
       break;
@@ -467,7 +485,9 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
     case ditInnerHTML:
     case ditReplaceChild:
     default:
-      LOG_ERROR("[%d] MenuData::populateWithDiffset:: Unsupported item type[%d]", __LINE__, key);
+      LOG_ERROR(
+          "[%d] MenuData::populateWithDiffset:: Unsupported item type[%d]",
+          __LINE__, key);
       return FALSE;
     }
   }
@@ -480,13 +500,9 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
 CMenuModel::CMenuModel() { ::InitializeCriticalSection(&cs_); }
 CMenuModel::~CMenuModel() { ::DeleteCriticalSection(&cs_); }
 
-namespace {
-  CMenuModel s_instance;
-}
-
 CMenuModel &CMenuModel::Instance() {
-  //static CMenuModel s_instance;
-  
+  static CMenuModel s_instance;
+
   return s_instance;
 }
 
@@ -521,13 +537,16 @@ void CMenuModel::UpdateDiffSetHandler(
   Driver &d = Driver::Current();
   auto id = getIdFromParam(parameter);
   if (id.empty()) {
-    LOG_ERROR("[%d] CMenuModel::UpdateDiffSetHandler: parameter['id'] not found.", __LINE__);
+    LOG_ERROR(
+        "[%d] CMenuModel::UpdateDiffSetHandler: parameter['id'] not found.",
+        __LINE__);
     d.responceEventBoolResult(responceNo, false);
     return;
   }
   auto fiter = menus_.find(id);
   if (fiter == menus_.end()) {
-    LOG_ERROR("[%d] CMenuModel::UpdateDiffSetHandler: menu not found['%s']", __LINE__, id.c_str());
+    LOG_ERROR("[%d] CMenuModel::UpdateDiffSetHandler: menu not found['%s']",
+              __LINE__, id.c_str());
     d.responceEventBoolResult(responceNo, false);
     return;
   }
@@ -535,7 +554,9 @@ void CMenuModel::UpdateDiffSetHandler(
   auto menuData = (*fiter).second;
 
   if (!menuData->populateWithDiffset(argument)) {
-    LOG_ERROR("[%d] CMenuModel::UpdateDiffSetHandler: populateWithDiffset failed['%s']", __LINE__, id.c_str());
+    LOG_ERROR("[%d] CMenuModel::UpdateDiffSetHandler: populateWithDiffset "
+              "failed['%s']",
+              __LINE__, id.c_str());
     d.responceEventBoolResult(responceNo, false);
     return;
   }
@@ -551,7 +572,9 @@ void CMenuModel::SetApplicationMenu(
     const std::map<std::string, std::string> &parameter, int responceNo) {
   auto id = getIdFromParam(parameter);
   if (id.empty()) {
-    LOG_ERROR("[%d] CMenuModel::UpdateDiffSetHandler: parameter['id'] not found.", __LINE__);
+    LOG_ERROR(
+        "[%d] CMenuModel::UpdateDiffSetHandler: parameter['id'] not found.",
+        __LINE__);
     return;
   }
   applicationMenuId_ = id;
@@ -563,7 +586,9 @@ void CMenuModel::PopupContextMenu(
   auto &d = Driver::Current();
   auto id = getIdFromParam(parameter);
   if (id.empty()) {
-    LOG_ERROR("[%d] CMenuModel::UpdateDiffSetHandler: parameter['id'] not found.", __LINE__);
+    LOG_ERROR(
+        "[%d] CMenuModel::UpdateDiffSetHandler: parameter['id'] not found.",
+        __LINE__);
     return;
   }
   auto menu = getMenuFromId(id);

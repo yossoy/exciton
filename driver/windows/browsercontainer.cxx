@@ -5,11 +5,10 @@
 #include "browsercontainer.h"
 #include "browserhost.h"
 
-#include "menumgr.h"
 #include "global.h"
 #include "log.h"
+#include "menumgr.h"
 #include "util.h"
-
 
 CWebBrowserContainer *CWebBrowserContainer::s_pActiveContainer = nullptr;
 BOOL CWebBrowserContainer::s_bClassInitialized = FALSE;
@@ -88,8 +87,8 @@ BOOL CWebBrowserContainer::NewWindow(HINSTANCE hinst, int width, int height) {
 
   hwnd = CreateWindowEx(0, g_szContainerClassName, g_szWinodowName,
                         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT,
-                        CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL,
-                        hinst, this);
+                        CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL,
+                        NULL, hinst, this);
   if (hwnd == NULL) {
     return FALSE;
   }
@@ -128,10 +127,11 @@ BOOL CWebBrowserContainer::Create(HWND hwnd) {
   return TRUE;
 }
 
-CWebBrowserHost *
-CWebBrowserContainer::NewBrowser(const std::string &initialHtml, const std::string id) {
-  m_pActiveWebBrowserHost = new CWebBrowserHost(shared_from_this(), initialHtml, id);
-  if (!m_pActiveWebBrowserHost->Create(m_hwnd, L"about:blank", 30000)) {
+CWebBrowserHost *CWebBrowserContainer::NewBrowser(const std::string &url,
+                                                  const std::string id) {
+  std::wstring urlW = exciton::util::ToUTF16String(url);
+  m_pActiveWebBrowserHost = new CWebBrowserHost(shared_from_this(), id);
+  if (!m_pActiveWebBrowserHost->Create(m_hwnd, urlW.c_str(), 30000)) {
     return FALSE;
   }
 
@@ -213,7 +213,8 @@ void CWebBrowserContainer::ResizeWindow() {
   int nHeightMenu = rc.bottom - rc.top;
 
   if (m_pActiveWebBrowserHost != NULL)
-    m_pActiveWebBrowserHost->SetWindowSize(0, nHeightMenu, nWidthClient, nHeightClient - nHeightMenu);
+    m_pActiveWebBrowserHost->SetWindowSize(0, nHeightMenu, nWidthClient,
+                                           nHeightClient - nHeightMenu);
 }
 
 void CWebBrowserContainer::SetUserAgent() {
@@ -261,7 +262,7 @@ void CWebBrowserContainer::Navigate(LPWSTR lpszUrl, BOOL bNewTab) {
 
 void CWebBrowserContainer::OnCommandStateChange(long Command,
                                                 VARIANT_BOOL Enable) {
-  //TODO: need implement??
+  // TODO: need implement??
 }
 
 void CWebBrowserContainer::OnTitleChange(BSTR Text) {
@@ -271,7 +272,7 @@ void CWebBrowserContainer::OnTitleChange(BSTR Text) {
 }
 
 void CWebBrowserContainer::OnNavigateComplete2(BSTR URL) {
-  //TODO: need implement?
+  // TODO: need implement?
 }
 
 void CWebBrowserContainer::UpdateMenu(const std::string &menuId) {

@@ -3,7 +3,6 @@ package windows
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"runtime"
 	"sync"
 	"unsafe"
@@ -157,17 +156,6 @@ func (d *windows) IsIE() bool {
 	return true
 }
 
-//TODO: remove this method.
-func (d *windows) Resources() (string, error) {
-	exePathStr, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	resourcesName := filepath.Join(filepath.Dir(exePathStr), "resources")
-	createDirIfNotExists(resourcesName)
-	return resourcesName, nil
-}
-
 func (d *windows) NativeRequestJSMethod() string {
 	return "window.external.golangRequest"
 }
@@ -191,11 +179,6 @@ func newDriver() *windows {
 	}
 	return platform
 }
-
-// func init() {
-// 	runtime.LockOSThread()
-// 	driver.SetupDriver(newDriver())
-// }
 
 //export requestEventEmit
 func requestEventEmit(cstr unsafe.Pointer, clen C.int) {
