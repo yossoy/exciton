@@ -7,15 +7,35 @@ import (
 	"sync"
 )
 
+type klassPathInfo struct {
+	pkgPath string
+	klasses map[string]*Klass
+	id      string
+	dir     string
+}
+
 var (
-	componentsLock   = sync.RWMutex{}
-	componentKlasses = make(map[string]*Klass)
+	componentsLock = sync.RWMutex{}
+	klassPaths     = make(map[string]*klassPathInfo)
+	klassPathIDs   = make(map[string]*klassPathInfo)
 )
 
 type Klass struct {
-	Name       string
-	Type       reflect.Type
-	Properties map[string]int
+	name        string
+	pathInfo    *klassPathInfo
+	Type        reflect.Type
+	Properties  map[string]int
+	cssFile     string
+	jsFile      string
+	cssIsGlobal bool
+}
+
+func (k *Klass) Name() string {
+	return k.pathInfo.pkgPath + "/" + k.name
+}
+
+func (k *Klass) ClassName() string {
+	return escapeClassName(k.Name())
 }
 
 func (k *Klass) NewInstance() Component {
@@ -29,7 +49,7 @@ func (k *Klass) NewInstance() Component {
 	return cc
 }
 
-func makeKlass(c Component) (*Klass, error) {
+func makeKlass(c Component, dir string) (*Klass, error) {
 	// need lock?
 	componentsLock.Lock()
 	defer componentsLock.Unlock()
@@ -41,14 +61,11 @@ func makeKlass(c Component) (*Klass, error) {
 	if ct.Kind() != reflect.Struct {
 		return nil, errors.New("RegisterComponent: requiered pointer of struct")
 	}
-	p := ct.PkgPath() + "/" + ct.Name()
-	if k, ok := componentKlasses[p]; ok {
-		return k, fmt.Errorf("RegisterComponent: already registerd Component: %q", p)
+	k, err := makeKlassCore(ct.PkgPath(), ct.Name(), dir)
+	if err != nil {
+		return nil, err
 	}
-	k := &Klass{
-		Name: p,
-		Type: ct,
-	}
+	k.Type = ct
 	fn := ct.NumField()
 	for i := 0; i < fn; i++ {
 		f := ct.Field(i)
@@ -59,14 +76,48 @@ func makeKlass(c Component) (*Klass, error) {
 			k.Properties[ft] = i
 		}
 	}
-	componentKlasses[p] = k
+	return k, nil
+}
+
+func makeKlassCore(pkgPath, name, dir string) (*Klass, error) {
+	var kpi *klassPathInfo
+	var ok bool
+	if kpi, ok = klassPaths[pkgPath]; ok {
+		if k, ok := kpi.klasses[name]; ok {
+			return k, fmt.Errorf("RegisterComponent: already registerd Component: %q", pkgPath+"/"+name)
+		}
+		if kpi.dir != dir {
+			return nil, fmt.Errorf("RegisterComponent: invalid caller path: %q", dir)
+		}
+	} else {
+		kpid := fmt.Sprintf("eXcItOnCoMpOnEnT_%d", len(klassPathIDs))
+		kpi = &klassPathInfo{
+			klasses: make(map[string]*Klass),
+			id:      kpid,
+			pkgPath: pkgPath,
+			dir:     dir,
+		}
+		klassPaths[pkgPath] = kpi
+		klassPathIDs[kpid] = kpi
+	}
+	k := &Klass{
+		name:     name,
+		pathInfo: kpi,
+	}
+	kpi.klasses[name] = k
 	return k, nil
 }
 
 func deleteKlass(k *Klass) {
 	componentsLock.Lock()
 	defer componentsLock.Unlock()
-	if _, ok := componentKlasses[k.Name]; ok {
-		delete(componentKlasses, k.Name)
+	if kb, ok := klassPaths[k.pathInfo.pkgPath]; ok {
+		if _, ok = kb.klasses[k.name]; ok {
+			delete(kb.klasses, k.name)
+		}
+		if len(kb.klasses) == 0 {
+			delete(klassPaths, k.pathInfo.pkgPath)
+			delete(klassPathIDs, k.pathInfo.id)
+		}
 	}
 }

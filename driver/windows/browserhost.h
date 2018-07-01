@@ -3,13 +3,13 @@
 #include <windows.h>
 
 #include <exdisp.h>
-#include <mshtmhst.h>
 #include <memory>
+#include <mshtmhst.h>
 #include <string>
 
-// class CBandSite;
 class CEventSink;
 class CWebBrowserContainer;
+class HtmlMoniker;
 
 class CWebBrowserHost : public IOleClientSite,
                         public IOleInPlaceSite,
@@ -82,7 +82,8 @@ public:
   STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet);
 
 public:
-  CWebBrowserHost(std::shared_ptr<CWebBrowserContainer> pContainer, const std::string& strInitialHtml);
+  CWebBrowserHost(std::shared_ptr<CWebBrowserContainer> pContainer,
+                  const std::string &id);
   CWebBrowserHost(const CWebBrowserHost &) = delete;
   CWebBrowserHost(CWebBrowserHost &&) = delete;
   ~CWebBrowserHost();
@@ -101,16 +102,21 @@ public:
   void ForwardOrBack(BOOL bForward);
   void SetTravelState(BOOL bEnableForward, BOOL bEnableBack);
   void GetTravelState(LPBOOL lpbEnableForward, LPBOOL lpbEnableBack);
-  // BOOL ShowBandMenu();
   HRESULT TranslateAccelerator(LPMSG lpMsg);
   void Exec(OLECMDID nCmdID, OLECMDEXECOPT nCmdexecopt, VARIANT *pvaIn,
             VARIANT *pvaOut);
   void ExecDocument(const GUID *pguid, DWORD nCmdID, DWORD nCmdexecopt,
                     VARIANT *pvaIn, VARIANT *pvaOut);
-  void OnDocumentComplate(IDispatch* lpDisp);
-  void EvaluateJavasScript(const std::wstring& funcName, const std::wstring& jsonArg, VARIANT* pRetValue);
-  std::shared_ptr<CWebBrowserContainer> GetHostContainer() const { return m_pContainer; }
+  void QueryExecDocument(const GUID *pguid, DWORD nCmdID, BOOL *pbEnabled,
+                         BOOL *pbChecked);
+  void OnDocumentComplate(IDispatch *lpDisp, const std::wstring &strURL);
+  void EvaluateJavasScript(const std::wstring &funcName,
+                           const std::wstring &jsonArg, VARIANT *pRetValue);
+  std::shared_ptr<CWebBrowserContainer> GetHostContainer() const {
+    return m_pContainer;
+  }
   void PutFullscreen(bool bEnter);
+
 private:
   std::shared_ptr<CWebBrowserContainer> m_pContainer;
   LONG m_cRef;
@@ -121,7 +127,6 @@ private:
   BOOL m_bEnableBack;
   DWORD m_dwAmbientDLControl;
   CEventSink *m_pEventSink;
-  // CBandSite *m_pBandSite;
-  std::string m_strInitialHtml;
+  std::string m_strID;
 };
 #endif

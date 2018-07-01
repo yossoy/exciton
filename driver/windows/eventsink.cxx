@@ -6,6 +6,7 @@
 #include "browsercontainer.h"
 #include "browserhost.h"
 #include "eventsink.h"
+#include "util.h"
 
 CEventSink::CEventSink(CWebBrowserContainer &container)
     : m_container(container), m_cRef(1), m_pWebBrowserHost(nullptr),
@@ -135,7 +136,9 @@ void CEventSink::OnBeforeNavigate2(IDispatch *pDisp, VARIANT *url,
 void CEventSink::OnDocumentComplete(IDispatch *pDisp, VARIANT *url) {
   CWebBrowserHost *pWebBrowserHost;
   pWebBrowserHost = m_container.GetActiveBrowser();
-  pWebBrowserHost->OnDocumentComplate(pDisp);
+  BSTR bstrURL = (url->vt & VT_BYREF) ? *url->pbstrVal : url->bstrVal;
+  std::wstring strURL = exciton::util::ToUTF16String(bstrURL);
+  pWebBrowserHost->OnDocumentComplate(pDisp, strURL);
 }
 
 void CEventSink::OnNavigateComplete2(IDispatch *pDispatch, VARIANT *URL) {

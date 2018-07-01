@@ -69,7 +69,7 @@ func (m *menuBar) OnSave(e *html.MouseEvent) {
 
 }
 
-func (m *menuBar) Render() markup.RenderResult {
+func (m *menuBar) Render() *markup.RenderResult {
 	return menu.ApplicationMenu(
 		markup.If(
 			isDarwin,
@@ -128,7 +128,7 @@ func (m *menuBar) Render() markup.RenderResult {
 	)
 }
 
-var MenuBar = markup.MustRegisterComponent((*menuBar)(nil))
+var MenuBar, _ = markup.MustRegisterComponent((*menuBar)(nil))
 
 type contextMenu struct {
 	markup.Core
@@ -139,7 +139,7 @@ func (m *contextMenu) OnClickItem(e *html.MouseEvent) {
 	//TODO: Not implment menuitem.GetProp(), GetAttr(), etc...
 }
 
-func (m *contextMenu) Render() markup.RenderResult {
+func (m *contextMenu) Render() *markup.RenderResult {
 	return menu.ContextMenu(
 		menu.Item("Item1", m.OnClickItem),
 		menu.Item("Item2", m.OnClickItem),
@@ -148,7 +148,7 @@ func (m *contextMenu) Render() markup.RenderResult {
 
 var (
 	contextMenuInst *menu.MenuInstance
-	ContextMenu     = markup.MustRegisterComponent((*contextMenu)(nil))
+	ContextMenu, _  = markup.MustRegisterComponent((*contextMenu)(nil))
 )
 
 type testChildComponent struct {
@@ -156,7 +156,7 @@ type testChildComponent struct {
 	Text string `exciton:"text"`
 }
 
-func (c *testChildComponent) Render() markup.RenderResult {
+func (c *testChildComponent) Render() *markup.RenderResult {
 	return html.Span(
 		markup.Style("color", "red"),
 		markup.Style("background-color", "green"),
@@ -176,7 +176,7 @@ func (c *testChildComponent) OnContextMenu(e *html.MouseEvent) {
 	}
 }
 
-var TestChildComponent = markup.MustRegisterComponent((*testChildComponent)(nil))
+var TestChildComponent, _ = markup.MustRegisterComponent((*testChildComponent)(nil))
 
 type testComponent struct {
 	markup.Core
@@ -217,10 +217,10 @@ func (c *testComponent) checkHandler(e *html.MouseEvent) {
 	c.Context().Builder().Rerender(c)
 }
 
-func (c *testComponent) Render() markup.RenderResult {
+func (c *testComponent) Render() *markup.RenderResult {
 	return html.Div(
 		html.Image(
-			markup.Attribute("src", "liberty.svg"),
+			markup.Attribute("src", "/resources/liberty.svg"),
 			markup.Attribute("width", 200),
 			markup.Style("float", "right"),
 		),
@@ -260,15 +260,12 @@ func (c *testComponent) Render() markup.RenderResult {
 	)
 }
 
-var TestComponent = markup.MustRegisterComponent((*testComponent)(nil))
+var TestComponent, _ = markup.MustRegisterComponent((*testComponent)(nil))
 
-func onAppStart(app *exciton.App) {
+func onAppStart() {
 	log.PrintInfo("onAppStart")
 	contextMenuInst = menu.MustNew(ContextMenu())
 	menu.SetApplicationMenu(menu.MustNew(MenuBar()))
-	app.OnQuit(func() {
-		log.PrintInfo("app is terminated...")
-	})
 
 	cfg := window.WindowConfig{
 		Title: "Exciton Sample",
@@ -280,7 +277,13 @@ func onAppStart(app *exciton.App) {
 	w.Mount(TestComponent())
 }
 
-func main() {
-	log.PrintInfo("Run")
-	exciton.Run(onAppStart)
+func ExcitonStartup(info *exciton.StartupInfo) error {
+	info.OnAppStart = onAppStart
+	info.OnAppQuit = func() {
+		log.PrintInfo("app is terminated...")
+	}
+	if err := exciton.Init(info); err != nil {
+		return err
+	}
+	return nil
 }

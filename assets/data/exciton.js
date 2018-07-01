@@ -1,14 +1,8 @@
-(function(global, id, callnative) {
+(function(nsobj) {
 'use strict';
-// Functions in this file belong to the exciton namespace
-// function (global, ns, id)
+nsobj.system = this;
 
-const ns = 'exciton';
-global[ns] = global[ns] || {};
-const nsobj = global[ns];
-const ID = id;
 const ExcitonEventData = 'exciton-event-data';
-nsobj.ID = ID;
 
 // event emitter
 function EventEmitter() {
@@ -158,10 +152,10 @@ function translateEvent(e) {
               if ((typeof pv) !== 'undefined' && pv != null) {
                 // console.log(rp, pv);
                 if (rp === 'view') {
-                  result[rp] = { windowId: pv[ns].ID }
+                  result[rp] = { windowId: pv.exciton.ID }
                 } else {
                   result[rp] = {
-                    windowId: pv.ownerDocument.defaultView[ns].ID,
+                    windowId: pv.ownerDocument.defaultView.exciton.ID,
                     elementId: pv.dataset['excitonId']
                   };
                 }
@@ -184,14 +178,14 @@ function translateEvent(e) {
 }
 
 function callNativeMethod(method, arg) {
-  callnative({path: '/window/' + ID + '/' + method, arg: JSON.stringify(arg)});
+  nsobj.callnative({path: '/window/' + nsobj.ID + '/' + method, arg: JSON.stringify(arg)});
 }
 
 const exciton = new EventEmitter();
 
 exciton.addEventListener('requestAnimationFrame', function(e) {
   const timestamp = e.detail;
-  global.requestAnimationFrame(function(timestamp) {
+  window.requestAnimationFrame(function(timestamp) {
     callNativeMethod('onRequestAnimationFrame', timestamp);
   });
 }, false);
@@ -267,6 +261,7 @@ function removeEventCallback(n, name) {
 }
 
 exciton.addEventListener('updateDiffData', function(e) {
+  const rootObj = document.getElementById(nsobj.ID);
   const diff = e.detail;
   let curNode = null;
   let arg1Node = null;
@@ -289,29 +284,29 @@ exciton.addEventListener('updateDiffData', function(e) {
         break;
       case ditSelectCurNode:
         if (item.v === null || item.v === undefined) {
-          curNode = document.getElementById("app");
+          curNode = rootObj;
         } else if (typeof(item.v) === 'number') {
           curNode = creNodes[item.v];
         } else {
-          curNode = resolvePathNode(document.getElementById("app"), item.v);
+          curNode = resolvePathNode(rootObj, item.v);
         }
         break;
       case ditSelectArg1Node:
         if (item.v === null || item.v === undefined) {
-          arg1Node = document.getElementById("app");
+          arg1Node = rootObj;
         } else if (typeof(item.v) === 'number') {
           arg1Node = creNodes[item.v];
         } else {
-          arg1Node = resolvePathNode(document.getElementById('app'), item.v);
+          arg1Node = resolvePathNode(rootObj, item.v);
         }
         break;
       case ditSelectArg2Node:
         if (item.v === null || item.v === undefined) {
-          arg2Node = document.getElementById('app');
+          arg2Node = rootObj;
         } if (typeof(item.v) === 'number') {
           arg2Node = creNodes[item.v];
         } else {
-          arg2Node = resolvePathNode(document.getElementById('app'), item.v);
+          arg2Node = resolvePathNode(rootObj, item.v);
         }
         break;
       case ditPropertyValue:
@@ -413,4 +408,4 @@ nsobj.requestBrowerEventSync = function(method, jsonArg) {
 };
 
 callNativeMethod('ready', null);
-})
+})(window.exciton)

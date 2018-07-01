@@ -1,10 +1,11 @@
 #pragma once
 #ifdef __cplusplus
 #include <windows.h>
+
 #include <functional>
 #include <map>
-#include <set>
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 
@@ -26,16 +27,17 @@ public:
     HostHolder();
     ~HostHolder();
   };
+
 private:
-  //TODO: tab support
+  // TODO: tab support
   CRITICAL_SECTION m_cs;
   std::vector<DelayProcHandler> delayProcs_;
-//  std::map<ObjectKey, std::shared_ptr<CWebBrowserContainer>> browsers_;
+  //  std::map<ObjectKey, std::shared_ptr<CWebBrowserContainer>> browsers_;
   std::map<std::string, NativeEventHandler> handlers_;
-//   std::map<int, std::string> deferId2Name_;
-//   std::map<std::string, int> deferName2Id_;
-//   std::map<int, picojson::value> deferValues_;
-   std::map<ObjectKey, HostHolder> hosts_;
+  //   std::map<int, std::string> deferId2Name_;
+  //   std::map<std::string, int> deferName2Id_;
+  //   std::map<int, picojson::value> deferValues_;
+  std::map<ObjectKey, HostHolder> hosts_;
   std::set<std::string> deferEventNames_;
   HINSTANCE hInstance_;
   DWORD mainThreadId_;
@@ -45,11 +47,11 @@ private:
 public:
   static Driver &Current();
   HINSTANCE InstanceHandle() const { return hInstance_; }
-  std::map<ObjectKey, HostHolder>& Hosts() { return hosts_; }
-  const std::map<ObjectKey, HostHolder>& Hosts() const { return hosts_; }
+  std::map<ObjectKey, HostHolder> &Hosts() { return hosts_; }
+  const std::map<ObjectKey, HostHolder> &Hosts() const { return hosts_; }
   void PushDelayProc(DelayProcHandler proc);
-  const std::wstring& GetProductName(void);
-  const std::wstring& GetProductVersion(void);
+  const std::wstring &GetProductName(void);
+  const std::wstring &GetProductVersion(void);
 
 public:
   Driver();
@@ -65,9 +67,11 @@ public:
   int emitEvent(const void *bytes, int length);
   void responceEventResult(int responceNo, picojson::value result);
   void responceEventBoolResult(int responceNo, bool result);
-  void responceEventJsonResult(int responceNo, const std::string& result);
+  void responceEventJsonResult(int responceNo, const std::string &result);
+
 public:
-  void notifyUpdateMenu(const std::string& menuId);
+  void notifyUpdateMenu(const std::string &menuId);
+
 public:
   void Run();
   void Quit();
@@ -80,11 +84,16 @@ private:
 extern "C" {
 #endif
 
+struct ResFileItem {
+  void *ptr;
+  int size;
+};
 extern void Driver_Run(void);
 extern void Driver_Terminate(void);
 extern int Driver_EmitEvent(void *bytes, int length);
-extern char* Driver_GetProductName(void);
-extern char* Driver_GetProductVersion(void);
+extern char *Driver_GetProductName(void);
+extern char *Driver_GetProductVersion(void);
+extern struct ResFileItem Driver_GetResFile(int resNo);
 
 #ifdef __cplusplus
 };

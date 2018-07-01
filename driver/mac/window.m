@@ -117,8 +117,7 @@
     // TODO: handle fixed url?
     //[win.webview loadRequest:[NSURLRequest requestWithURL:[NSURL
     // URLWithString:@"http://www.google.co.jp"]]];
-    NSURL *baseURL = [NSURL fileURLWithPath:cfg[@"resources"]];
-    [win.webview loadHTMLString:cfg[@"html"] baseURL:baseURL];
+    [win.webview loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:cfg[@"url"]]]];
   };
 
   if ([NSThread isMainThread]) {
@@ -164,7 +163,9 @@
   WKWebViewConfiguration *conf = [[WKWebViewConfiguration alloc] init];
   conf.userContentController = userContentController;
 
+#if defined(DEBUG)
   [conf.preferences setValue:@YES forKey:@"developerExtrasEnabled"];
+#endif
 
   WKWebView *webview = [[WKWebView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)
                                           configuration:conf];

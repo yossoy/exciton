@@ -5,11 +5,11 @@ import (
 )
 
 type tagStack struct {
-	items []RenderResult
+	items []*RenderResult
 	idx   int
 }
 
-func splitMarkupOrChild(mm []MarkupOrChild) (marksups []Markup, children []RenderResult, err error) {
+func splitMarkupOrChild(mm []MarkupOrChild) (marksups []Markup, children []*RenderResult, err error) {
 	for _, m := range mm {
 		if m == nil {
 			continue
@@ -18,7 +18,7 @@ func splitMarkupOrChild(mm []MarkupOrChild) (marksups []Markup, children []Rende
 		switch v := m.(type) {
 		case Markup:
 			marksups = append(marksups, v)
-		case RenderResult:
+		case *RenderResult:
 			children = append(children, v)
 		case List:
 			mm, cc, e := splitMarkupOrChild(v)
@@ -35,7 +35,7 @@ func splitMarkupOrChild(mm []MarkupOrChild) (marksups []Markup, children []Rende
 	return
 }
 
-func flattenChildren(children []RenderResult) ([]RenderResult, error) {
+func flattenChildren(children []*RenderResult) ([]*RenderResult, error) {
 	if len(children) == 0 {
 		return nil, nil
 	}
@@ -43,7 +43,7 @@ func flattenChildren(children []RenderResult) ([]RenderResult, error) {
 	stack = append(stack, tagStack{
 		items: children,
 	})
-	children2 := make([]RenderResult, 0, len(children))
+	children2 := make([]*RenderResult, 0, len(children))
 	for len(stack) > 0 {
 		item := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
@@ -60,7 +60,7 @@ func flattenChildren(children []RenderResult) ([]RenderResult, error) {
 	return children2, nil
 }
 
-func tag(name string, mm []MarkupOrChild) (RenderResult, error) {
+func tag(name string, mm []MarkupOrChild) (*RenderResult, error) {
 	markups, children, err := splitMarkupOrChild(mm)
 	if err != nil {
 		return nil, err
@@ -69,14 +69,14 @@ func tag(name string, mm []MarkupOrChild) (RenderResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &renderResult{
+	return &RenderResult{
 		name:     name,
 		markups:  markups,
 		children: children2,
 	}, err
 }
 
-func Tag(name string, mm ...MarkupOrChild) RenderResult {
+func Tag(name string, mm ...MarkupOrChild) *RenderResult {
 	r, err := tag(name, mm)
 	if err != nil {
 		panic(err)
@@ -84,7 +84,7 @@ func Tag(name string, mm ...MarkupOrChild) RenderResult {
 	return r
 }
 
-func TagWithNS(name string, ns string, mm ...MarkupOrChild) RenderResult {
+func TagWithNS(name string, ns string, mm ...MarkupOrChild) *RenderResult {
 	rr, err := tag(name, mm)
 	if err != nil {
 		panic(err)
@@ -93,8 +93,8 @@ func TagWithNS(name string, ns string, mm ...MarkupOrChild) RenderResult {
 	return rr
 }
 
-func Text(text string) RenderResult {
-	return &renderResult{
+func Text(text string) *RenderResult {
+	return &RenderResult{
 		data: text,
 	}
 }

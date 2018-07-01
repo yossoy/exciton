@@ -1,18 +1,25 @@
 package markup
 
-import "errors"
+import (
+	"fmt"
+	"net/url"
+	"path/filepath"
+	"runtime"
+	"strings"
+)
 
 type Core struct {
 	klass           *Klass
 	self            Component
 	childComponent  Component
 	parentComponent Component
-	children        []*renderResult
+	children        []*RenderResult
 	base            *node
 	disabled        bool
 	builder         *Builder
 	dirty           bool
 	key             interface{}
+	parentMarkups   []Markup
 }
 
 type renderOptType int
@@ -27,15 +34,29 @@ type Component interface {
 	Context() *Core
 	Builder() *Builder
 	Key() interface{}
-	Render() RenderResult
+	Render() *RenderResult
+	Classes(...string) MarkupOrChild
 }
 
-func (c *Core) Context() *Core           { return c }
-func (c *Core) Key() interface{}         { return c.key }
-func (c *Core) Builder() *Builder        { return c.builder }
-func (c *Core) Children() []RenderResult { return c.children }
+func (c *Core) Context() *Core            { return c }
+func (c *Core) Key() interface{}          { return c.key }
+func (c *Core) Builder() *Builder         { return c.builder }
+func (c *Core) Children() []*RenderResult { return c.children }
 
-type ComponentInstance func(m ...ComponentMarkupOrChild) RenderResult
+func (c *Core) Classes(classes ...string) MarkupOrChild {
+	k := c.klass
+	if k.cssFile == "" {
+		return Classes(classes...)
+	}
+	ccs := make(classApplyer, len(classes))
+	prefix := k.pathInfo.id + "-" + strings.TrimSuffix(k.cssFile, filepath.Ext(k.cssFile)) + "-"
+	for i, class := range classes {
+		ccs[i] = prefix + class
+	}
+	return ccs
+}
+
+type ComponentInstance func(m ...MarkupOrChild) *RenderResult
 
 // Mounter is an optional interface that a Component can implement in order
 // to receive component mount events.
@@ -69,28 +90,84 @@ type Initializer interface {
 	Initialize()
 }
 
-func splitComponentMarkupOrChild(mm []ComponentMarkupOrChild) (marksups []ComponentMarkup, children []RenderResult, err error) {
-	for _, m := range mm {
-		switch v := m.(type) {
-		case ComponentMarkup:
-			marksups = append(marksups, v)
-		case RenderResult:
-			children = append(children, v)
-		default:
-			err = errors.New("invalid input")
-		}
+type ComponentRegisterParameter func(k *Klass) error
+
+func WithGlobalCSS() ComponentRegisterParameter {
+	return func(k *Klass) error {
+		k.cssIsGlobal = true
+		return nil
 	}
-	return
 }
 
-func RegisterComponent(c Component) (ComponentInstance, error) {
-	k, err := makeKlass(c)
-	if err != nil {
-		return nil, err
+func WithComponentStyleSheet(css string) ComponentRegisterParameter {
+	return func(k *Klass) error {
+		if k.cssFile != "" {
+			return fmt.Errorf("component %q already has component css file (%q)", k.Name(), k.cssFile)
+		}
+		k.cssFile = css
+		return nil
 	}
-	return ComponentInstance(func(m ...ComponentMarkupOrChild) RenderResult {
-		//TODO: remove this constraits?
-		markups, children, err := splitComponentMarkupOrChild(m)
+}
+
+func WithComponentScript(js string) ComponentRegisterParameter {
+	return func(k *Klass) error {
+		if k.jsFile != "" {
+			return fmt.Errorf("component %q already has component js file (%q)", k.Name(), k.jsFile)
+		}
+		k.jsFile = js
+		return nil
+	}
+}
+
+func filePathToFileURI(path string) *url.URL {
+	path = filepath.ToSlash(path)
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	if !strings.HasSuffix(path, "/") {
+		path = path + "/"
+	}
+	url := &url.URL{}
+	url.Scheme = "file"
+	url.Host = ""
+	url.Path = path
+	return url
+}
+
+func escapeClassName(name string) string {
+	sb := strings.Builder{}
+	for _, c := range name {
+		switch {
+		case '0' <= c && c <= '9':
+			fallthrough
+		case 'A' <= c && c <= 'Z':
+			fallthrough
+		case 'a' <= c && c <= 'z':
+			fallthrough
+		case c == '_':
+			sb.WriteRune(c)
+		case c < 256:
+			sb.WriteByte('\\')
+			sb.WriteRune(c)
+		default:
+			sb.WriteRune(c)
+		}
+	}
+	return sb.String()
+}
+
+func registerComponent(c Component, dir string, params []ComponentRegisterParameter) (ComponentInstance, *Klass, error) {
+	k, err := makeKlass(c, dir)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, p := range params {
+		if err := p(k); err != nil {
+			return nil, nil, err
+		}
+	}
+	return ComponentInstance(func(m ...MarkupOrChild) *RenderResult {
+		markups, children, err := splitMarkupOrChild(m)
 		if err != nil {
 			panic(err)
 		}
@@ -98,22 +175,34 @@ func RegisterComponent(c Component) (ComponentInstance, error) {
 		if err != nil {
 			panic(err)
 		}
-		rr := &renderResult{
-			name:             k.Name,
-			componentMarkups: markups,
-			children:         children2,
-			klass:            k,
+		rr := &RenderResult{
+			name:     k.Name(),
+			markups:  markups,
+			children: children2,
+			klass:    k,
 		}
 		return rr
-	}), nil
+	}), k, nil
 }
 
-func MustRegisterComponent(c Component) ComponentInstance {
-	ci, err := RegisterComponent(c)
+func RegisterComponent(c Component, params ...ComponentRegisterParameter) (ComponentInstance, *Klass, error) {
+	_, fp, _, ok := runtime.Caller(1)
+	if !ok {
+		return nil, nil, fmt.Errorf("invalid caller")
+	}
+	return registerComponent(c, filepath.Dir(fp), params)
+}
+
+func MustRegisterComponent(c Component, params ...ComponentRegisterParameter) (ComponentInstance, *Klass) {
+	_, fp, _, ok := runtime.Caller(1)
+	if !ok {
+		panic(fmt.Errorf("invalid caller"))
+	}
+	ci, k, err := registerComponent(c, filepath.Dir(fp), params)
 	if err != nil {
 		panic(err)
 	}
-	return ci
+	return ci, k
 }
 
 func unregisterComponent(ci ComponentInstance) {
@@ -121,7 +210,7 @@ func unregisterComponent(ci ComponentInstance) {
 	deleteKlass(rr.klass)
 }
 
-func createComponent(b *Builder, vnode RenderResult) Component {
+func createComponent(b *Builder, vnode *RenderResult) Component {
 	c := vnode.klass.NewInstance()
 	c.Context().builder = b
 
@@ -155,17 +244,23 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 		var inst Component
 		var base *node
 
+		if rendered != nil {
+			if ctx.parentMarkups != nil {
+				rendered.markups = append(rendered.markups, ctx.parentMarkups...)
+			}
+		}
+
 		if rendered != nil && rendered.klass != nil {
 			inst = initialChildComponent
 
 			if inst != nil && inst.Context().klass == rendered.klass && inst.Key() == rendered.key {
-				setComponentProps(b, inst, renderOptSync, rendered.componentMarkups, rendered.children)
+				setComponentProps(b, inst, renderOptSync, rendered.markups, rendered.children)
 			} else {
 				toUnmount = inst
 				inst = createComponent(b, rendered)
 				ctx.childComponent = inst
 				inst.Context().parentComponent = c
-				setComponentProps(b, inst, renderOptNone, rendered.componentMarkups, rendered.children)
+				setComponentProps(b, inst, renderOptNone, rendered.markups, rendered.children)
 				renderComponent(b, inst, renderOptSync, true)
 			}
 			base = inst.Context().base
@@ -231,7 +326,7 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 	}
 }
 
-func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups []ComponentMarkup, children []RenderResult) {
+func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups []Markup, children []*RenderResult) {
 	ctx := c.Context()
 	if ctx.disabled {
 		return
@@ -245,10 +340,16 @@ func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups
 	ctx.disabled = false
 	//TODO: async render
 
-	// apply property
+	// apply to ComponentMarkup
+	mm := make([]Markup, 0, len(markups))
 	for _, m := range markups {
-		m.applyToComponent(c)
+		if cm, ok := m.(ComponentMarkup); ok {
+			cm.applyToComponent(c)
+		} else {
+			mm = append(mm, m)
+		}
 	}
+	ctx.parentMarkups = mm
 	ctx.children = children
 
 	if renderOpt != renderOptNone {
@@ -261,7 +362,7 @@ func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups
 	}
 }
 
-func buildComponentFromVNode(b *Builder, dom *node, vnode RenderResult) *node {
+func buildComponentFromVNode(b *Builder, dom *node, vnode *RenderResult) *node {
 	var c Component
 	if dom != nil {
 		c = dom.component
@@ -279,7 +380,7 @@ func buildComponentFromVNode(b *Builder, dom *node, vnode RenderResult) *node {
 		isOwner = c.Context().klass == vnode.klass
 	}
 	if c != nil && isOwner && (!b.mountAll || c.Context().childComponent != nil) {
-		setComponentProps(b, c, renderOptAsync, vnode.componentMarkups, vnode.children)
+		setComponentProps(b, c, renderOptAsync, vnode.markups, vnode.children)
 		dom = c.Context().base
 	} else {
 		if origComponent != nil && !isDirectOwner {
@@ -292,7 +393,7 @@ func buildComponentFromVNode(b *Builder, dom *node, vnode RenderResult) *node {
 		if dom != nil {
 			oldDom = nil
 		}
-		setComponentProps(b, c, renderOptSync, vnode.componentMarkups, vnode.children)
+		setComponentProps(b, c, renderOptSync, vnode.markups, vnode.children)
 		dom = c.Context().base
 
 		if oldDom != nil && dom != oldDom {

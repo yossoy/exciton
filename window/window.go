@@ -1,12 +1,13 @@
 package window
 
 import (
-	"github.com/yossoy/exciton/internal/object"
+	"errors"
+	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/geom"
+	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
 )
@@ -22,7 +23,10 @@ type Window struct {
 	isReady           bool
 	OnClosed          func(e *event.Event)
 	OnResize          func(width, height float64)
-	mountRenderResult markup.RenderResult
+	mountRenderResult *markup.RenderResult
+	title             string
+	lang              string
+	cachedHTML        []byte
 }
 
 var activeWindow *Window
@@ -60,7 +64,7 @@ func (w *Window) onRequestAnimationFrame(tick float64) {
 	w.builder.ProcRequestAnimationFrame()
 }
 
-func (w *Window) Mount(c markup.RenderResult) error {
+func (w *Window) Mount(c *markup.RenderResult) error {
 	if c == nil {
 		return errors.New("Windows is already mount")
 	}
@@ -86,9 +90,8 @@ type WindowConfig struct {
 	FixedSize       bool        `json:"fixedSize"`
 	NoClosable      bool        `json:"noClosable"`
 	NoMinimizable   bool        `json:"noMinimizable"`
-	HTML            string      `json:"html"`
-	Resources       string      `json:"resources"`
 	Lang            string      `json:"lang"`
+	URL             string      `json:"url"`
 }
 
 const (
@@ -151,7 +154,10 @@ func onWindowBlur(e *event.Event) {
 	}
 }
 
-func InitWindows() error {
+func InitWindows(si *driver.StartupInfo) error {
+	if err := initHTML(si); err != nil {
+		return err
+	}
 	if err := event.AddHandler("/window/:id/finalize", func(e *event.Event) {
 		id := e.Params["id"]
 		log.PrintInfo("finalized: %q", id)
@@ -207,28 +213,22 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 	}
 	id := object.Windows.NewKey()
 	cfg.ID = id
-	if cfg.HTML == "" {
-		if err := setupHTML(&cfg); err != nil {
-			return nil, err
-		}
-	}
-	if cfg.Resources == "" {
-		p, err := driver.Resources()
-		if err != nil {
-			return nil, err
-		}
-		cfg.Resources = p
+	if cfg.URL == "" {
+		cfg.URL = fmt.Sprintf("%s/window/%s/", driver.BaseURL, id)
 	}
 
+	w := &Window{
+		ID:    id,
+		title: cfg.Title,
+		lang:  cfg.Lang,
+	}
+	object.Windows.Put(id, w)
 	r := event.EmitWithResult("/window/"+string(id)+"/new", event.NewValue(cfg))
 	if r.Error() != nil {
+		object.Windows.Delete(id)
 		return nil, r.Error()
 	}
-	w := &Window{
-		ID: id,
-	}
 	w.builder = markup.NewAsyncBuilder(w.requestAnimationFrame, w.updateDiffSetHandler)
-	object.Windows.Put(id, w)
 
 	return w, nil
 }

@@ -2,6 +2,7 @@ package mac
 
 import (
 	"encoding/json"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -180,7 +181,15 @@ func (d *mac) IsIE() bool {
 	return false
 }
 
-func (d *mac) Resources() (string, error) {
+func (d *mac) ResourcesFileSystem() (http.FileSystem, error) {
+	resources, err := resourcesPath()
+	if err != nil {
+		return nil, err
+	}
+	return http.Dir(resources), nil
+}
+
+func resourcesPath() (string, error) {
 	exePathStr, err := os.Executable()
 	if err != nil {
 		return "", err
@@ -197,6 +206,7 @@ func (d *mac) Resources() (string, error) {
 
 	}
 	resourcesName := filepath.Join(filepath.Dir(exePathStr), "resources")
+	//TODO: ??? need to create folder?
 	createDirIfNotExists(resourcesName)
 	return resourcesName, nil
 }
@@ -226,11 +236,6 @@ func newDriver() *mac {
 	return platform
 }
 
-func init() {
-	runtime.LockOSThread()
-	driver.SetupDriver(newDriver())
-}
-
 //export requestEventEmit
 func requestEventEmit(cstr unsafe.Pointer, clen C.int) {
 	jsonstr := C.GoBytes(cstr, clen)
@@ -255,4 +260,15 @@ func responceEventResult(crespNo C.int, cstr unsafe.Pointer, clen C.int) {
 	respNo := int(crespNo)
 
 	platform.responceCallback(jsonstr, respNo)
+}
+
+func Startup(startup driver.StartupFunc) error {
+	runtime.LockOSThread()
+	event.StartEventMgr()
+	defer event.StopEventMgr()
+	d := newDriver()
+	if err := d.Init(); err != nil {
+		return err
+	}
+	return driver.Startup(d, startup)
 }

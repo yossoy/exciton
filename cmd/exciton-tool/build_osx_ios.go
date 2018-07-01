@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"go/build"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -91,16 +90,6 @@ func goDarwinBuild(te *targetEnv, outFile string) (map[string]bool, error) {
 		}
 	}
 
-	// arm64Path := filepath.Join(tmpdir, "arm64")
-	// if err := goBuild(src, darwinArm64Env, "-o="+arm64Path); err != nil {
-	// 	return nil, err
-	// }
-
-	// Apple requires builds to target both darwin/arm and darwin/arm64.
-	// We are using lipo tool to build multiarchitecture binaries.
-	// TODO(jbd): Investigate the new announcements about iO9's fat binary
-	// size limitations are breaking this feature.
-	//TODO: no need lipo?
 	cmd := exec.Command(
 		"xcrun", "lipo",
 		"-create", targetPath,
@@ -111,7 +100,7 @@ func goDarwinBuild(te *targetEnv, outFile string) (map[string]bool, error) {
 	}
 
 	// TODO(jbd): Set the launcher icon.
-	if err := darwinCopyAssets(te.he, pkg, workdir); err != nil {
+	if err := darwinCopyAssets(te, workdir); err != nil {
 		return nil, err
 	}
 
@@ -167,44 +156,32 @@ func xcodeAvailable() bool {
 	return err == nil
 }
 
-func darwinCopyAssets(he *hostEnv, pkg *build.Package, xcodeProjDir string) error {
+func darwinCopyAssets(te *targetEnv, xcodeProjDir string) error {
+	he := te.he
 	dstAssets := xcodeProjDir + "/main/assets"
 	if err := mkdir(he, dstAssets); err != nil {
 		return err
 	}
 
-	srcAssets := filepath.Join(pkg.Dir, "resources")
-	fi, err := os.Stat(srcAssets)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// skip walking through the directory to deep copy.
-			return nil
-		}
-		return err
-	}
-	if !fi.IsDir() {
-		// skip walking through to deep copy.
-		return nil
-	}
-	// if assets is a symlink, follow the symlink.
-	srcAssets, err = filepath.EvalSymlinks(srcAssets)
+	items, err := collectPackageResourceFileItems(te)
 	if err != nil {
 		return err
 	}
-	return filepath.Walk(srcAssets, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	for _, item := range items {
+		for _, f := range item.files {
+			dstPath := dstAssets
+			if item.dstRelDir != "" {
+				dstPath = filepath.Join(dstPath, item.dstRelDir)
+			}
+			dstPath = filepath.Join(dstPath, f)
+			srcPath := filepath.Join(item.srcDir, f)
+			if err = copyFile(te.he, dstPath, srcPath); err != nil {
+				return err
+			}
 		}
-		if name := filepath.Base(path); strings.HasPrefix(name, ".") {
-			// Do not include the hidden files.
-			return nil
-		}
-		if info.IsDir() {
-			return nil
-		}
-		dst := dstAssets + "/" + path[len(srcAssets)+1:]
-		return copyFile(he, dst, path)
-	})
+	}
+
+	return nil
 }
 
 type infoplistTmplData struct {

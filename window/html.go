@@ -3,12 +3,16 @@ package window
 import (
 	"bytes"
 	"html/template"
-	"net/url"
-	"path/filepath"
-	"strings"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/yossoy/exciton/markup"
+
+	"github.com/gorilla/mux"
 
 	"github.com/yossoy/exciton/assets"
 	"github.com/yossoy/exciton/driver"
+	"github.com/yossoy/exciton/log"
 )
 
 type htmlContext struct {
@@ -21,51 +25,79 @@ type htmlContext struct {
 	NativeRequestJSMethod template.JS
 	JS                    []string
 	CSS                   []string
+	ComponentCSSFiles     []template.URL
+	ComponentJSFiles      []template.URL
+	IsReleaseBuild        bool
 }
 
-func setupHTML(cfg *WindowConfig) error {
-	js, err := assets.Asset("assets/exciton.js")
+func loadFromAssets(fn string) ([]byte, error) {
+	f, err := assets.FileSystem.Open(fn)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// make resources folder's file url
-	resources, err := driver.Resources()
-	if err != nil {
-		return err
-	}
-	resources = filepath.ToSlash(resources)
-	if !strings.HasPrefix(resources, "/") {
-		resources = "/" + resources
-	}
-	if !strings.HasSuffix(resources, "/") {
-		resources = resources + "/"
-	}
-	resurl := &url.URL{}
-	resurl.Scheme = "file"
-	resurl.Host = ""
-	resurl.Path = resources
+	defer f.Close()
+	return ioutil.ReadAll(f)
+}
 
-	ctx := htmlContext{
-		ID:                    cfg.ID,
-		Title:                 cfg.Title,
-		Lang:                  cfg.Lang,
-		IsIE:                  driver.IsIE(),
-		ResourcesURL:          template.URL(resurl.String()),
-		MesonJS:               template.JS(string(js)),
-		NativeRequestJSMethod: template.JS(driver.NativeRequestJSMethod()),
+func toTemplateURL(ss []string) []template.URL {
+	var r []template.URL
+	for _, s := range ss {
+		r = append(r, template.URL(s))
 	}
-	a, err := assets.Asset("assets/default.gohtml")
-	if err != nil {
-		return err
+	return r
+}
+
+func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
+		return
 	}
-	t, err := template.New("").Parse(string(a))
-	if err != nil {
-		return err
+	win := getWindowByID(id)
+	if win == nil {
+		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
+		return
 	}
-	var b bytes.Buffer
-	if err = t.Execute(&b, ctx); err != nil {
-		return err
+	if win.cachedHTML == nil {
+		a, err := loadFromAssets("/default.gohtml")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ctx := htmlContext{
+			ID:    id,
+			Title: win.title,
+			Lang:  win.lang,
+			IsIE:  driver.IsIE(),
+			NativeRequestJSMethod: template.JS(driver.NativeRequestJSMethod()),
+			IsReleaseBuild:        driver.ReleaseBuild,
+			ComponentCSSFiles:     toTemplateURL(markup.GetComponentCSSURLs()),
+			ComponentJSFiles:      toTemplateURL(markup.GetComponentJSURLs()),
+		}
+		t, err := template.New("").Parse(string(a))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		var b bytes.Buffer
+		if err = t.Execute(&b, ctx); err != nil {
+			http.Error(w, err.Error(), http.StatusProcessing)
+			return
+		}
+		log.PrintDebug("%s\n", b.String())
+		win.cachedHTML = b.Bytes()
 	}
-	cfg.HTML = b.String()
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	w.Write(win.cachedHTML)
+}
+
+func initHTML(info *driver.StartupInfo) error {
+	markup.HandleComponentResource(info.Router)
+	info.Router.HandleFunc("/window/{id}/", rootHTMLHandler)
+	//TODO: assetsのマウントは別の場所で行う?
+	info.Router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(assets.FileSystem)))
 	return nil
 }

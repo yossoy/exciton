@@ -1,35 +1,46 @@
 package exciton
 
-import "github.com/yossoy/exciton/event"
-import "github.com/yossoy/exciton/driver"
-import "github.com/yossoy/exciton/markup"
-import "github.com/yossoy/exciton/menu"
-import "github.com/yossoy/exciton/window"
+import (
+	"errors"
+
+	"github.com/yossoy/exciton/driver"
+	"github.com/yossoy/exciton/event"
+	"github.com/yossoy/exciton/markup"
+	"github.com/yossoy/exciton/menu"
+	"github.com/yossoy/exciton/window"
+)
 
 // RunCallback is called at ready application
-type RunCallback func(app *App)
 
-// Run start application mainloop
-func Run(callback RunCallback) {
-	event.StartEventMgr()
-	event.AddHandler("/app/init", func(e *event.Event) {
-		callback(&app)
-	})
-	err := driver.Init()
-	if err != nil {
-		panic(err)
+type StartupFunc = driver.StartupFunc
+
+type StartupInfo = driver.StartupInfo
+
+func Init(info *driver.StartupInfo) error {
+	//event.StartEventMgr()
+	if info.OnAppStart == nil {
+		return errors.New("Need to set a StartupInfo.OnAppQuit handler.")
 	}
-	err = window.InitWindows()
-	if err != nil {
-		panic(err)
+	if info.OnAppQuit != nil {
+		event.AddHandler("/app/finalize", func(e *event.Event) {
+			info.OnAppQuit()
+		})
 	}
-	err = menu.InitMenus()
-	if err != nil {
-		panic(err)
+	if err := event.AddHandler("/app/init", func(e *event.Event) {
+		info.OnAppStart()
+	}); err != nil {
+		return err
 	}
-	err = markup.InitEvents()
-	if err != nil {
-		panic(err)
+	if err := window.InitWindows(info); err != nil {
+		return err
 	}
-	driver.Run()
+	if err := menu.InitMenus(); err != nil {
+		return err
+	}
+	if err := markup.InitEvents(); err != nil {
+		return err
+	}
+	return nil
 }
+
+//	driver.Run()

@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -29,7 +30,7 @@ func (te *targetEnv) BuildWorkDir() string {
 var cmdBuild = &command{
 	run:   runBuild,
 	Name:  "build",
-	Usage: "[-target android|ios] [-o output] [build flags] [package]",
+	Usage: "[build flags] [package]",
 	Short: "compile exciton app",
 	Long: `
 	Build compiles and encodes the app named by the import path.
@@ -96,8 +97,8 @@ func addBuildFlags(cmd *command) {
 	cmd.flag.StringVar(&flagBuildWorkDir, "w", "", "specify working directory.")
 
 	cmd.flag.BoolVar(&flagBuildForceRebuild, "a", false, "force rebuilding of packages that are already up-to-date.")
-	cmd.flag.BoolVar(&flagBuildI, "i", false, "???")
-	cmd.flag.BoolVar(&flagBuildRelease, "release", false, "release build")
+	cmd.flag.BoolVar(&flagBuildI, "i", false, "???")                       //TODO: no need this option?
+	cmd.flag.BoolVar(&flagBuildRelease, "release", false, "release build") //TODO: option => command?
 
 	cmd.flag.Var((*stringsFlag)(&flagBuildTarget), "target", "a space-separated list of build target.")
 	cmd.flag.Var((*stringsFlag)(&flagBuildTags), "tags", `a space-separated list of build tags to consider satisfied during the build.
@@ -113,12 +114,23 @@ func addBuildFlagsNVXWork(cmd *command) {
 }
 
 func parseBuildTarget() (ret []*buildTargetArch, err error) {
-
-	//TODO: modify target
-	// current: => if empty, all target
-	// modify: => if empty, current os target, add "all" target
-	// all terget
+	// for current os target
 	if len(flagBuildTarget) == 0 {
+		for bt := buildTarget(0); bt < buildTargetMax; bt++ {
+			if bt.OSName() == runtime.GOOS {
+				for _, arch := range bt.archList() {
+					if arch == runtime.GOARCH {
+						ret = append(ret, &buildTargetArch{target: bt, arch: arch})
+					}
+				}
+			}
+		}
+		return
+	}
+
+	// for all target
+	if findInSlice(flagBuildTarget, "all") >= 0 {
+		//TODO: need to change ouput file (or folder)
 		for bt := buildTarget(0); bt < buildTargetMax; bt++ {
 			archs := bt.archList()
 			for _, arch := range archs {
@@ -177,6 +189,142 @@ func parseBuildTarget() (ret []*buildTargetArch, err error) {
 		return nil, fmt.Errorf("invalid target: %q", flagBuildTarget)
 	}
 	return
+}
+
+type collectFileItem struct {
+	srcDir    string
+	dstRelDir string
+	files     []string
+}
+
+func collectAppResourceFileItems(pkg *build.Package) (*collectFileItem, error) {
+	srcAssets := filepath.Join(pkg.Dir, "resources")
+	fi, err := os.Stat(srcAssets)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// skip walking through the directory to deep copy.
+			return nil, nil
+		}
+		return nil, err
+	}
+	if !fi.IsDir() {
+		// skip walking through to deep copy.
+		return nil, nil
+	}
+	// if assets is a symlink, follow the symlink.
+	srcAssets, err = filepath.EvalSymlinks(srcAssets)
+	if err != nil {
+		return nil, err
+	}
+	ret := &collectFileItem{
+		srcDir:    srcAssets,
+		dstRelDir: "",
+	}
+	err = filepath.Walk(srcAssets, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if name := filepath.Base(path); strings.HasPrefix(name, ".") {
+			// Do not include the hidden files.
+			return nil
+		}
+		if info.IsDir() {
+			return nil
+		}
+		ret.files = append(ret.files, path[len(srcAssets)+1:])
+		return nil
+	})
+
+	return ret, err
+}
+
+func collectPackageResourceFileItemSub(p2 *build.Package) (*collectFileItem, error) {
+	importMarkup := false
+	for _, pp := range p2.Imports {
+		if strings.HasSuffix(pp, "github.com/yossoy/exciton/markup") {
+			importMarkup = true
+			break
+		}
+	}
+	if !importMarkup {
+		return nil, nil
+	}
+	resFolder := filepath.Join(p2.Dir, "resources")
+	fi, err := os.Stat(resFolder)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if !fi.IsDir() {
+		return nil, nil
+	}
+
+	ret := &collectFileItem{
+		srcDir:    resFolder,
+		dstRelDir: filepath.FromSlash(p2.ImportPath),
+	}
+
+	//	pkgFilePath := filepath.FromSlash(p2.ImportPath)
+	err = filepath.Walk(resFolder, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if name := filepath.Base(path); strings.HasPrefix(name, ".") {
+			// Do not include the hidden files.
+			return nil
+		}
+		if info.IsDir() {
+			return nil
+		}
+		relSrcPath := path[len(resFolder)+1:]
+
+		ret.files = append(ret.files, relSrcPath)
+		return nil
+
+	})
+	return ret, nil
+
+}
+
+func collectPackageResourceFileItems(te *targetEnv) ([]*collectFileItem, error) {
+	pctx := build.Default
+	processed := make(map[string]struct{})
+	itm, err := collectAppResourceFileItems(te.pkg)
+	if err != nil {
+		return nil, err
+	}
+	ret := []*collectFileItem{itm}
+	imports := make([]string, len(te.pkg.Imports))
+	for i, s := range te.pkg.Imports {
+		imports[i] = s
+	}
+	for {
+		if len(imports) == 0 {
+			break
+		}
+		s := imports[len(imports)-1]
+		imports = imports[:len(imports)-1]
+		if _, ok := processed[s]; ok {
+			continue
+		}
+		p2, err := pctx.Import(s, te.he.cwd, build.ImportComment)
+		if err == nil {
+			itm, err := collectPackageResourceFileItemSub(p2)
+			if err != nil {
+				return nil, err
+			}
+			if itm != nil {
+				ret = append(ret, itm)
+			}
+			processed[s] = struct{}{}
+			for _, ss := range p2.Imports {
+				if _, ok := processed[ss]; !ok {
+					imports = append(imports, ss)
+				}
+			}
+		}
+	}
+
+	return ret, nil
 }
 
 func runBuildOne(he *hostEnv, bta *buildTargetArch, cmd *command) error {

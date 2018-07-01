@@ -1,5 +1,11 @@
 package main
 
 import (
-	_ "github.com/yossoy/exciton/driver/mac"
+	"github.com/yossoy/exciton/driver/mac"
 )
+
+func main() {
+	if err := mac.Startup(ExcitonStartup); err != nil {
+		panic(err)
+	}
+}

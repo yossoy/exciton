@@ -4,11 +4,6 @@ type MarkupOrChild interface {
 	isMarkupOrChild()
 }
 
-type ComponentMarkupOrChild interface {
-	isComponentMarkupOrChild()
-	isMarkupOrChild()
-}
-
 type Markup interface {
 	isMarkup()
 	isMarkupOrChild()
@@ -16,7 +11,5 @@ type Markup interface {
 }
 
 type ComponentMarkup interface {
-	isComponentMarkupOrChild()
-	isComponentMarkup()
 	applyToComponent(c Component)
 }

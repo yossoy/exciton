@@ -168,7 +168,7 @@ func writeElem(w io.Writer, name, desc, link string) {
 	fmt.Fprintf(w, `%s
 //
 // https://developer.mozilla.org%s
-func %s(markup ...mkup.MarkupOrChild) mkup.RenderResult {
+func %s(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 	return mkup.Tag("%s", markup...)
 }
 `, descToComments(desc), link, funName, name)

@@ -2,24 +2,21 @@ package markup
 
 type List []MarkupOrChild
 
-func (l List) isMarkupOrChild()          {}
-func (l List) isComponentMarkupOrChild() {}
-func (l List) isRenderResult()           {}
+func (l List) isMarkupOrChild() {}
+func (l List) isRenderResult()  {}
 
-type renderResult struct {
-	name             string
-	data             string // text or namespace
-	klass            *Klass
-	key              interface{}
-	markups          []Markup
-	componentMarkups []ComponentMarkup
-	children         []*renderResult
+type RenderResult struct {
+	name     string
+	data     string // text or namespace
+	klass    *Klass
+	key      interface{}
+	markups  []Markup
+	children []*RenderResult
 }
 
-func (rr *renderResult) isTextNode() bool { return rr != nil && rr.name == "" }
+func (rr *RenderResult) isTextNode() bool { return rr != nil && rr.name == "" }
 
-type RenderResult = *renderResult
+//type RenderResult *renderResult
 
-func (rr *renderResult) isMarkupOrChild()          {}
-func (rr *renderResult) isRenderResult()           {}
-func (rr *renderResult) isComponentMarkupOrChild() {}
+func (rr *RenderResult) isMarkupOrChild() {}
+func (rr *RenderResult) isRenderResult()  {}

@@ -9,19 +9,19 @@ import (
 )
 
 type hostEnv struct {
-	tmpdir        string
-	cleanupTmpDir bool
-	xout          io.Writer
-	verbose       bool
-	noExec        bool
-	preserveWork  bool
-	hostOS        string
-	cwd           string
+	tmpdir       string
+	cleanupFuncs []func()
+	xout         io.Writer
+	verbose      bool
+	noExec       bool
+	preserveWork bool
+	hostOS       string
+	cwd          string
 }
 
 func (be *hostEnv) finalize() {
-	if be.cleanupTmpDir {
-		removeAll(be, be.tmpdir)
+	for _, cf := range be.cleanupFuncs {
+		cf()
 	}
 }
 
@@ -41,18 +41,18 @@ func initHostEnv() (*hostEnv, error) {
 	if flagBuildN {
 		be.noExec = true
 		be.tmpdir = "$WORK"
-		be.cleanupTmpDir = false
 	} else if flagBuildWorkDir != "" {
 		be.noExec = false
 		be.tmpdir = flagBuildWorkDir
-		be.cleanupTmpDir = false
 	} else {
 		tmpdir, err := ioutil.TempDir("", "exciton-work-")
 		if err != nil {
 			return nil, err
 		}
 		be.tmpdir = tmpdir
-		be.cleanupTmpDir = true
+		be.cleanupFuncs = append(be.cleanupFuncs, func() {
+			removeAll(be, tmpdir)
+		})
 	}
 	be.xout = os.Stderr
 
