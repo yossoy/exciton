@@ -7,8 +7,6 @@ import (
 	"net"
 	"net/http"
 	"time"
-
-	"github.com/gorilla/mux"
 )
 
 type LogLevel int
@@ -57,7 +55,7 @@ func NativeRequestJSMethod() string {
 
 type StartupInfo struct {
 	PortNo     int
-	Router     *mux.Router
+	Router     Router
 	OnAppStart func()
 	OnAppQuit  func()
 }
@@ -66,7 +64,7 @@ type StartupFunc func(info *StartupInfo) error
 
 func newStartupInfo() *StartupInfo {
 	return &StartupInfo{
-		Router: mux.NewRouter(),
+		Router: newRouter(),
 	}
 }
 
