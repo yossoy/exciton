@@ -1,5 +1,11 @@
 package main
 
 import (
-	_ "github.com/yossoy/exciton/driver/windows"
+	"github.com/yossoy/exciton/driver/windows"
 )
+
+func main() {
+	if err := windows.Startup(ExcitonStartup); err != nil {
+		panic(err)
+	}
+}

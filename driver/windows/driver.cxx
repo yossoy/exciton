@@ -29,6 +29,7 @@ Driver &Driver::Current()
   static Driver s_driver;
   return s_driver;
 }
+
 Driver::Driver() : mainThreadId_(0) { ::InitializeCriticalSection(&m_cs); }
 Driver::~Driver() { ::DeleteCriticalSection(&m_cs); }
 

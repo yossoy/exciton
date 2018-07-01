@@ -87,6 +87,10 @@ func (m *menuBar) Render() *markup.RenderResult {
 		menu.SubMenu("File",
 			menu.Item("Open;CommandOrControl+O", m.OnOpen),
 			menu.Item("Save;CommandOrControl+S", m.OnSave),
+			markup.If(
+				!isDarwin,
+				menu.RoledItem(menu.RoleQuit),
+			),
 		),
 		menu.SubMenu("Edit",
 			markup.If(

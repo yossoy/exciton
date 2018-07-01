@@ -77,30 +77,31 @@ struct RoleInfo {
   RoleInfo(RoledCommandId cmd, const char *l, const char *a = nullptr)
       : command(cmd), label(l), accel(a) {}
 };
-namespace {
-static std::map<std::string, RoleInfo> labelMap = {
-    {"about", {RoledCommandId::About, "&About %s"}},
-    {"front", {RoledCommandId::Front, "Bring All to Front"}}, //
-    //{"undo", { "Undo"}},                                //
-    //{"redo", {"Redo"}},                                //
-    {"cut", {RoledCommandId::Cut, "Cut"}},          //
-    {"copy", {RoledCommandId::Copy, "Copy"}},       //
-    {"paste", {RoledCommandId::Paste, "Paste"}},    //
-    {"delete", {RoledCommandId::Delete, "Delete"}}, //
-    //      {"pasteandmatchstyle", {"Paste and Match Style"}}, //
-    {"selectall", {RoledCommandId::SelectAll, "Select All"}}, //
-    //      {"startspeaking", {"Start Speaking"}},             //
-    //      {"stopspeaking", {"Stop Speaking"}},               //
-    {"minimize", {RoledCommandId::Minimize, "Minimize"}}, //
-    {"close", {RoledCommandId::Close, "Close Window"}},   //
-    {"zoom", {RoledCommandId::Zoom, "Zoom"}},             //
-    {"quit", {RoledCommandId::Quit, "Quit"}},             //
-    {"togglefullscreen",
-     {RoledCommandId::ToggleFullscreen, "Toggle Full Screen"}}, //
-    {"viewsource", {RoledCommandId::ViewSource, "View Source..."}},
-};
-}
+
 const RoleInfo *getDefaultRoleInfo(const std::string &role) {
+
+  static const std::map<std::string, RoleInfo> labelMap = {
+      {"about", {RoledCommandId::About, "&About %s"}},
+      {"front", {RoledCommandId::Front, "Bring All to Front"}}, //
+      //{"undo", { "Undo"}},                                //
+      //{"redo", {"Redo"}},                                //
+      {"cut", {RoledCommandId::Cut, "Cut"}},          //
+      {"copy", {RoledCommandId::Copy, "Copy"}},       //
+      {"paste", {RoledCommandId::Paste, "Paste"}},    //
+      {"delete", {RoledCommandId::Delete, "Delete"}}, //
+      //      {"pasteandmatchstyle", {"Paste and Match Style"}}, //
+      {"selectall", {RoledCommandId::SelectAll, "Select All"}}, //
+      //      {"startspeaking", {"Start Speaking"}},             //
+      //      {"stopspeaking", {"Stop Speaking"}},               //
+      {"minimize", {RoledCommandId::Minimize, "Minimize"}}, //
+      {"close", {RoledCommandId::Close, "Close Window"}},   //
+      {"zoom", {RoledCommandId::Zoom, "Zoom"}},             //
+      {"quit", {RoledCommandId::Quit, "Quit"}},             //
+      {"togglefullscreen",
+       {RoledCommandId::ToggleFullscreen, "Toggle Full Screen"}}, //
+      {"viewsource", {RoledCommandId::ViewSource, "View Source..."}},
+  };
+
   auto fiter = labelMap.find(role);
   if (fiter == labelMap.end()) {
     return nullptr;
