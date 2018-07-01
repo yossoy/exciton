@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/log"
 
 	"github.com/gorilla/mux"
@@ -19,7 +20,7 @@ func (k *Klass) ResourcePathBase() string {
 	return fmt.Sprintf("/components/%s/%s", k.pathInfo.id, k.name)
 }
 
-func HandleComponentResource(r *mux.Router) {
+func HandleComponentResource(r driver.Router) {
 	r.PathPrefix("/components/{id}/{name}/resources/").HandlerFunc(componentResourceFileHandle)
 }
 
