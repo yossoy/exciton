@@ -74,7 +74,8 @@ BEGIN
 	END
 END
 
-{{range .AppendResFiles}}{{.ID}}	RCDATA 	"{{.Path}}"{{end}}
+{{range .AppendResFiles}}{{.ID}}	RCDATA 	"{{.Path}}"
+{{end}}
 `
 
 func addWin32ResFileItems(id int, items resfile.Items, paths []string, srcDir string) (string, error) {
@@ -152,7 +153,7 @@ func toWin32ResFileItem(files []*collectFileItem) (resfile.Items, []idAndFile, e
 			if fp != "" {
 				resFiles = append(resFiles, idAndFile{
 					ID:   id,
-					Path: fp,
+					Path: filepath.ToSlash(fp),
 				})
 				id++
 			}
@@ -232,9 +233,13 @@ func generateWinResourceFile(te *targetEnv, outFile string, resFilePath string) 
 		panic(false)
 	}
 	jsonResFile.Close()
+	absJSONResPath, err := filepath.Abs(jsonResFile.Name())
+	if err != nil {
+		return err
+	}
 	fileList = append(fileList, idAndFile{
 		ID:   resfile.FileMapJsonID,
-		Path: jsonResFile.Name(),
+		Path: filepath.ToSlash(absJSONResPath),
 	})
 
 	// fmt.Printf("json:\n%s\n", string(jsonResItem))
