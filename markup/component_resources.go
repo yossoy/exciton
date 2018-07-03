@@ -107,7 +107,7 @@ func GetComponentCSSURLs() []string {
 func GetComponentJSURLs() []string {
 	var jsURLs []string
 	for kpid, kpi := range klassPathIDs {
-		for _, k := range kpi.jsFiles {
+		for k, _ := range kpi.jsFiles {
 			p := fmt.Sprintf("/components/%s/resources/%s", kpid, k)
 			jsURLs = append(jsURLs, p)
 		}
