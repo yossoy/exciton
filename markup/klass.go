@@ -3,15 +3,18 @@ package markup
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"reflect"
 	"sync"
 )
 
 type klassPathInfo struct {
-	pkgPath string
-	klasses map[string]*Klass
-	id      string
-	dir     string
+	pkgPath  string
+	klasses  map[string]*Klass
+	id       string
+	dir      string
+	jsFiles  map[string]bool
+	cssFiles map[string]bool
 }
 
 var (
@@ -21,12 +24,12 @@ var (
 )
 
 type Klass struct {
-	name        string
-	pathInfo    *klassPathInfo
-	Type        reflect.Type
-	Properties  map[string]int
-	cssFile     string
-	jsFile      string
+	name         string
+	pathInfo     *klassPathInfo
+	Type         reflect.Type
+	Properties   map[string]int
+	localCSSFile string
+	// jsFile      string
 	cssIsGlobal bool
 }
 
@@ -120,4 +123,8 @@ func deleteKlass(k *Klass) {
 			delete(klassPathIDs, k.pathInfo.id)
 		}
 	}
+}
+
+func (k *Klass) GetResourceFile(fn string) (http.File, error) {
+	return k.pathInfo.getResourceFile(fn)
 }

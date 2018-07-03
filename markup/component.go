@@ -45,11 +45,11 @@ func (c *Core) Children() []*RenderResult { return c.children }
 
 func (c *Core) Classes(classes ...string) MarkupOrChild {
 	k := c.klass
-	if k.cssFile == "" {
+	if k.localCSSFile != "" {
 		return Classes(classes...)
 	}
 	ccs := make(classApplyer, len(classes))
-	prefix := k.pathInfo.id + "-" + strings.TrimSuffix(k.cssFile, filepath.Ext(k.cssFile)) + "-"
+	prefix := k.pathInfo.id + "-" + strings.TrimSuffix(k.localCSSFile, filepath.Ext(k.localCSSFile)) + "-"
 	for i, class := range classes {
 		ccs[i] = prefix + class
 	}
@@ -92,29 +92,62 @@ type Initializer interface {
 
 type ComponentRegisterParameter func(k *Klass) error
 
-func WithGlobalCSS() ComponentRegisterParameter {
+func WithGlobalStyleSheet(css string) ComponentRegisterParameter {
 	return func(k *Klass) error {
-		k.cssIsGlobal = true
+		g, ok := k.pathInfo.cssFiles[css]
+		if ok && !g {
+			return fmt.Errorf("css %q registerd as component css file by other component", css)
+		}
+		if k.pathInfo.cssFiles == nil {
+			k.pathInfo.cssFiles = make(map[string]bool)
+		}
+		k.pathInfo.cssFiles[css] = true
 		return nil
 	}
 }
 
 func WithComponentStyleSheet(css string) ComponentRegisterParameter {
 	return func(k *Klass) error {
-		if k.cssFile != "" {
-			return fmt.Errorf("component %q already has component css file (%q)", k.Name(), k.cssFile)
+		g, ok := k.pathInfo.cssFiles[css]
+		if ok && g {
+			return fmt.Errorf("css %q registerd as global css file by other component", css)
 		}
-		k.cssFile = css
+		if k.localCSSFile != "" {
+			return fmt.Errorf("component %q has another component css file (%s)", k.Name(), k.localCSSFile)
+		}
+		if k.pathInfo.cssFiles == nil {
+			k.pathInfo.cssFiles = make(map[string]bool)
+		}
+		k.localCSSFile = css
+		k.pathInfo.cssFiles[css] = false
+		return nil
+	}
+}
+
+func WithGlobalScript(js string) ComponentRegisterParameter {
+	return func(k *Klass) error {
+		g, ok := k.pathInfo.jsFiles[js]
+		if ok && !g {
+			return fmt.Errorf("js %q registerd as component js file by other component", js)
+		}
+		if k.pathInfo.jsFiles == nil {
+			k.pathInfo.jsFiles = make(map[string]bool)
+		}
+		k.pathInfo.jsFiles[js] = true
 		return nil
 	}
 }
 
 func WithComponentScript(js string) ComponentRegisterParameter {
 	return func(k *Klass) error {
-		if k.jsFile != "" {
-			return fmt.Errorf("component %q already has component js file (%q)", k.Name(), k.jsFile)
+		g, ok := k.pathInfo.jsFiles[js]
+		if ok && g {
+			return fmt.Errorf("js %q already registerd as global js file by other component", js)
 		}
-		k.jsFile = js
+		if k.pathInfo.jsFiles == nil {
+			k.pathInfo.jsFiles = make(map[string]bool)
+		}
+		k.pathInfo.jsFiles[js] = true
 		return nil
 	}
 }

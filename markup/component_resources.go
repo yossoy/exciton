@@ -11,24 +11,21 @@ import (
 	"strings"
 
 	"github.com/yossoy/exciton/driver"
-	"github.com/yossoy/exciton/log"
 
 	"github.com/gorilla/mux"
 )
 
 func (k *Klass) ResourcePathBase() string {
-	return fmt.Sprintf("/components/%s/%s", k.pathInfo.id, k.name)
+	return fmt.Sprintf("/components/%s", k.pathInfo.id)
 }
 
 func HandleComponentResource(r driver.Router) {
-	r.PathPrefix("/components/{id}/{name}/resources/").HandlerFunc(componentResourceFileHandle)
+	r.PathPrefix("/components/{id}/resources/").HandlerFunc(componentResourceFileHandle)
 }
 
-func getKlassFromIDandName(id, name string) *Klass {
+func getKlassPathInfoFromID(id string) *klassPathInfo {
 	if kpi, ok := klassPathIDs[id]; ok {
-		if k, ok := kpi.klasses[name]; ok {
-			return k
-		}
+		return kpi
 	}
 	return nil
 }
@@ -45,28 +42,20 @@ func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
 		return
 	}
-	klassName, ok := vars["name"]
-	if !ok {
-		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
-		return
-	}
 
-	k := getKlassFromIDandName(id, klassName)
-	if k == nil {
-		log.PrintDebug("getKlassFromIDandName class not found\n")
+	kpi := getKlassPathInfoFromID(id)
+	if kpi == nil {
 		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
 		return
 	}
-	f, err := k.GetResourceFile(fn)
+	f, err := kpi.getResourceFile(fn)
 	if err != nil {
-		log.PrintDebug("k.GetResourceFile() failed\n = %v\n", err)
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	defer f.Close()
 	fi, err := f.Stat()
 	if err != nil {
-		log.PrintDebug("k.GetResourceFile() failed\n = %v\n", err)
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
@@ -76,7 +65,7 @@ func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(path.Base(fn), "-global") {
 		switch ext {
 		case ".css":
-			if k.cssIsGlobal {
+			if g, ok := kpi.cssFiles[fn]; !ok || g {
 				break
 			}
 			css, err := ioutil.ReadAll(f)
@@ -107,11 +96,9 @@ func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
 func GetComponentCSSURLs() []string {
 	var cssURLs []string
 	for kpid, kpi := range klassPathIDs {
-		for _, k := range kpi.klasses {
-			if k.cssFile != "" {
-				p := fmt.Sprintf("/components/%s/%s/resources/%s", kpid, k.name, k.cssFile)
-				cssURLs = append(cssURLs, p)
-			}
+		for k, _ := range kpi.cssFiles {
+			p := fmt.Sprintf("/components/%s/resources/%s", kpid, k)
+			cssURLs = append(cssURLs, p)
 		}
 	}
 	return cssURLs
@@ -120,11 +107,9 @@ func GetComponentCSSURLs() []string {
 func GetComponentJSURLs() []string {
 	var jsURLs []string
 	for kpid, kpi := range klassPathIDs {
-		for _, k := range kpi.klasses {
-			if k.jsFile != "" {
-				p := fmt.Sprintf("/components/%s/%s/resources/%s", kpid, k.name, k.jsFile)
-				jsURLs = append(jsURLs, p)
-			}
+		for _, k := range kpi.jsFiles {
+			p := fmt.Sprintf("/components/%s/resources/%s", kpid, k)
+			jsURLs = append(jsURLs, p)
 		}
 	}
 	return jsURLs

@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 )
 
-func (k *Klass) GetResourceFile(fn string) (http.File, error) {
+func (k *klassPathInfo) getResourceFile(fn string) (http.File, error) {
 	fp := path.Join("resources", fn)
-	return http.Dir(k.pathInfo.dir).Open(fp)
+	return http.Dir(k.dir).Open(fp)
 }
 
-func (k *Klass) getResourcePath(base string) string {
-	return filepath.Join(k.pathInfo.dir, "resources")
+func (k *klassPathInfo) getResourcePath(base string) string {
+	return filepath.Join(k.dir, "resources")
 }
