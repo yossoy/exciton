@@ -6,6 +6,7 @@ type RequestAnimationFrameHandler func()
 type UpdateDiffSetHandler func(ds *DiffSet)
 
 type Builder struct {
+	hostPath         string
 	diffSet          *DiffSet
 	renderingDiffSet *DiffSet
 	nestLevel        int
@@ -15,6 +16,7 @@ type Builder struct {
 	mounter          []Mounter
 	delayUpdater     []Component
 	elements         *object.ObjectMap
+	components       *object.ObjectMap
 	rafHandler       RequestAnimationFrameHandler
 	updateHandler    UpdateDiffSetHandler
 	scheduled        bool //TODO: need atomic proc?
@@ -29,25 +31,29 @@ type Buildable interface {
 	Builder() *Builder
 }
 
-func NewBuilder() *Builder {
+func NewBuilder(hostPath string) *Builder {
 	rn := &node{}
 	b := &Builder{
+		hostPath:         hostPath,
 		diffSet:          &DiffSet{rootNode: rn},
 		renderingDiffSet: &DiffSet{rootNode: rn},
 		rootNode:         rn,
 		elements:         object.NewObjectMap(),
+		components:       object.NewObjectMap(),
 		delayUpdater:     make([]Component, 0, 16),
 	}
 	return b
 }
 
-func NewAsyncBuilder(raf RequestAnimationFrameHandler, udh UpdateDiffSetHandler) *Builder {
+func NewAsyncBuilder(hostPath string, raf RequestAnimationFrameHandler, udh UpdateDiffSetHandler) *Builder {
 	rn := &node{}
 	b := &Builder{
+		hostPath:         hostPath,
 		diffSet:          &DiffSet{rootNode: rn},
 		renderingDiffSet: &DiffSet{rootNode: rn},
 		rootNode:         rn,
 		elements:         object.NewObjectMap(),
+		components:       object.NewObjectMap(),
 		delayUpdater:     make([]Component, 0, 16),
 		rafHandler:       raf,
 		updateHandler:    udh,
@@ -203,6 +209,15 @@ func (b *Builder) insertBefore(t *node, c *node, pos *node) {
 	t.insertBefore(c, pos)
 }
 
+func (b *Builder) mountComponent(c Component) {
+	ctx := c.Context()
+	b.diffSet.addMountComponent(ctx.base, c)
+	b.components.Put(ctx.id, c)
+	if m, ok := c.(Mounter); ok {
+		b.mounter = append(b.mounter, m)
+	}
+}
+
 func (b *Builder) unmountComponent(c Component) {
 	//	if (options.beforeUnmount) options.beforeUnmount(component);
 	ctx := c.Context()
@@ -212,6 +227,9 @@ func (b *Builder) unmountComponent(c Component) {
 	if um, ok := c.(Unmounter); ok {
 		um.Unmount()
 	}
+
+	b.diffSet.addUnmountComponent(c)
+	b.components.Delete(ctx.id)
 
 	ctx.base = nil
 
@@ -225,7 +243,6 @@ func (b *Builder) unmountComponent(c Component) {
 		b.removeNode(base)
 		b.removeChildren(base)
 	}
-
 }
 
 func (b *Builder) removeNode(n *node) {

@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path"
 	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -29,8 +31,8 @@ type Klass struct {
 	Type         reflect.Type
 	Properties   map[string]int
 	localCSSFile string
-	// jsFile      string
-	cssIsGlobal bool
+	localJSFile  string
+	cssIsGlobal  bool
 }
 
 func (k *Klass) Name() string {
@@ -50,6 +52,13 @@ func (k *Klass) NewInstance() Component {
 	ctx.klass = k
 	ctx.self = cc
 	return cc
+}
+
+func (k *Klass) localJSKey() string {
+	if k.localJSFile == "" {
+		return ""
+	}
+	return k.pathInfo.id + "-" + strings.TrimSuffix(k.localJSFile, path.Ext(k.localJSFile))
 }
 
 func makeKlass(c Component, dir string) (*Klass, error) {

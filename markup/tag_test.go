@@ -8,7 +8,7 @@ import (
 
 func TestNewEmptyTag(t *testing.T) {
 	r := Tag("foo")
-	assert.IsType(t, r, &renderResult{})
+	assert.IsType(t, r, &RenderResult{})
 	assert.Equal(t, r.name, "foo")
 	assert.Equal(t, r.data, "")
 	assert.Nil(t, r.klass)
@@ -18,7 +18,7 @@ func TestNewEmptyTag(t *testing.T) {
 
 func TestNewText(t *testing.T) {
 	r := Text("foo")
-	assert.IsType(t, r, &renderResult{})
+	assert.IsType(t, r, &RenderResult{})
 	assert.Equal(t, r.name, "")
 	assert.Equal(t, r.data, "foo")
 	assert.Nil(t, r.klass)
@@ -30,7 +30,7 @@ func TestNewNest1Tag(t *testing.T) {
 	r := Tag("foo",
 		Tag("bar"),
 	)
-	assert.IsType(t, r, &renderResult{})
+	assert.IsType(t, r, &RenderResult{})
 	assert.Equal(t, r.name, "foo")
 	assert.Equal(t, r.data, "")
 	assert.Nil(t, r.klass)
@@ -48,7 +48,7 @@ func TestNewNestEmptyList(t *testing.T) {
 	r := Tag("foo",
 		List{},
 	)
-	assert.IsType(t, r, &renderResult{})
+	assert.IsType(t, r, &RenderResult{})
 	assert.Equal(t, r.name, "foo")
 	assert.Equal(t, r.data, "")
 	assert.Nil(t, r.klass)
@@ -59,7 +59,7 @@ func TestNewNestList(t *testing.T) {
 	r := Tag("foo",
 		List{Tag("bar"), Tag("baz")},
 	)
-	assert.IsType(t, r, &renderResult{})
+	assert.IsType(t, r, &RenderResult{})
 	assert.Equal(t, r.name, "foo")
 	assert.Equal(t, r.data, "")
 	assert.Nil(t, r.klass)

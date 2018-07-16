@@ -1,1 +1,3 @@
 .vscode/
+assets/node_modules
+example/component-sample/node_modules

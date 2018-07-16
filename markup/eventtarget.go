@@ -13,9 +13,9 @@ type EventTarget struct {
 }
 
 type browserCommand struct {
-	Command   string `json:"cmd"`
-	ElementID string `json:"elemId"`
-	Property  string `json:"propName"`
+	Command  string      `json:"cmd"`
+	Target   interface{} `json:"target"`
+	Argument interface{} `json:"argument"`
 }
 
 func (et *EventTarget) Builder() *Builder {
@@ -43,15 +43,37 @@ func (et *EventTarget) Node() *node {
 	return nil
 }
 
+func (et *EventTarget) HostComponent() Component {
+	builder := et.Builder()
+	if builder == nil {
+		return nil
+	}
+	itm := builder.elements.Get(et.ElementID)
+	n, ok := itm.(*node)
+	if !ok {
+		return nil
+	}
+	for n != nil {
+		if n == builder.rootNode {
+			break
+		}
+		if n.component != nil {
+			return n.component
+		}
+		n = n.parent
+	}
+	return nil
+}
+
 func (et *EventTarget) GetProperty(name string) (interface{}, error) {
 	if et.ElementID == "" {
 		// target is window
 		panic("not implement yet")
 	}
 	arg := &browserCommand{
-		"getProp",
-		et.ElementID,
-		name,
+		Command:  "getProp",
+		Target:   et.ElementID,
+		Argument: name,
 	}
 	var result event.Result
 	if et.WindowID != "" {

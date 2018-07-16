@@ -149,7 +149,7 @@ func New(component *markup.RenderResult) (*MenuInstance, error) {
 	}
 
 	m.mounted = component
-	m.builder = markup.NewAsyncBuilder(m.requestAnimationFrame, m.updateDiffSetHandler)
+	m.builder = markup.NewAsyncBuilder("/menu/"+m.uuid, m.requestAnimationFrame, m.updateDiffSetHandler)
 	m.builder.RenderBody(component)
 
 	return m, nil

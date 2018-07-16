@@ -32,6 +32,9 @@ const (
 	ditRemoveEventListener
 	ditSetRootItem
 	ditNodeUUID
+	ditAddClientEvent
+	ditMountComponent
+	ditUnmountComponent
 )
 
 func (t diffItemType) String() string {
@@ -90,6 +93,12 @@ func (t diffItemType) String() string {
 		return "setRootItem"
 	case ditNodeUUID:
 		return "nodeUUID"
+	case ditAddClientEvent:
+		return "addClientEvent"
+	case ditMountComponent:
+		return "mountComponent"
+	case ditUnmountComponent:
+		return "unmountComponent"
 	default:
 		panic("invalid diffType")
 	}
@@ -340,4 +349,28 @@ func (ds *DiffSet) RemoveEventListener(t *node, name string) {
 func (ds *DiffSet) SetRootItem(t *node, id string) {
 	ds.selectCurNode(t)
 	ds.addItem(ditSetRootItem, id)
+}
+
+type dtAddClientEventItem struct {
+	ID                 string `json:"id"`
+	ClientScriptPrefix string `json:"sp"`
+	ScriptHandlerName  string `json:"sh"`
+}
+
+func (ds *DiffSet) AddClientEvent(t *node, name string, eventId string, clientScriptPrefix string, scriptHandlerName string) {
+	ds.selectCurNode(t)
+	ds.addItemWithKey(ditAddClientEvent, name, dtAddClientEventItem{
+		ID:                 eventId,
+		ClientScriptPrefix: clientScriptPrefix,
+		ScriptHandlerName:  scriptHandlerName,
+	})
+}
+
+func (ds *DiffSet) addMountComponent(t *node, c Component) {
+	ds.selectCurNode(t)
+	ds.addItem(ditMountComponent, c)
+}
+
+func (ds *DiffSet) addUnmountComponent(c Component) {
+	ds.addItem(ditUnmountComponent, c)
 }

@@ -74,12 +74,46 @@ func ResourcesFileSystem() (http.FileSystem, error) {
 	return platform.ResourcesFileSystem()
 }
 
+type InitProc func(*StartupInfo) error
+
+type InitProcTiming int
+
+const (
+	InitProcTimingPreStartup InitProcTiming = iota
+	InitProcTimingPostStartup
+	InitProcTimingPostStartServer
+)
+
+var initProcs map[InitProcTiming][]InitProc
+
+func AddInitProc(timing InitProcTiming, initializer InitProc) {
+	if initProcs == nil {
+		initProcs = make(map[InitProcTiming][]InitProc)
+	}
+	initProcs[timing] = append(initProcs[timing], initializer)
+}
+
+func callInitProc(timing InitProcTiming, si *StartupInfo) error {
+	if procs, ok := initProcs[timing]; ok {
+		for _, proc := range procs {
+			if err := proc(si); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func Startup(driver Driver, startup StartupFunc) error {
 	platform = driver
 	si := newStartupInfo()
+	if err := callInitProc(InitProcTimingPreStartup, si); err != nil {
+		return err
+	}
 	if err := startup(si); err != nil {
 		return err
 	}
+
 	l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", si.PortNo))
 	if err != nil {
 		return err
@@ -108,6 +142,10 @@ func Startup(driver Driver, startup StartupFunc) error {
 	// add "/resources/" file handler
 	si.Router.PathPrefix("/resources/").Handler(http.StripPrefix("/resources/", http.FileServer(fs)))
 
+	if err := callInitProc(InitProcTimingPostStartup, si); err != nil {
+		return err
+	}
+
 	srv := &http.Server{
 		Handler: si.Router,
 	}
@@ -117,7 +155,10 @@ func Startup(driver Driver, startup StartupFunc) error {
 		//http.Serve(l, si.Router)
 	}()
 
-	platform.Run()
+	err = callInitProc(InitProcTimingPostStartServer, si)
+	if err == nil {
+		platform.Run()
+	}
 
 	//TODO: MacでCommand+Qで終了した時にここに辿り着かない?
 
@@ -128,5 +169,5 @@ func Startup(driver Driver, startup StartupFunc) error {
 	}
 	cancelFunc()
 
-	return nil
+	return err
 }

@@ -1,0 +1,28 @@
+.Sample {
+    background-color: #c0c0c0;
+    color: #cc0000;
+    background-image: url(./background.jpg);
+    background-repeat: repeat;
+}
+
+.ButtonGroup {
+    display: flex;
+    flex-direction: row;
+    margin: 0.3em;
+}
+
+.Button {
+    flex: 1;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 0.3em, 1em;
+    color: white;
+    border-style: solid;
+    border-color: white;
+    background-color:#248;
+}
+
+.Button:hover {
+    background: #24d;
+    color: white;
+}

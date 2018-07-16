@@ -254,6 +254,10 @@ func applyDiff(ds *DiffSet, root *html.Node) *html.Node {
 		case ditNodeUUID:
 			v := itm.Value
 			setAttrToNode(curNode, "_uuid", v.(string))
+		case ditMountComponent:
+			//TODO:
+		case ditUnmountComponent:
+			//TODO:
 		default:
 			panic("invalid input")
 		}

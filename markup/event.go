@@ -11,6 +11,8 @@ import (
 type EventListener struct {
 	Name                string
 	Listener            event.Handler
+	clientScriptPrefix  string
+	scriptHandlerName   string
 	callPreventDefault  bool
 	callStopPropagation bool
 	//TODO: binding position
@@ -23,6 +25,7 @@ func (l *EventListener) isMarkupOrChild() {}
 //
 // See https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault.
 func (l *EventListener) PreventDefault() *EventListener {
+	//TODO: if eventListener is client script, PreventDefault does not affect.
 	l.callPreventDefault = true
 	return l
 }
@@ -32,6 +35,7 @@ func (l *EventListener) PreventDefault() *EventListener {
 //
 // See https://developer.mozilla.org/en-US/docs/Web/API/Event/stopPropagation.
 func (l *EventListener) StopPropagation() *EventListener {
+	//TODO: if eventListener is client script, StopPropagation does not affect.
 	l.callStopPropagation = true
 	return l
 }
@@ -43,15 +47,13 @@ func (l *EventListener) applyToNode(b *Builder, n *node, on *node) {
 	if on.eventListeners != nil {
 		if oe, ok := on.eventListeners[l.Name]; ok {
 			if l.callPreventDefault == oe.callPreventDefault && l.callStopPropagation == oe.callStopPropagation {
-				// There is not need to compare Listener,
-				//   	 because Listner is used only in go region and is not used in js region.
-				/*
-					nf := reflect.ValueOf(l.Listener)
-					of := reflect.ValueOf(oe.Listener)
-					if nf == of {
-						match = true
-					}*/
-				match = true
+				if l.Listener != nil && oe.Listener != nil {
+					// There is not need to compare Listener,
+					//   	 because Listner is used only in go region and is not used in js region.
+					match = true
+				} else if l.Listener == nil && oe.Listener == nil {
+					match = (l.clientScriptPrefix == oe.clientScriptPrefix) && (l.scriptHandlerName == oe.scriptHandlerName)
+				}
 			}
 			exist = true
 			delete(on.eventListeners, l.Name)
@@ -65,7 +67,11 @@ func (l *EventListener) applyToNode(b *Builder, n *node, on *node) {
 		if exist {
 			b.diffSet.RemoveEventListener(n, l.Name)
 		}
-		b.diffSet.AddEventListener(n, l.Name, n.uuid, l.callPreventDefault, l.callStopPropagation)
+		if l.Listener != nil {
+			b.diffSet.AddEventListener(n, l.Name, n.uuid, l.callPreventDefault, l.callStopPropagation)
+		} else {
+			b.diffSet.AddClientEvent(n, l.Name, n.uuid, l.clientScriptPrefix, l.scriptHandlerName)
+		}
 	}
 }
 

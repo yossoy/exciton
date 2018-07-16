@@ -3,7 +3,6 @@
 <head>
     {{if .IsIE}}<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="UTF-8">
-    <script src="/assets/pollyfill-ie.js"></script>
     {{end}}
     <link type="text/css" rel="stylesheet" href="/assets/default.css"></link>
     {{range .CSS}}<link type="text/css" rel="stylesheet" href="/resources/css/{{.}}"></link>{{end}}
@@ -12,9 +11,9 @@
 </head>
 <body>
     <div id="{{.ID}}"></div>
-    <script>window.exciton={ID: {{.ID}}, components:{}, callnative: function(a){ {{.NativeRequestJSMethod }}(a);}};</script>
+    <script>window.exciton={ID: {{.ID}}, modules: {}, components:{}, callnative: function(a){ {{.NativeRequestJSMethod }}(a);}};</script>
     <script src="/assets/exciton.js"></script>
-    {{range .JS}}<script src="/resources/js/{{.}}"></script>{{end}}
-    {{range .ComponentJSFiles}}<script src="{{.}}"></script>{{end}}
+    {{range .JS}}<script src="/resources/js/{{.}}" defer></script>{{end}}
+    {{range .ComponentJSFiles}}<script src="{{.}}" defer></script>{{end}}
 </body>
 </html>

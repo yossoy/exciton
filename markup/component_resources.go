@@ -15,6 +15,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	jsTemplate = `(function() {
+var id = %q;
+function wrapper(exports, require, module, __filename, __dirname) {
+	%s
+};
+console.log('register', id);
+window.exciton.registerModule(id, wrapper);
+})();`
+)
+
 func (k *Klass) ResourcePathBase() string {
 	return fmt.Sprintf("/components/%s", k.pathInfo.id)
 }
@@ -83,6 +94,23 @@ func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			io.WriteString(w, s)
 			return
+		case ".js":
+			if g, ok := kpi.jsFiles[fn]; !ok || g {
+				break
+			}
+			js, err := ioutil.ReadAll(f)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusProcessing)
+				return
+			}
+			js = stripShebang(js)
+			prefix := id + "-" + strings.TrimSuffix(fn, ext)
+			jsStr := fmt.Sprintf(jsTemplate, prefix, string(js))
+			fmt.Printf("*********** jsStr = %s\n", jsStr)
+			w.Header().Add("Content-Length", fmt.Sprintf("%d", len(jsStr)))
+			w.WriteHeader(http.StatusOK)
+			io.WriteString(w, jsStr)
+			return
 		default:
 			break
 		}
@@ -96,7 +124,7 @@ func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
 func GetComponentCSSURLs() []string {
 	var cssURLs []string
 	for kpid, kpi := range klassPathIDs {
-		for k, _ := range kpi.cssFiles {
+		for k := range kpi.cssFiles {
 			p := fmt.Sprintf("/components/%s/resources/%s", kpid, k)
 			cssURLs = append(cssURLs, p)
 		}
@@ -107,10 +135,32 @@ func GetComponentCSSURLs() []string {
 func GetComponentJSURLs() []string {
 	var jsURLs []string
 	for kpid, kpi := range klassPathIDs {
-		for k, _ := range kpi.jsFiles {
+		for k := range kpi.jsFiles {
 			p := fmt.Sprintf("/components/%s/resources/%s", kpid, k)
 			jsURLs = append(jsURLs, p)
 		}
 	}
 	return jsURLs
+}
+
+func stripShebang(content []byte) []byte {
+	if len(content) < 2 {
+		return content
+	}
+	if content[0] != '#' || content[1] != '!' {
+		return content
+	}
+	if len(content) == 2 {
+		return content[:0]
+	}
+	var i int
+	for i = 2; i < len(content); i++ {
+		if content[i] == '\r' || content[i] == '\n' {
+			break
+		}
+	}
+	if i == len(content) {
+		return content[:0]
+	}
+	return content[i:]
 }

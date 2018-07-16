@@ -1,0 +1,25 @@
+{
+  "name": "component-sample",
+  "version": "0.0.1",
+  "main": "resources/sample.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "go",
+    "exciton"
+  ],
+  "author": "YOSHIKAWA Hiroki",
+  "license": "ISC",
+  "description": "component-sample is exciton sample component.",
+  "private": true,
+  "browserslist": "IE 11, safari >= 10",
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.53",
+    "@babel/preset-env": "^7.0.0-beta.53",
+    "babel-loader": "^8.0.0-beta.4",
+    "uglifyjs-webpack-plugin": "^1.2.7",
+    "webpack": "^4.16.0",
+    "webpack-cli": "^3.0.8"
+  }
+}

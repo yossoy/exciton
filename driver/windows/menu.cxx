@@ -68,7 +68,10 @@ enum {
   ditAddEventListener,
   ditRemoveEventListener,
   ditSetRootItem,
-  ditNodeUUID
+  ditNodeUUID,
+  ditAddClientEvent,
+  ditMountComponent,
+  ditUnmountComponent
 };
 struct RoleInfo {
   const char *label;
@@ -475,6 +478,8 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
     }
     case ditAddClassList:
     case ditDelClassList:
+    case ditMountComponent:
+    case ditUnmountComponent:
       break;
     case ditCreateNodeWithNS:
     case ditCreateTextNode:
@@ -485,6 +490,7 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
     case ditNodeValue:
     case ditInnerHTML:
     case ditReplaceChild:
+    case ditAddClientEvent:
     default:
       LOG_ERROR(
           "[%d] MenuData::populateWithDiffset:: Unsupported item type[%d]",

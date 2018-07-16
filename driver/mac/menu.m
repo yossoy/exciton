@@ -1,9 +1,9 @@
 #include "menu.h"
 #include "accelerator.h"
 #include "driver.h"
-#include "window.h"
-#include "menu.h"
 #include "log.h"
+#include "menu.h"
+#include "window.h"
 
 enum {
   ditNone = 0,
@@ -32,7 +32,10 @@ enum {
   ditAddEventListener,
   ditRemoveEventListener,
   ditSetRootItem,
-  ditNodeUUID
+  ditNodeUUID,
+  ditAddClientEvent,
+  ditMountComponent,
+  ditUnmountComponent
 };
 
 @implementation Menu
@@ -138,60 +141,59 @@ enum {
   Driver *d = [Driver current];
 
   [d addEventHandler:@"/menu/:id/new"
-              handler:^(id argument,
-                        NSDictionary<NSString *, NSString *> *parameter,
-                        int responceNo) {
-                NSString *idstr = parameter[@"id"];
-                Menu *menu = [[Menu alloc] initWithID:idstr];
-                Driver *d = [Driver current];
-                d.elements[idstr] = menu;
-                [d responceEventResult:responceNo boolean:TRUE];
-              }];
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               NSString *idstr = parameter[@"id"];
+               Menu *menu = [[Menu alloc] initWithID:idstr];
+               Driver *d = [Driver current];
+               d.elements[idstr] = menu;
+               [d responceEventResult:responceNo boolean:TRUE];
+             }];
   [d addEventHandler:@"/menu/:id/updateDiffSetHandler"
-              handler:^(id argument,
-                        NSDictionary<NSString *, NSString *> *parameter,
-                        int responceNo) {
-                defer(NSString *idstr = parameter[@"id"];
-                      NSDictionary *diff = argument;
-                      Driver *driver = [Driver current];
-                      Menu *m = driver.elements[idstr];
-                      LOG_INFO(@"updateDiffSetHandler: %@", idstr);
-                      [m populateWithDiffset:diff];
-                      [driver responceEventResult:responceNo boolean:TRUE];);
-              }];
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               defer(NSString *idstr = parameter[@"id"];
+                     NSDictionary *diff = argument;
+                     Driver *driver = [Driver current];
+                     Menu *m = driver.elements[idstr];
+                     LOG_INFO(@"updateDiffSetHandler: %@", idstr);
+                     [m populateWithDiffset:diff];
+                     [driver responceEventResult:responceNo boolean:TRUE];);
+             }];
   [d addEventHandler:@"/menu/:id/setApplicationMenu"
-              handler:^(id argument,
-                        NSDictionary<NSString *, NSString *> *parameter,
-                        int responceNo) {
-                defer(NSString *idstr = parameter[@"id"];
-                      Driver *d = [Driver current]; Menu *m = d.elements[idstr];
-                      LOG_INFO(@"setApplicationMenu: %@", idstr);
-                      [NSApp setMainMenu:m.pMenu];);
-              }];
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               defer(NSString *idstr = parameter[@"id"];
+                     Driver *d = [Driver current]; Menu *m = d.elements[idstr];
+                     LOG_INFO(@"setApplicationMenu: %@", idstr);
+                     [NSApp setMainMenu:m.pMenu];);
+             }];
   [d addEventHandler:@"/menu/:id/popupContextMenu"
-              handler:^(id argument,
-                        NSDictionary<NSString *, NSString *> *parameter,
-                        int responceNo) {
-                defer(
-                    NSString *idstr = parameter[@"id"];
-                    Driver *d = [Driver current];
-                    Menu *m = d.elements[idstr];
-                    float posX = [argument[@"position"][@"x"] floatValue];
-                    float posY = [argument[@"position"][@"y"] floatValue];
-                    LOG_INFO(@"popupContextMenu: %@, %f, %f", idstr, posX, posY);
-                    NSString *winidstr = argument[@"windowId"];
-                    Window *parentWindow = d.elements[winidstr];
-                    NSWindow *parent = parentWindow.window;
-                    NSView *contentView = parent.contentView;
-                    NSRect scrRect = NSMakeRect(
-                        posX, parent.screen.frame.size.height - posY, 0.0, 0.0);
-                    NSRect winRect = [parent convertRectFromScreen:scrRect];
-                    NSPoint pos =
-                        [contentView convertPoint:winRect.origin fromView:nil];
-                    [m.pMenu popUpMenuPositioningItem:m.pMenu.itemArray[0]
-                                           atLocation:pos
-                                               inView:parent.contentView];);
-              }];
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               defer(
+                   NSString *idstr = parameter[@"id"];
+                   Driver *d = [Driver current]; Menu *m = d.elements[idstr];
+                   float posX = [argument[@"position"][@"x"] floatValue];
+                   float posY = [argument[@"position"][@"y"] floatValue];
+                   LOG_INFO(@"popupContextMenu: %@, %f, %f", idstr, posX, posY);
+                   NSString *winidstr = argument[@"windowId"];
+                   Window *parentWindow = d.elements[winidstr];
+                   NSWindow *parent = parentWindow.window;
+                   NSView *contentView = parent.contentView;
+                   NSRect scrRect = NSMakeRect(
+                       posX, parent.screen.frame.size.height - posY, 0.0, 0.0);
+                   NSRect winRect = [parent convertRectFromScreen:scrRect];
+                   NSPoint pos =
+                       [contentView convertPoint:winRect.origin fromView:nil];
+                   [m.pMenu popUpMenuPositioningItem:m.pMenu.itemArray[0]
+                                          atLocation:pos
+                                              inView:parent.contentView];);
+             }];
 }
 
 - (instancetype)initWithID:(NSString *)menuId {
@@ -250,7 +252,7 @@ enum {
         } else {
           curNode = menu;
           [creNodes addObject:menu];
-          //TODO: more cleanup
+          // TODO: more cleanup
           self.pMenu = menu;
         }
       } else if ([str1 isEqualToString:@"menuitem"]) {
@@ -273,8 +275,7 @@ enum {
     case ditSelectCurNode:
       if (v == nil || v == [NSNull null]) {
         curNode = self.pMenu;
-      } else
-      if ([v isKindOfClass:[NSNumber class]]) {
+      } else if ([v isKindOfClass:[NSNumber class]]) {
         NSUInteger idx = [v unsignedIntegerValue];
         curNode = [creNodes objectAtIndex:[v unsignedIntegerValue]];
       } else {
@@ -284,8 +285,7 @@ enum {
     case ditSelectArg1Node:
       if (v == nil || v == [NSNull null]) {
         arg1Node = self.pMenu;
-      } else
-      if ([v isKindOfClass:[NSNumber class]]) {
+      } else if ([v isKindOfClass:[NSNumber class]]) {
         NSUInteger idx = [v unsignedIntegerValue];
         arg1Node = [creNodes objectAtIndex:[v unsignedIntegerValue]];
       } else {
@@ -295,8 +295,7 @@ enum {
     case ditSelectArg2Node:
       if (v == nil || v == [NSNull null]) {
         arg2Node = self.pMenu;
-      } else
-      if ([v isKindOfClass:[NSNumber class]]) {
+      } else if ([v isKindOfClass:[NSNumber class]]) {
         NSUInteger idx = [v unsignedIntegerValue];
         arg2Node = [creNodes objectAtIndex:[v unsignedIntegerValue]];
       } else {
@@ -402,7 +401,7 @@ enum {
         return FALSE;
       }
       // LOG_DEBUG(@"addItem %@ <<- %@", target, mi);
-      if (target !=arg1Node) { //TODO: more cleanup
+      if (target != arg1Node) { // TODO: more cleanup
         [target addItem:mi];
       }
       break;
@@ -465,6 +464,8 @@ enum {
     }
     case ditAddClassList:
     case ditDelClassList:
+    case ditMountComponent:
+    case ditUnmountComponent:
       break;
     case ditCreateNodeWithNS:
     case ditCreateTextNode:
@@ -475,6 +476,7 @@ enum {
     case ditNodeValue:
     case ditInnerHTML:
     case ditReplaceChild:
+    case ditAddClientEvent:
     default:
       LOG_ERROR(@"Unsupported item type: %d", key);
       return FALSE;

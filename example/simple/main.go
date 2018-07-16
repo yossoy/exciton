@@ -132,7 +132,7 @@ func (m *menuBar) Render() *markup.RenderResult {
 	)
 }
 
-var MenuBar, _ = markup.MustRegisterComponent((*menuBar)(nil))
+var MenuBar = markup.MustRegisterComponent((*menuBar)(nil))
 
 type contextMenu struct {
 	markup.Core
@@ -152,7 +152,7 @@ func (m *contextMenu) Render() *markup.RenderResult {
 
 var (
 	contextMenuInst *menu.MenuInstance
-	ContextMenu, _  = markup.MustRegisterComponent((*contextMenu)(nil))
+	ContextMenu     = markup.MustRegisterComponent((*contextMenu)(nil))
 )
 
 type testChildComponent struct {
@@ -180,7 +180,7 @@ func (c *testChildComponent) OnContextMenu(e *html.MouseEvent) {
 	}
 }
 
-var TestChildComponent, _ = markup.MustRegisterComponent((*testChildComponent)(nil))
+var TestChildComponent = markup.MustRegisterComponent((*testChildComponent)(nil))
 
 type testComponent struct {
 	markup.Core
@@ -264,7 +264,7 @@ func (c *testComponent) Render() *markup.RenderResult {
 	)
 }
 
-var TestComponent, _ = markup.MustRegisterComponent((*testComponent)(nil))
+var TestComponent = markup.MustRegisterComponent((*testComponent)(nil))
 
 func onAppStart() {
 	log.PrintInfo("onAppStart")

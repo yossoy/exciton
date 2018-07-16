@@ -222,13 +222,14 @@ func NewWindow(cfg WindowConfig) (*Window, error) {
 		title: cfg.Title,
 		lang:  cfg.Lang,
 	}
+	hostPath := "/window/" + string(id)
 	object.Windows.Put(id, w)
-	r := event.EmitWithResult("/window/"+string(id)+"/new", event.NewValue(cfg))
+	r := event.EmitWithResult(hostPath+"/new", event.NewValue(cfg))
 	if r.Error() != nil {
 		object.Windows.Delete(id)
 		return nil, r.Error()
 	}
-	w.builder = markup.NewAsyncBuilder(w.requestAnimationFrame, w.updateDiffSetHandler)
+	w.builder = markup.NewAsyncBuilder(hostPath, w.requestAnimationFrame, w.updateDiffSetHandler)
 
 	return w, nil
 }

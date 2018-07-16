@@ -13,16 +13,16 @@ import (
 
 	"golang.org/x/net/html"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/internal/object"
-	"github.com/stretchr/testify/assert"
 )
 
 type testComponent1 struct {
 	Core
 }
 
-func (tc1 *testComponent1) Render() RenderResult {
+func (tc1 *testComponent1) Render() *RenderResult {
 	return nil
 }
 
@@ -42,17 +42,21 @@ func TestComponent1(t *testing.T) {
 type testErrorCompoent1 struct {
 }
 
-func (tec1 testErrorCompoent1) Context() *Core       { return nil }
-func (tec1 testErrorCompoent1) Render() RenderResult { return nil }
-func (tec1 testErrorCompoent1) Key() interface{}     { return nil }
-func (tec1 testErrorCompoent1) Builder() *Builder    { return nil }
+func (tec1 testErrorCompoent1) Context() *Core                          { return nil }
+func (tec1 testErrorCompoent1) Render() *RenderResult                   { return nil }
+func (tec1 testErrorCompoent1) Key() interface{}                        { return nil }
+func (tec1 testErrorCompoent1) Builder() *Builder                       { return nil }
+func (tec1 testErrorCompoent1) Classes(classes ...string) MarkupOrChild { return nil }
+func (tec1 testErrorCompoent1) ID() string                              { return "" }
 
 type testErrorCompoent2 int
 
-func (tec2 *testErrorCompoent2) Context() *Core       { return nil }
-func (tec2 *testErrorCompoent2) Render() RenderResult { return nil }
-func (tec2 *testErrorCompoent2) Key() interface{}     { return nil }
-func (tec2 *testErrorCompoent2) Builder() *Builder    { return nil }
+func (tec2 *testErrorCompoent2) Context() *Core                          { return nil }
+func (tec2 *testErrorCompoent2) Render() *RenderResult                   { return nil }
+func (tec2 *testErrorCompoent2) Key() interface{}                        { return nil }
+func (tec2 *testErrorCompoent2) Builder() *Builder                       { return nil }
+func (tec2 *testErrorCompoent2) Classes(classes ...string) MarkupOrChild { return nil }
+func (tec2 *testErrorCompoent2) ID() string                              { return "" }
 
 func TestComponentError1(t *testing.T) {
 	f := testErrorCompoent1{}
@@ -114,7 +118,7 @@ func (tcp1 *testComponentProps1) Initialize() {
 	td.parentComponent = tcp1
 }
 
-func (tcp1 *testComponentProps1) Render() RenderResult {
+func (tcp1 *testComponentProps1) Render() *RenderResult {
 	return Text(strconv.Itoa(*tcp1.IntValue))
 }
 
@@ -165,7 +169,7 @@ type nestComponentChild1 struct {
 	Index int `exciton:"index"`
 }
 
-func (ncc1 *nestComponentChild1) Render() RenderResult {
+func (ncc1 *nestComponentChild1) Render() *RenderResult {
 	return Tag("span",
 		Text(strconv.Itoa(ncc1.Index)),
 	)
@@ -185,7 +189,7 @@ type nestComponentChild2 struct {
 	Index int `exciton:"index2"`
 }
 
-func (ncc1 *nestComponentChild2) Render() RenderResult {
+func (ncc1 *nestComponentChild2) Render() *RenderResult {
 	return Tag("span",
 		Text(strconv.Itoa(ncc1.Index)),
 	)
@@ -204,7 +208,7 @@ type nestComponentParent1 struct {
 	Var *int `exciton:"var"`
 }
 
-func (ncp1 *nestComponentParent1) Render() RenderResult {
+func (ncp1 *nestComponentParent1) Render() *RenderResult {
 	var mkups []MarkupOrChild
 	if *ncp1.Var == 0 {
 		mkups = append(mkups, NestComponentChild1(Property("index", 0)))
@@ -334,7 +338,7 @@ type nestComponentParent2 struct {
 	Var *int `exciton:"var"`
 }
 
-func (ncp1 *nestComponentParent2) Render() RenderResult {
+func (ncp1 *nestComponentParent2) Render() *RenderResult {
 	if *ncp1.Var == 0 {
 		return NestComponentChild1(Property("index", 0))
 	}
@@ -416,7 +420,7 @@ type nestComponentParent3 struct {
 	Var *int `exciton:"var"`
 }
 
-func (ncp3 *nestComponentParent3) Render() RenderResult {
+func (ncp3 *nestComponentParent3) Render() *RenderResult {
 	if *ncp3.Var == 0 {
 		return NestComponentChild1(Property("index", 0))
 	}
@@ -497,7 +501,7 @@ type nestComponentParent4 struct {
 	Var *int `exciton:"var"`
 }
 
-func (ncp4 *nestComponentParent4) Render() RenderResult {
+func (ncp4 *nestComponentParent4) Render() *RenderResult {
 	if *ncp4.Var == 0 {
 		return NestComponentChild1(Property("index", 0))
 	}
@@ -572,7 +576,7 @@ type childParentComponent1 struct {
 	Var int `exciton:"var"`
 }
 
-func (cpc1 *childParentComponent1) Render() RenderResult {
+func (cpc1 *childParentComponent1) Render() *RenderResult {
 	m := make([]MarkupOrChild, len(cpc1.Children()))
 	for i, c := range cpc1.Children() {
 		m[i] = c
@@ -627,7 +631,7 @@ func (c *testEventComponent1) Callback1() {
 func (c *testEventComponent1) Callback2() {
 }
 
-func (c *testEventComponent1) Render() RenderResult {
+func (c *testEventComponent1) Render() *RenderResult {
 	var m MarkupOrChild
 	if *c.Var == 0 {
 		m = makeTestEvent("event1", c.Callback1)
@@ -673,7 +677,7 @@ type testEventComponent2 struct {
 func (c *testEventComponent2) Callback1() {
 }
 
-func (c *testEventComponent2) Render() RenderResult {
+func (c *testEventComponent2) Render() *RenderResult {
 	var m MarkupOrChild
 	if *c.Var == 0 {
 		m = makeTestEvent("event1", c.Callback1)
@@ -721,7 +725,7 @@ type keyTestChildComponent1 struct {
 	Var int `exciton:"var"`
 }
 
-func (c *keyTestChildComponent1) Render() RenderResult {
+func (c *keyTestChildComponent1) Render() *RenderResult {
 	if c.Var == 0 {
 		return Text("a")
 	}
@@ -735,7 +739,7 @@ type keyTestParentComponent1 struct {
 	Var *int `exciton:"var"`
 }
 
-func (c *keyTestParentComponent1) Render() RenderResult {
+func (c *keyTestParentComponent1) Render() *RenderResult {
 	if *c.Var == 0 {
 		return Tag("div",
 			Keyer("key1", KeyTestChildComponent1(Property("var", 0))),
@@ -755,7 +759,7 @@ type nonKeyTestParentComponent1 struct {
 	Var *int `exciton:"var"`
 }
 
-func (c *nonKeyTestParentComponent1) Render() RenderResult {
+func (c *nonKeyTestParentComponent1) Render() *RenderResult {
 	if *c.Var == 0 {
 		return Tag("div",
 			KeyTestChildComponent1(Property("var", 0)),
@@ -845,7 +849,7 @@ type innerHTMLTestComponent1 struct {
 	Var *int `exciton:"var"`
 }
 
-func (c *innerHTMLTestComponent1) Render() RenderResult {
+func (c *innerHTMLTestComponent1) Render() *RenderResult {
 	if *c.Var == 0 {
 		return Tag("div",
 			UnsafeHTML(`<span>innerHTML</span>`),
