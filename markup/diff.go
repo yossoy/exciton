@@ -1,6 +1,10 @@
 package markup
 
-func diff(b *Builder, dom *node, vnode *RenderResult, parent *node, componentRoot bool) *node {
+import (
+	"fmt"
+)
+
+func diff(b *Builder, dom *node, vnode RenderResult, parent *node, componentRoot bool) *node {
 	if b.nestLevel == 0 {
 		if dom != nil && dom.uuid == "" {
 			b.hydrating = true
@@ -29,55 +33,15 @@ func diff(b *Builder, dom *node, vnode *RenderResult, parent *node, componentRoo
 	return ret
 }
 
-func idiff(b *Builder, dom *node, vnode *RenderResult, componentRoot bool) *node {
+func idiffTag(b *Builder, dom *node, vnode *tagRenderResult, componentRoot bool) *node {
 	out := dom
-	//prevSvgMode = isSvgMode;
-
-	// empty values (null, undefined, booleans) render as empty Text nodes
-	//if (vnode==null || typeof vnode==='boolean') vnode = '';
-	if vnode == nil {
-		vnode = Tag("noscript")
-	}
-
-	// Fast case: Strings & Numbers create/update Text nodes.
-	if vnode.isTextNode() {
-		if dom.isTextNode() && dom.parent != nil && (dom.component == nil || componentRoot) {
-			if dom.text != vnode.data {
-				b.setNodeValue(dom, vnode.data)
-			}
-		} else {
-			// it wasn't a Text node: replace it with one and recycle the old Element
-			out = b.createTextNode(vnode.data)
-			if dom != nil {
-				if dom.parent != nil {
-					b.replaceChild(dom.parent, out, dom)
-				}
-				b.recollectNodeTree(dom, true)
-			}
-		}
-
-		//out[ATTR_KEY] = true;
-
-		return out
-	}
-
-	// If the VNode represents a Component, perform a component diff:
-	if vnode.klass != nil {
-		return buildComponentFromVNode(b, dom, vnode)
-	}
-
-	// Tracks entering and exiting SVG namespace when descending through the tree.
-	//isSvgMode = vnodeName==='svg' ? true : vnodeName==='foreignObject' ? false : isSvgMode;
-
 	if dom == nil || dom.tag != vnode.name {
 		out = b.createNode(vnode)
-
 		if dom != nil {
 			// move children into the replacement node
 			for dom.firstChild() != nil {
 				b.appendChild(out, dom.firstChild())
 			}
-
 			// if the previous Element was mounted into the DOM, replace it inline
 			if dom.parent != nil {
 				b.replaceChild(dom.parent, out, dom)
@@ -92,8 +56,9 @@ func idiff(b *Builder, dom *node, vnode *RenderResult, componentRoot bool) *node
 	fc := out.firstChild()
 	if !b.hydrating && len(vchildren) == 1 && vchildren[0].isTextNode() && fc != nil && fc.isTextNode() && fc.nextSibling() == nil {
 		// Optimization: fast-path for elements containing a single TextNode:
-		if fc.text != vchildren[0].data {
-			b.setNodeValue(fc, vchildren[0].data)
+		vtt := vchildren[0].(*textRenderResult)
+		if fc.text != vtt.text {
+			b.setNodeValue(fc, vtt.text)
 		}
 	} else if len(vchildren) > 0 || fc != nil {
 		// otherwise, if there are existing or new children, diff them:
@@ -107,14 +72,46 @@ func idiff(b *Builder, dom *node, vnode *RenderResult, componentRoot bool) *node
 	// Apply attributes/props from VNode to the DOM Element:
 	diffMarkups(b, out, vnode.markups)
 
-	// restore previous SVG mode: (in case we're exiting an SVG namespace)
-	//TODO:
-	//isSvgMode = prevSvgMode;
+	return out
+}
+
+func idiff(b *Builder, dom *node, vnode RenderResult, componentRoot bool) *node {
+	out := dom
+	//prevSvgMode = isSvgMode;
+
+	// empty values (null, undefined, booleans) render as empty Text nodes
+	//if (vnode==null || typeof vnode==='boolean') vnode = '';
+	if vnode == nil {
+		vnode = Tag("noscript")
+	}
+
+	switch vt := vnode.(type) {
+	case *textRenderResult:
+		// Fast case: Strings & Numbers create/update Text nodes.
+		if dom.isTextNode() && dom.parent != nil && (dom.component == nil || componentRoot) {
+			if dom.text != vt.text {
+				b.setNodeValue(dom, vt.text)
+			}
+		} else {
+			out = b.createTextNode(vt.text)
+			if dom != nil {
+				if dom.parent != nil {
+					b.replaceChild(dom.parent, out, dom)
+				}
+				b.recollectNodeTree(dom, true)
+			}
+		}
+	case *componentRenderResult:
+		// If the VNode represents a Component, perform a component diff:
+		out = buildComponentFromVNode(b, dom, vt)
+	case *tagRenderResult:
+		out = idiffTag(b, dom, vt, componentRoot)
+	}
 
 	return out
 }
 
-func innerDiffNode(b *Builder, dom *node, vchildren []*RenderResult, isHydrating bool) {
+func innerDiffNode(b *Builder, dom *node, vchildren []RenderResult, isHydrating bool) {
 	//originalChildren := dom.children
 	children := make([]*node, 0, len(dom.children))
 	keyed := make(map[interface{}]*node)
@@ -135,7 +132,10 @@ func innerDiffNode(b *Builder, dom *node, vchildren []*RenderResult, isHydrating
 
 	for i, vchild := range vchildren {
 		var child *node
-		key := vchild.key
+		var key interface{}
+		if vk, ok := vchild.(keyedRenderResult); ok {
+			key = vk.Key()
+		}
 		// attempt to find a node based on key matching
 		if key != nil {
 			if c, ok := keyed[key]; ok {
@@ -195,22 +195,22 @@ func innerDiffNode(b *Builder, dom *node, vchildren []*RenderResult, isHydrating
 	}
 }
 
-func isSameNodeType(n *node, vnode *RenderResult, hydrating bool) bool {
-	if vnode.isTextNode() {
+func isSameNodeType(n *node, vnode RenderResult, hydrating bool) bool {
+	switch vt := vnode.(type) {
+	case nil:
+		return false
+	case *textRenderResult:
 		return n.isTextNode()
+	case *tagRenderResult:
+		return n.component == nil && n.tag == vt.name && n.ns == vt.data
+	case *componentRenderResult:
+		if hydrating {
+			return true
+		}
+		return n.component != nil && n.component.Context().klass == vt.klass
+	default:
+		panic(fmt.Errorf("unknown type", vnode))
 	}
-	if vnode.klass == nil {
-		return n.component == nil &&
-			n.tag == vnode.name &&
-			n.ns == vnode.data
-	}
-	if hydrating {
-		return true
-	}
-	if n.component != nil && n.component.Context().klass == vnode.klass {
-		return true
-	}
-	return false
 }
 
 func diffMarkups(b *Builder, dom *node, markups []Markup) {

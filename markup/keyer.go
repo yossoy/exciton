@@ -1,9 +1,11 @@
 package markup
 
-func Keyer(key interface{}, item *RenderResult) *RenderResult {
+func Keyer(key interface{}, item RenderResult) RenderResult {
 	if item == nil {
-		item = Tag("noscript")
+		item, _ = tag("noscript", nil)
 	}
-	item.key = key
+	if rr, ok := item.(keyedRenderResult); ok {
+		rr.setKey(key)
+	}
 	return item
 }

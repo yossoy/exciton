@@ -76,7 +76,7 @@ func (rc *rootComponent) onKillmeClicked(e *html.MouseEvent) {
 	}
 }
 
-func (rc *rootComponent) Render() *markup.RenderResult {
+func (rc *rootComponent) Render() markup.RenderResult {
 	log.PrintDebug("Render called!: %d", len(rc.components))
 	var children markup.List
 	for _, k := range rc.components {

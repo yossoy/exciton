@@ -35,7 +35,7 @@ func (s *sampleComponent) GetClickCount() (int64, error) {
 	return ret.Int64()
 }
 
-func (s *sampleComponent) Render() *markup.RenderResult {
+func (s *sampleComponent) Render() markup.RenderResult {
 	return html.Div(
 		s.Classes("Sample"),
 		markup.Text("Sample Component["+s.ObjectKey+"]"),

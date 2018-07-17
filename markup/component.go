@@ -21,7 +21,7 @@ type Core struct {
 	self            Component
 	childComponent  Component
 	parentComponent Component
-	children        []*RenderResult
+	children        []RenderResult
 	base            *node
 	disabled        bool
 	builder         *Builder
@@ -43,17 +43,17 @@ type Component interface {
 	Context() *Core
 	Builder() *Builder
 	Key() interface{}
-	Render() *RenderResult
+	Render() RenderResult
 	Classes(...string) MarkupOrChild
 	ID() string
 	GetProperty(string) (interface{}, bool)
 }
 
-func (c *Core) Context() *Core            { return c }
-func (c *Core) Key() interface{}          { return c.key }
-func (c *Core) Builder() *Builder         { return c.builder }
-func (c *Core) Children() []*RenderResult { return c.children }
-func (c *Core) ID() string                { return c.id }
+func (c *Core) Context() *Core           { return c }
+func (c *Core) Key() interface{}         { return c.key }
+func (c *Core) Builder() *Builder        { return c.builder }
+func (c *Core) Children() []RenderResult { return c.children }
+func (c *Core) ID() string               { return c.id }
 func (c *Core) GetProperty(name string) (interface{}, bool) {
 	if c.self == nil {
 		return nil, false
@@ -125,7 +125,7 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&s)
 }
 
-type ComponentInstance func(m ...MarkupOrChild) *RenderResult
+type ComponentInstance func(m ...MarkupOrChild) RenderResult
 
 // Mounter is an optional interface that a Component can implement in order
 // to receive component mount events.
@@ -354,7 +354,7 @@ func registerComponent(c Component, dir string, params []ComponentRegisterParame
 	if klassOnly {
 		return nil, k, nil
 	}
-	return ComponentInstance(func(m ...MarkupOrChild) *RenderResult {
+	return ComponentInstance(func(m ...MarkupOrChild) RenderResult {
 		markups, children, err := splitMarkupOrChild(m)
 		if err != nil {
 			panic(err)
@@ -363,7 +363,7 @@ func registerComponent(c Component, dir string, params []ComponentRegisterParame
 		if err != nil {
 			panic(err)
 		}
-		rr := &RenderResult{
+		rr := &componentRenderResult{
 			name:     k.Name(),
 			markups:  markups,
 			children: children2,
@@ -417,10 +417,14 @@ func MustRegisterKlassOnly(c Component, params ...ComponentRegisterParameter) *K
 
 func unregisterComponent(ci ComponentInstance) {
 	rr := ci()
-	deleteKlass(rr.klass)
+	rrr, ok := rr.(*componentRenderResult)
+	if !ok {
+		panic(fmt.Errorf("invalid result: ", rr))
+	}
+	deleteKlass(rrr.klass)
 }
 
-func createComponent(b *Builder, vnode *RenderResult) Component {
+func createComponent(b *Builder, vnode *componentRenderResult) Component {
 	c := vnode.klass.NewInstance()
 	c.Context().builder = b
 	c.Context().id = b.components.NewKey()
@@ -455,34 +459,35 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 		var inst Component
 		var base *node
 
-		if rendered != nil {
+		switch vt := rendered.(type) {
+		case nil:
+			break
+		case *componentRenderResult:
 			if ctx.parentMarkups != nil {
-				rendered.markups = append(rendered.markups, ctx.parentMarkups...)
+				vt.markups = append(vt.markups, ctx.parentMarkups...)
 			}
-		}
-
-		if rendered != nil && rendered.klass != nil {
 			inst = initialChildComponent
-
-			if inst != nil && inst.Context().klass == rendered.klass && inst.Key() == rendered.key {
-				setComponentProps(b, inst, renderOptSync, rendered.markups, rendered.children)
+			if inst != nil && inst.Context().klass == vt.klass && inst.Key() == vt.key {
+				setComponentProps(b, inst, renderOptSync, vt.markups, vt.children)
 			} else {
 				toUnmount = inst
-				inst = createComponent(b, rendered)
+				inst = createComponent(b, vt)
 				ctx.childComponent = inst
 				inst.Context().parentComponent = c
-				setComponentProps(b, inst, renderOptNone, rendered.markups, rendered.children)
+				setComponentProps(b, inst, renderOptNone, vt.markups, vt.children)
 				renderComponent(b, inst, renderOptSync, true)
 			}
 			base = inst.Context().base
-		} else {
+		case *tagRenderResult:
+			if ctx.parentMarkups != nil {
+				vt.markups = append(vt.markups, ctx.parentMarkups...)
+			}
 			cbase := ctx.base
 			toUnmount = initialChildComponent
 			if toUnmount != nil {
 				ctx.childComponent = nil
 				cbase = nil
 			}
-
 			if initialBase != nil || renderOpt == renderOptSync {
 				if cbase != nil {
 					cbase.component = nil
@@ -493,6 +498,8 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 				}
 				base = diff(b, cbase, rendered, parent, true)
 			}
+		default:
+			panic(fmt.Errorf("type not implement!: %v", rendered))
 		}
 		if initialBase != nil && base != initialBase && inst != initialChildComponent {
 			baseParent := initialBase.parent
@@ -535,7 +542,7 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 	}
 }
 
-func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups []Markup, children []*RenderResult) {
+func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups []Markup, children []RenderResult) {
 	ctx := c.Context()
 	if ctx.disabled {
 		return
@@ -571,7 +578,7 @@ func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups
 	}
 }
 
-func buildComponentFromVNode(b *Builder, dom *node, vnode *RenderResult) *node {
+func buildComponentFromVNode(b *Builder, dom *node, vnode *componentRenderResult) *node {
 	var c Component
 	if dom != nil {
 		c = dom.component

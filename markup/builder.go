@@ -1,6 +1,8 @@
 package markup
 
-import "github.com/yossoy/exciton/internal/object"
+import (
+	"github.com/yossoy/exciton/internal/object"
+)
 
 type RequestAnimationFrameHandler func()
 type UpdateDiffSetHandler func(ds *DiffSet)
@@ -20,7 +22,7 @@ type Builder struct {
 	rafHandler       RequestAnimationFrameHandler
 	updateHandler    UpdateDiffSetHandler
 	scheduled        bool //TODO: need atomic proc?
-	rootRenderResult *RenderResult
+	rootRenderResult RenderResult
 	rootRenderNode   *node
 	rootComponent    Component
 	UserData         interface{}
@@ -61,10 +63,10 @@ func NewAsyncBuilder(hostPath string, raf RequestAnimationFrameHandler, udh Upda
 	return b
 }
 
-func (b *Builder) RenderBody(rr *RenderResult) {
+func (b *Builder) RenderBody(rr RenderResult) {
 	b.diffSet.reset()
-	b.rootRenderResult = rr
 
+	b.rootRenderResult = rr
 	b.rootRenderNode = diff(b, nil, rr, b.rootNode, false)
 	if b.rootRenderNode.component != nil {
 		b.rootComponent = b.rootRenderNode.component
@@ -166,7 +168,7 @@ func (b *Builder) deleteElement(n *node) {
 	}
 }
 
-func (b *Builder) createNode(v *RenderResult) *node {
+func (b *Builder) createNode(v *tagRenderResult) *node {
 	n := &node{
 		tag: v.name,
 	}

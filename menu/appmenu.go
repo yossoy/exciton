@@ -5,7 +5,7 @@ import (
 	"github.com/yossoy/exciton/markup"
 )
 
-func ApplicationMenu(m ...markup.MarkupOrChild) *markup.RenderResult {
+func ApplicationMenu(m ...markup.MarkupOrChild) markup.RenderResult {
 	return markup.Tag("menu", m...)
 }
 

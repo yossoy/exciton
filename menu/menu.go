@@ -45,7 +45,7 @@ const (
 
 type MenuInstance struct {
 	builder *markup.Builder
-	mounted *markup.RenderResult
+	mounted markup.RenderResult
 	uuid    string
 }
 
@@ -74,7 +74,7 @@ func (m *MenuInstance) updateDiffSetHandler(ds *markup.DiffSet) {
 	}
 }
 
-func SubMenu(label string, m ...markup.MarkupOrChild) *markup.RenderResult {
+func SubMenu(label string, m ...markup.MarkupOrChild) markup.RenderResult {
 	if len(m) == 0 {
 		//TODO: return emtpy menu?
 		return nil
@@ -85,7 +85,7 @@ func SubMenu(label string, m ...markup.MarkupOrChild) *markup.RenderResult {
 	return markup.Tag("menu", args...)
 }
 
-func Item(label string, handler func(e *html.MouseEvent)) *markup.RenderResult {
+func Item(label string, handler func(e *html.MouseEvent)) markup.RenderResult {
 	ll := strings.Split(label, ";")
 	if len(ll) >= 2 {
 		return markup.Tag("menuitem",
@@ -100,13 +100,13 @@ func Item(label string, handler func(e *html.MouseEvent)) *markup.RenderResult {
 	)
 }
 
-func RoledItem(role ItemRole) *markup.RenderResult {
+func RoledItem(role ItemRole) markup.RenderResult {
 	return markup.Tag("menuitem",
 		markup.Data("menuRole", string(role)),
 	)
 }
 
-func RoledMenu(role MenuRole, label string, childitem ...markup.MarkupOrChild) *markup.RenderResult {
+func RoledMenu(role MenuRole, label string, childitem ...markup.MarkupOrChild) markup.RenderResult {
 	if len(childitem) == 0 {
 		return markup.Tag("menu",
 			markup.Attribute("label", label),
@@ -122,7 +122,7 @@ func RoledMenu(role MenuRole, label string, childitem ...markup.MarkupOrChild) *
 	return markup.Tag("menu", args...)
 }
 
-func Separator() *markup.RenderResult {
+func Separator() markup.RenderResult {
 	return html.HorizontalRule()
 }
 
@@ -142,7 +142,7 @@ func newMenu() (*MenuInstance, error) {
 	return m, nil
 }
 
-func New(component *markup.RenderResult) (*MenuInstance, error) {
+func New(component markup.RenderResult) (*MenuInstance, error) {
 	m, err := newMenu()
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func New(component *markup.RenderResult) (*MenuInstance, error) {
 	return m, nil
 }
 
-func MustNew(component *markup.RenderResult) *MenuInstance {
+func MustNew(component markup.RenderResult) *MenuInstance {
 	m, err := New(component)
 	if err != nil {
 		panic(err)

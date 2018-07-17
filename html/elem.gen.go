@@ -13,7 +13,7 @@ import mkup "github.com/yossoy/exciton/markup"
 // locations within the same page, email addresses, or any other URL.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a
-func Anchor(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Anchor(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("a", markup...)
 }
 
@@ -22,7 +22,7 @@ func Anchor(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // description for the abbreviation.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/abbr
-func Abbreviation(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Abbreviation(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("abbr", markup...)
 }
 
@@ -30,7 +30,7 @@ func Abbreviation(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // person or people, or for an organization.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/address
-func Address(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Address(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("address", markup...)
 }
 
@@ -38,7 +38,7 @@ func Address(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // with a hypertext link. This element is used only within a <map> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/area
-func Area(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Area(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("area", markup...)
 }
 
@@ -48,7 +48,7 @@ func Area(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // or newspaper article, or a blog entry.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article
-func Article(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Article(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("article", markup...)
 }
 
@@ -56,13 +56,17 @@ func Article(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // related to the document's main content.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/aside
-func Aside(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Aside(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("aside", markup...)
 }
 
+// Audio is used to embed sound content in documents. It may contain one or
+// more audio sources, represented using the src attribute or the <source>
+// element: the browser will choose the most suitable one. It can also be the
+// destination for streamed media, using a MediaStream.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio
-func Audio(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Audio(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("audio", markup...)
 }
 
@@ -71,7 +75,7 @@ func Audio(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // importance.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/b
-func Bold(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Bold(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("b", markup...)
 }
 
@@ -79,7 +83,7 @@ func Bold(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // document. There can be only one <base> element in a document.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-func Base(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Base(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("base", markup...)
 }
 
@@ -88,7 +92,7 @@ func Base(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // surrounding text.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/bdi
-func BidirectionalIsolation(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func BidirectionalIsolation(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("bdi", markup...)
 }
 
@@ -97,7 +101,7 @@ func BidirectionalIsolation(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // direction.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/bdo
-func BidirectionalOverride(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func BidirectionalOverride(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("bdo", markup...)
 }
 
@@ -108,7 +112,7 @@ func BidirectionalOverride(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // of the source can be given using the <cite> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/blockquote
-func BlockQuote(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func BlockQuote(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("blockquote", markup...)
 }
 
@@ -116,7 +120,7 @@ func BlockQuote(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // <body> element in a document.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body
-func Body(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Body(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("body", markup...)
 }
 
@@ -124,7 +128,7 @@ func Body(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // writing a poem or an address, where the division of lines is significant.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/br
-func Break(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Break(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("br", markup...)
 }
 
@@ -132,7 +136,7 @@ func Break(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // anywhere in a document that needs simple, standard button functionality.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button
-func Button(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Button(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("button", markup...)
 }
 
@@ -140,7 +144,7 @@ func Button(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // WebGL API to draw graphics and animations.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas
-func Canvas(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Canvas(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("canvas", markup...)
 }
 
@@ -148,7 +152,7 @@ func Canvas(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // of a table, and if used is always the first child of a <table>.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/caption
-func Caption(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Caption(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("caption", markup...)
 }
 
@@ -157,7 +161,7 @@ func Caption(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // work.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
-func Citation(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Citation(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("cite", markup...)
 }
 
@@ -165,7 +169,7 @@ func Citation(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // text is a short fragment of computer code.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
-func Code(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Code(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("code", markup...)
 }
 
@@ -174,14 +178,14 @@ func Code(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/col
-func Column(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Column(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("col", markup...)
 }
 
 // ColumnGroup defines a group of columns within a table.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/colgroup
-func ColumnGroup(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func ColumnGroup(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("colgroup", markup...)
 }
 
@@ -189,7 +193,7 @@ func ColumnGroup(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // content is time- or date-related, the <time> element must be used.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/data
-func Data(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Data(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("data", markup...)
 }
 
@@ -197,7 +201,7 @@ func Data(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // available for other controls.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/datalist
-func DataList(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func DataList(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("datalist", markup...)
 }
 
@@ -205,7 +209,7 @@ func DataList(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // term (<dt>) in a description list (<dl>).
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dd
-func Description(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Description(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("dd", markup...)
 }
 
@@ -213,7 +217,7 @@ func Description(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // document.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/del
-func DeletedText(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func DeletedText(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("del", markup...)
 }
 
@@ -221,7 +225,7 @@ func DeletedText(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // information is visible only when the widget is toggled into an "open" state.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details
-func Details(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Details(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("details", markup...)
 }
 
@@ -229,7 +233,7 @@ func Details(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // defined within the context of a definition phrase or sentence.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dfn
-func Definition(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Definition(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("dfn", markup...)
 }
 
@@ -237,7 +241,7 @@ func Definition(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // inspector or window.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog
-func Dialog(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Dialog(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("dialog", markup...)
 }
 
@@ -245,7 +249,7 @@ func Dialog(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // content. It has no effect on the content or layout until styled using CSS.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/div
-func Div(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Div(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("div", markup...)
 }
 
@@ -255,7 +259,7 @@ func Div(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // glossary or to display metadata (a list of key-value pairs).
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dl
-func DescriptionList(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func DescriptionList(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("dl", markup...)
 }
 
@@ -263,7 +267,7 @@ func DescriptionList(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // such must be used inside a <dl> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dt
-func DefinitionTerm(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func DefinitionTerm(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("dt", markup...)
 }
 
@@ -271,7 +275,7 @@ func DefinitionTerm(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // nested, with each level of nesting indicating a greater degree of emphasis.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/em
-func Emphasis(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Emphasis(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("em", markup...)
 }
 
@@ -280,7 +284,7 @@ func Emphasis(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // interactive content such as a browser plug-in.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/embed
-func Embed(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Embed(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("embed", markup...)
 }
 
@@ -288,7 +292,7 @@ func Embed(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // within a web form.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fieldset
-func FieldSet(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func FieldSet(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("fieldset", markup...)
 }
 
@@ -297,7 +301,7 @@ func FieldSet(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // which is its immediate ancestor.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/figcaption
-func FigureCaption(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func FigureCaption(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("figcaption", markup...)
 }
 
@@ -305,7 +309,7 @@ func FigureCaption(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // (<figcaption>), and is typically referenced as a single unit.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/figure
-func Figure(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Figure(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("figure", markup...)
 }
 
@@ -314,7 +318,7 @@ func Figure(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // the section, copyright data or links to related documents.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/footer
-func Footer(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Footer(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("footer", markup...)
 }
 
@@ -322,7 +326,7 @@ func Footer(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // submitting information to a web server.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form
-func Form(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Form(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("form", markup...)
 }
 
@@ -330,7 +334,7 @@ func Form(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // is the highest section level and <h6> is the lowest.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements
-func Heading1(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Heading1(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("h1", markup...)
 }
 
@@ -339,7 +343,7 @@ func Heading1(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // elements like a logo, a search form, an author name, and so on.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/header
-func Header(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Header(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("header", markup...)
 }
 
@@ -347,7 +351,7 @@ func Header(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // It groups a set of <h1>–<h6> elements.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hgroup
-func HeadingsGroup(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func HeadingsGroup(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("hgroup", markup...)
 }
 
@@ -357,7 +361,7 @@ func HeadingsGroup(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // line.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hr
-func HorizontalRule(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func HorizontalRule(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("hr", markup...)
 }
 
@@ -367,7 +371,7 @@ func HorizontalRule(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // italic type.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/i
-func Italic(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Italic(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("i", markup...)
 }
 
@@ -375,14 +379,14 @@ func Italic(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // context, effectively embedding another HTML page into the current page.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
-func InlineFrame(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func InlineFrame(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("iframe", markup...)
 }
 
 // Image embeds an image into the document.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img
-func Image(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Image(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("img", markup...)
 }
 
@@ -390,14 +394,14 @@ func Image(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // accept data from the user.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-func Input(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Input(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("input", markup...)
 }
 
 // InsertedText represents a range of text that has been added to a document.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ins
-func InsertedText(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func InsertedText(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("ins", markup...)
 }
 
@@ -406,21 +410,21 @@ func InsertedText(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // entry device.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/kbd
-func KeyboardInput(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func KeyboardInput(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("kbd", markup...)
 }
 
 // Label represents a caption for an item in a user interface.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label
-func Label(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Label(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("label", markup...)
 }
 
 // Legend represents a caption for the content of its parent <fieldset>.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/legend
-func Legend(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Legend(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("legend", markup...)
 }
 
@@ -431,16 +435,15 @@ func Legend(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // ascending counter on the left, such as a number or letter.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/li
-func ListItem(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func ListItem(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("li", markup...)
 }
 
 // Link specifies relationships between the current document and an external
-// resource. Possible uses for this element include defining a relational
-// framework for navigation. This element is most used to link to style sheets.
+// resource. This element is most commonly used to link to stylesheets.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
-func Link(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Link(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("link", markup...)
 }
 
@@ -450,7 +453,7 @@ func Link(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // central functionality of an application.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/main
-func Main(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Main(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("main", markup...)
 }
 
@@ -458,7 +461,7 @@ func Main(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // area).
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/map
-func Map(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Map(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("map", markup...)
 }
 
@@ -467,7 +470,7 @@ func Map(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // relevance or importance in the enclosing context.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/mark
-func Mark(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Mark(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("mark", markup...)
 }
 
@@ -477,7 +480,7 @@ func Mark(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // a button after it has been clicked.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/menu
-func Menu(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Menu(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("menu", markup...)
 }
 
@@ -485,7 +488,7 @@ func Menu(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // meta-related elements, like <base>, <link>, <script>, <style> or <title>.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
-func Meta(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Meta(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("meta", markup...)
 }
 
@@ -493,7 +496,7 @@ func Meta(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // value.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meter
-func Meter(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Meter(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("meter", markup...)
 }
 
@@ -503,7 +506,7 @@ func Meter(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // indexes.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/nav
-func Navigation(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Navigation(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("nav", markup...)
 }
 
@@ -511,7 +514,7 @@ func Navigation(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // page is unsupported or if scripting is currently turned off in the browser.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/noscript
-func NoScript(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func NoScript(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("noscript", markup...)
 }
 
@@ -519,7 +522,7 @@ func NoScript(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // nested browsing context, or a resource to be handled by a plugin.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/object
-func Object(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Object(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("object", markup...)
 }
 
@@ -527,14 +530,14 @@ func Object(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // numbered list.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ol
-func OrderedList(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func OrderedList(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("ol", markup...)
 }
 
 // OptionsGroup creates a grouping of options within a <select> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/optgroup
-func OptionsGroup(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func OptionsGroup(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("optgroup", markup...)
 }
 
@@ -543,7 +546,7 @@ func OptionsGroup(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // and other lists of items in an HTML document.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/option
-func Option(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Option(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("option", markup...)
 }
 
@@ -552,21 +555,21 @@ func Option(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // action.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/output
-func Output(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Output(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("output", markup...)
 }
 
 // Paragraph represents a paragraph of text.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/p
-func Paragraph(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Paragraph(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("p", markup...)
 }
 
 // Parameter defines parameters for an <object> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/param
-func Parameter(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Parameter(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("param", markup...)
 }
 
@@ -575,7 +578,7 @@ func Parameter(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // scenarios.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/picture
-func Picture(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Picture(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("picture", markup...)
 }
 
@@ -583,7 +586,7 @@ func Picture(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // as written in the HTML file.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/pre
-func Preformatted(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Preformatted(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("pre", markup...)
 }
 
@@ -591,7 +594,7 @@ func Preformatted(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // typically displayed as a progress bar.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/progress
-func Progress(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Progress(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("progress", markup...)
 }
 
@@ -599,8 +602,16 @@ func Progress(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // modern browsers implement this by surrounding the text in quotation marks.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/q
-func Quote(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Quote(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("q", markup...)
+}
+
+// The HTML Ruby Base (<rb>) element is used to delimit the base text component
+// of a <ruby> annotation, i.e. the text that is being annotated.
+//
+// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/rb
+func Rb(markup ...mkup.MarkupOrChild) mkup.RenderResult {
+	return mkup.Tag("rb", markup...)
 }
 
 // The HTML Ruby Fallback Parenthesis (<rp>) element is used to provide
@@ -608,7 +619,7 @@ func Quote(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // annotations using the <ruby> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/rp
-func RubyParenthesis(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func RubyParenthesis(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("rp", markup...)
 }
 
@@ -618,7 +629,7 @@ func RubyParenthesis(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // always be contained within a <ruby> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/rt
-func RubyText(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func RubyText(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("rt", markup...)
 }
 
@@ -628,7 +639,7 @@ func RubyText(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // (<rtc>) annotations.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/rtc
-func RubyTextContainer(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func RubyTextContainer(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("rtc", markup...)
 }
 
@@ -636,7 +647,7 @@ func RubyTextContainer(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // pronunciation of East Asian characters.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ruby
-func Ruby(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Ruby(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("ruby", markup...)
 }
 
@@ -646,7 +657,7 @@ func Ruby(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // for that, use the <del> and <ins> elements, as appropriate.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/s
-func Strikethrough(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Strikethrough(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("s", markup...)
 }
 
@@ -654,7 +665,7 @@ func Strikethrough(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // represents sample (or quoted) output from a computer program.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/samp
-func Sample(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Sample(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("samp", markup...)
 }
 
@@ -662,7 +673,7 @@ func Sample(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // to embed or refer to JavaScript code.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
-func Script(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Script(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("script", markup...)
 }
 
@@ -671,14 +682,14 @@ func Script(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // document.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/section
-func Section(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Section(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("section", markup...)
 }
 
 // Select represents a control that provides a menu of options:
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
-func Select(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Select(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("select", markup...)
 }
 
@@ -687,7 +698,7 @@ func Select(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // create separate DOM trees and present them together.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot
-func Slot(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Slot(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("slot", markup...)
 }
 
@@ -698,7 +709,7 @@ func Slot(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // presentation.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/small
-func Small(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Small(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("small", markup...)
 }
 
@@ -708,7 +719,7 @@ func Small(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // browsers.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/source
-func Source(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Source(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("source", markup...)
 }
 
@@ -718,7 +729,7 @@ func Source(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // values, such as lang.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/span
-func Span(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Span(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("span", markup...)
 }
 
@@ -727,14 +738,14 @@ func Span(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // the contents in bold type.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/strong
-func Strong(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Strong(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("strong", markup...)
 }
 
 // Style contains style information for a document, or part of a document.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/style
-func Style(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Style(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("style", markup...)
 }
 
@@ -742,7 +753,7 @@ func Style(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // displayed as subscript for solely typographical reasons.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/sub
-func Subscript(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Subscript(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("sub", markup...)
 }
 
@@ -750,7 +761,7 @@ func Subscript(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // caption, or legend for a <details> element's disclosure box.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/summary
-func Summary(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Summary(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("summary", markup...)
 }
 
@@ -758,7 +769,7 @@ func Summary(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // displayed as superscript for solely typographical reasons.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/sup
-func Superscript(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Superscript(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("sup", markup...)
 }
 
@@ -767,7 +778,7 @@ func Superscript(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // data.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
-func Table(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Table(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("table", markup...)
 }
 
@@ -775,7 +786,7 @@ func Table(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // elements, indicating that they comprise the body of the table (<table>).
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tbody
-func TableBody(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func TableBody(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("tbody", markup...)
 }
 
@@ -783,7 +794,7 @@ func TableBody(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // the table model.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/td
-func TableData(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func TableData(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("td", markup...)
 }
 
@@ -792,21 +803,23 @@ func TableData(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // subsequently be instantiated during runtime using JavaScript.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template
-func Template(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Template(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("template", markup...)
 }
 
-// TextArea represents a multi-line plain-text editing control.
+// TextArea represents a multi-line plain-text editing control, useful when you
+// want to allow users to enter a sizeable amount of free-form text, for
+// example a comment on a review or feedback form.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea
-func TextArea(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func TextArea(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("textarea", markup...)
 }
 
 // TableFoot defines a set of rows summarizing the columns of the table.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tfoot
-func TableFoot(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func TableFoot(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("tfoot", markup...)
 }
 
@@ -814,7 +827,7 @@ func TableFoot(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // nature of this group is defined by the scope and headers attributes.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/th
-func TableHeader(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func TableHeader(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("th", markup...)
 }
 
@@ -822,7 +835,7 @@ func TableHeader(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // table.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/thead
-func TableHead(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func TableHead(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("thead", markup...)
 }
 
@@ -831,23 +844,26 @@ func TableHead(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // better search engine results or custom features such as reminders.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/time
-func Time(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Time(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("time", markup...)
 }
 
-// The HTML Title element (<title>) defines the title of the document, shown in
-// a browser's title bar or on the page's tab.
+// The HTML Title element (<title>) defines the document's title that is shown
+// in a browser's title bar or a page's tab.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title
-func Title(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Title(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("title", markup...)
 }
 
 // TableRow defines a row of cells in a table. The row's cells can then be
-// established using a mix of <td> (data cell) and <th> (header cell) elements.
+// established using a mix of <td> (data cell) and <th> (header cell)
+// elements.The HTML <tr> element specifies that the markup contained inside
+// the <tr> block comprises one row of a table, inside which the <th> and <td>
+// elements create header and data cells, respectively, within the row.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tr
-func TableRow(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func TableRow(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("tr", markup...)
 }
 
@@ -857,7 +873,7 @@ func TableRow(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // (.vtt files) — Web Video Text Tracks or Timed Text Markup Language (TTML).
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/track
-func Track(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Track(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("track", markup...)
 }
 
@@ -866,7 +882,7 @@ func Track(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // non-textual annotation.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/u
-func Underline(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Underline(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("u", markup...)
 }
 
@@ -874,7 +890,7 @@ func Underline(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // bulleted list.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ul
-func UnorderedList(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func UnorderedList(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("ul", markup...)
 }
 
@@ -882,7 +898,7 @@ func UnorderedList(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // mathematical expression or a programming context.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/var
-func Variable(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Variable(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("var", markup...)
 }
 
@@ -890,7 +906,7 @@ func Variable(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // playback into the document.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video
-func Video(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func Video(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("video", markup...)
 }
 
@@ -899,6 +915,6 @@ func Video(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
 // rules would not otherwise create a break at that location.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/wbr
-func WordBreakOpportunity(markup ...mkup.MarkupOrChild) *mkup.RenderResult {
+func WordBreakOpportunity(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("wbr", markup...)
 }

@@ -23,7 +23,7 @@ type Window struct {
 	isReady           bool
 	OnClosed          func(e *event.Event)
 	OnResize          func(width, height float64)
-	mountRenderResult *markup.RenderResult
+	mountRenderResult markup.RenderResult
 	title             string
 	lang              string
 	cachedHTML        []byte
@@ -64,7 +64,7 @@ func (w *Window) onRequestAnimationFrame(tick float64) {
 	w.builder.ProcRequestAnimationFrame()
 }
 
-func (w *Window) Mount(c *markup.RenderResult) error {
+func (w *Window) Mount(c markup.RenderResult) error {
 	if c == nil {
 		return errors.New("Windows is already mount")
 	}

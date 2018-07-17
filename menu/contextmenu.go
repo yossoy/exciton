@@ -7,7 +7,7 @@ import (
 	"github.com/yossoy/exciton/window"
 )
 
-func ContextMenu(m ...markup.MarkupOrChild) *markup.RenderResult {
+func ContextMenu(m ...markup.MarkupOrChild) markup.RenderResult {
 	return markup.Tag("menu", m...)
 }
 
