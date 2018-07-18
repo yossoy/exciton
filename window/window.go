@@ -44,7 +44,7 @@ func (w *Window) requestAnimationFrame() {
 }
 
 func (w *Window) updateDiffSetHandler(ds *markup.DiffSet) {
-	//log.Info("updateDiffSetHandler: %v", ds)
+	//log.PrintDebug("updateDiffSetHandler: %v", ds)
 	event.Emit("/window/"+w.ID+"/updateDiffSetHandler", event.NewValue(ds))
 }
 

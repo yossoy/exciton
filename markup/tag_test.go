@@ -8,73 +8,72 @@ import (
 
 func TestNewEmptyTag(t *testing.T) {
 	r := Tag("foo")
-	assert.IsType(t, r, &RenderResult{})
-	assert.Equal(t, r.name, "foo")
-	assert.Equal(t, r.data, "")
-	assert.Nil(t, r.klass)
-	assert.Nil(t, r.markups)
-	assert.Nil(t, r.children)
+	tr, ok := r.(*tagRenderResult)
+	assert.True(t, ok)
+	assert.Equal(t, tr.data, "")
+	assert.Nil(t, tr.markups)
+	assert.Nil(t, tr.children)
 }
 
 func TestNewText(t *testing.T) {
 	r := Text("foo")
-	assert.IsType(t, r, &RenderResult{})
-	assert.Equal(t, r.name, "")
-	assert.Equal(t, r.data, "foo")
-	assert.Nil(t, r.klass)
-	assert.Nil(t, r.markups)
-	assert.Nil(t, r.children)
+	tr, ok := r.(*textRenderResult)
+	assert.True(t, ok)
+	assert.Equal(t, tr.text, "foo")
 }
 
 func TestNewNest1Tag(t *testing.T) {
 	r := Tag("foo",
 		Tag("bar"),
 	)
-	assert.IsType(t, r, &RenderResult{})
-	assert.Equal(t, r.name, "foo")
-	assert.Equal(t, r.data, "")
-	assert.Nil(t, r.klass)
-	assert.Nil(t, r.markups)
-	assert.Equal(t, len(r.children), 1)
-	c := r.children[0]
-	assert.Equal(t, c.name, "bar")
-	assert.Equal(t, c.data, "")
-	assert.Nil(t, c.klass)
-	assert.Nil(t, c.markups)
-	assert.Nil(t, c.children)
+	tr, ok := r.(*tagRenderResult)
+	assert.True(t, ok)
+	assert.Equal(t, tr.name, "foo")
+	assert.Equal(t, tr.data, "")
+	assert.Nil(t, tr.markups)
+	assert.Equal(t, len(tr.children), 1)
+	c := tr.children[0]
+	tcr, ok := c.(*tagRenderResult)
+	assert.True(t, ok)
+	assert.Equal(t, tcr.name, "bar")
+	assert.Equal(t, tcr.data, "")
+	assert.Nil(t, tcr.markups)
+	assert.Nil(t, tcr.children)
 }
 
 func TestNewNestEmptyList(t *testing.T) {
 	r := Tag("foo",
 		List{},
 	)
-	assert.IsType(t, r, &RenderResult{})
-	assert.Equal(t, r.name, "foo")
-	assert.Equal(t, r.data, "")
-	assert.Nil(t, r.klass)
-	assert.Nil(t, r.markups)
-	assert.Nil(t, r.children)
+	tr, ok := r.(*tagRenderResult)
+	assert.True(t, ok)
+	assert.Equal(t, tr.name, "foo")
+	assert.Equal(t, tr.data, "")
+	assert.Nil(t, tr.markups)
+	assert.Nil(t, tr.children)
 }
 func TestNewNestList(t *testing.T) {
 	r := Tag("foo",
 		List{Tag("bar"), Tag("baz")},
 	)
-	assert.IsType(t, r, &RenderResult{})
-	assert.Equal(t, r.name, "foo")
-	assert.Equal(t, r.data, "")
-	assert.Nil(t, r.klass)
-	assert.Nil(t, r.markups)
-	assert.Equal(t, len(r.children), 2)
-	c := r.children[0]
-	assert.Equal(t, c.name, "bar")
-	assert.Equal(t, c.data, "")
-	assert.Nil(t, c.klass)
-	assert.Nil(t, c.markups)
-	assert.Nil(t, c.children)
-	c = r.children[1]
-	assert.Equal(t, c.name, "baz")
-	assert.Equal(t, c.data, "")
-	assert.Nil(t, c.klass)
-	assert.Nil(t, c.markups)
-	assert.Nil(t, c.children)
+	tr, ok := r.(*tagRenderResult)
+	assert.True(t, ok)
+	assert.Equal(t, tr.name, "foo")
+	assert.Equal(t, tr.data, "")
+	assert.Nil(t, tr.markups)
+	assert.Equal(t, len(tr.children), 2)
+	c := tr.children[0]
+	tcr, ok := c.(*tagRenderResult)
+	assert.True(t, ok)
+	assert.Equal(t, tcr.name, "bar")
+	assert.Equal(t, tcr.data, "")
+	assert.Nil(t, tcr.markups)
+	assert.Nil(t, tcr.children)
+	c = tr.children[1]
+	tcr, ok = c.(*tagRenderResult)
+	assert.True(t, ok)
+	assert.Equal(t, tcr.name, "baz")
+	assert.Equal(t, tcr.data, "")
+	assert.Nil(t, tcr.markups)
+	assert.Nil(t, tcr.children)
 }

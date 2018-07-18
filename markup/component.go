@@ -419,7 +419,7 @@ func unregisterComponent(ci ComponentInstance) {
 	rr := ci()
 	rrr, ok := rr.(*componentRenderResult)
 	if !ok {
-		panic(fmt.Errorf("invalid result: ", rr))
+		panic(fmt.Errorf("invalid result: %v", rr))
 	}
 	deleteKlass(rrr.klass)
 }
@@ -458,10 +458,10 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 		var toUnmount Component
 		var inst Component
 		var base *node
+		procComponentResult := false
 
 		switch vt := rendered.(type) {
 		case nil:
-			break
 		case *componentRenderResult:
 			if ctx.parentMarkups != nil {
 				vt.markups = append(vt.markups, ctx.parentMarkups...)
@@ -478,10 +478,16 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 				renderComponent(b, inst, renderOptSync, true)
 			}
 			base = inst.Context().base
+			procComponentResult = true
+		case *textRenderResult:
 		case *tagRenderResult:
 			if ctx.parentMarkups != nil {
 				vt.markups = append(vt.markups, ctx.parentMarkups...)
 			}
+		default:
+			panic(fmt.Errorf("type not implement!: %v", vt))
+		}
+		if !procComponentResult {
 			cbase := ctx.base
 			toUnmount = initialChildComponent
 			if toUnmount != nil {
@@ -498,8 +504,6 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 				}
 				base = diff(b, cbase, rendered, parent, true)
 			}
-		default:
-			panic(fmt.Errorf("type not implement!: %v", rendered))
 		}
 		if initialBase != nil && base != initialBase && inst != initialChildComponent {
 			baseParent := initialBase.parent

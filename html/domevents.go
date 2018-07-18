@@ -27,7 +27,7 @@ type Event struct {
 	DefaultPrevented bool                `json:"defaultPrevented"`        // DefaultPrevented indicates whether or not event.preventDefault() has been called on the event.
 	EventPhase       EventPhase          `json:"eventPhase"`              // Phase indicates which phase of the event flow is being processed.
 	Target           *markup.EventTarget `json:"target,omitempty"`        // Target is a reference to the target to which the event was originally dispatched.
-	TimeStamp        uint64              `json:"timeStamp"`               // TimeStamp is the time at which the event was created, in milliseconds. By specification, this value is time since epoch, but in reality browsers' definitions vary; in addition, work is underway to change this to be a DOMHighResTimeStamp instead.
+	TimeStamp        float64             `json:"timeStamp"`               // TimeStamp is the time at which the event was created, in milliseconds. By specification, this value is time since epoch, but in reality browsers' definitions vary; in addition, work is underway to change this to be a DOMHighResTimeStamp instead.
 	Type             string              `json:"type"`                    // Type is the name of the event (case-insensitive).
 	IsTrusted        bool                `json:"isTrusted"`               // Indicates whether or not the event was initiated by the browser (after a user click for instance) or by a script (using an event creation method, like event.initEvent)
 }

@@ -151,7 +151,7 @@ function mountUnmountComponent(nsobj, n, itemv, mounted) {
     nsobj.components[id] = instanceData;
     n[ExcitonComponentID] = id;
   } else {
-    delete nsobj.components[dataKey];
+    delete nsobj.components[id];
   }
 }
 

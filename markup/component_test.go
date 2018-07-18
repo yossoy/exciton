@@ -22,7 +22,7 @@ type testComponent1 struct {
 	Core
 }
 
-func (tc1 *testComponent1) Render() *RenderResult {
+func (tc1 *testComponent1) Render() RenderResult {
 	return nil
 }
 
@@ -42,21 +42,25 @@ func TestComponent1(t *testing.T) {
 type testErrorCompoent1 struct {
 }
 
-func (tec1 testErrorCompoent1) Context() *Core                          { return nil }
-func (tec1 testErrorCompoent1) Render() *RenderResult                   { return nil }
-func (tec1 testErrorCompoent1) Key() interface{}                        { return nil }
-func (tec1 testErrorCompoent1) Builder() *Builder                       { return nil }
-func (tec1 testErrorCompoent1) Classes(classes ...string) MarkupOrChild { return nil }
-func (tec1 testErrorCompoent1) ID() string                              { return "" }
+func (tec1 testErrorCompoent1) Context() *Core                              { return nil }
+func (tec1 testErrorCompoent1) Render() RenderResult                        { return nil }
+func (tec1 testErrorCompoent1) Key() interface{}                            { return nil }
+func (tec1 testErrorCompoent1) Builder() *Builder                           { return nil }
+func (tec1 testErrorCompoent1) Classes(classes ...string) MarkupOrChild     { return nil }
+func (tec1 testErrorCompoent1) ID() string                                  { return "" }
+func (tec1 testErrorCompoent1) GetProperty(name string) (interface{}, bool) { return nil, false }
+func (tec1 testErrorCompoent1) MarshalJSON() ([]byte, error)                { return nil, nil }
 
 type testErrorCompoent2 int
 
-func (tec2 *testErrorCompoent2) Context() *Core                          { return nil }
-func (tec2 *testErrorCompoent2) Render() *RenderResult                   { return nil }
-func (tec2 *testErrorCompoent2) Key() interface{}                        { return nil }
-func (tec2 *testErrorCompoent2) Builder() *Builder                       { return nil }
-func (tec2 *testErrorCompoent2) Classes(classes ...string) MarkupOrChild { return nil }
-func (tec2 *testErrorCompoent2) ID() string                              { return "" }
+func (tec2 *testErrorCompoent2) Context() *Core                              { return nil }
+func (tec2 *testErrorCompoent2) Render() RenderResult                        { return nil }
+func (tec2 *testErrorCompoent2) Key() interface{}                            { return nil }
+func (tec2 *testErrorCompoent2) Builder() *Builder                           { return nil }
+func (tec2 *testErrorCompoent2) Classes(classes ...string) MarkupOrChild     { return nil }
+func (tec2 *testErrorCompoent2) ID() string                                  { return "" }
+func (tec2 *testErrorCompoent2) GetProperty(name string) (interface{}, bool) { return nil, false }
+func (tec2 *testErrorCompoent2) MarshalJSON() ([]byte, error)                { return nil, nil }
 
 func TestComponentError1(t *testing.T) {
 	f := testErrorCompoent1{}
@@ -118,7 +122,7 @@ func (tcp1 *testComponentProps1) Initialize() {
 	td.parentComponent = tcp1
 }
 
-func (tcp1 *testComponentProps1) Render() *RenderResult {
+func (tcp1 *testComponentProps1) Render() RenderResult {
 	return Text(strconv.Itoa(*tcp1.IntValue))
 }
 
@@ -136,7 +140,7 @@ func TestComponentProps(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
 	ci := MustRegisterComponent((*testComponentProps1)(nil))
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -169,7 +173,7 @@ type nestComponentChild1 struct {
 	Index int `exciton:"index"`
 }
 
-func (ncc1 *nestComponentChild1) Render() *RenderResult {
+func (ncc1 *nestComponentChild1) Render() RenderResult {
 	return Tag("span",
 		Text(strconv.Itoa(ncc1.Index)),
 	)
@@ -189,7 +193,7 @@ type nestComponentChild2 struct {
 	Index int `exciton:"index2"`
 }
 
-func (ncc1 *nestComponentChild2) Render() *RenderResult {
+func (ncc1 *nestComponentChild2) Render() RenderResult {
 	return Tag("span",
 		Text(strconv.Itoa(ncc1.Index)),
 	)
@@ -208,7 +212,7 @@ type nestComponentParent1 struct {
 	Var *int `exciton:"var"`
 }
 
-func (ncp1 *nestComponentParent1) Render() *RenderResult {
+func (ncp1 *nestComponentParent1) Render() RenderResult {
 	var mkups []MarkupOrChild
 	if *ncp1.Var == 0 {
 		mkups = append(mkups, NestComponentChild1(Property("index", 0)))
@@ -244,7 +248,7 @@ var NestComponentParent1 = MustRegisterComponent((*nestComponentParent1)(nil))
 func TestComponentNest1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -298,6 +302,7 @@ func TestComponentNestAsync1(t *testing.T) {
 	var bp **Builder
 	ch := make(chan string, 1)
 	b := NewAsyncBuilder(
+		"",
 		func() {
 			(*bp).ProcRequestAnimationFrame()
 		}, func(ds *DiffSet) {
@@ -338,7 +343,7 @@ type nestComponentParent2 struct {
 	Var *int `exciton:"var"`
 }
 
-func (ncp1 *nestComponentParent2) Render() *RenderResult {
+func (ncp1 *nestComponentParent2) Render() RenderResult {
 	if *ncp1.Var == 0 {
 		return NestComponentChild1(Property("index", 0))
 	}
@@ -367,7 +372,7 @@ var NestComponentParent2 = MustRegisterComponent((*nestComponentParent2)(nil))
 func TestComponentNest2(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -420,7 +425,7 @@ type nestComponentParent3 struct {
 	Var *int `exciton:"var"`
 }
 
-func (ncp3 *nestComponentParent3) Render() *RenderResult {
+func (ncp3 *nestComponentParent3) Render() RenderResult {
 	if *ncp3.Var == 0 {
 		return NestComponentChild1(Property("index", 0))
 	}
@@ -448,7 +453,7 @@ var NestComponentParent3 = MustRegisterComponent((*nestComponentParent3)(nil))
 func TestComponentNest3(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -501,7 +506,7 @@ type nestComponentParent4 struct {
 	Var *int `exciton:"var"`
 }
 
-func (ncp4 *nestComponentParent4) Render() *RenderResult {
+func (ncp4 *nestComponentParent4) Render() RenderResult {
 	if *ncp4.Var == 0 {
 		return NestComponentChild1(Property("index", 0))
 	}
@@ -529,7 +534,7 @@ var NestComponentParent4 = MustRegisterComponent((*nestComponentParent4)(nil))
 func TestComponentNest4(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -576,7 +581,7 @@ type childParentComponent1 struct {
 	Var int `exciton:"var"`
 }
 
-func (cpc1 *childParentComponent1) Render() *RenderResult {
+func (cpc1 *childParentComponent1) Render() RenderResult {
 	m := make([]MarkupOrChild, len(cpc1.Children()))
 	for i, c := range cpc1.Children() {
 		m[i] = c
@@ -597,7 +602,7 @@ var ChildParentComponent1 = MustRegisterComponent((*childParentComponent1)(nil))
 func TestComponentChild1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -631,7 +636,7 @@ func (c *testEventComponent1) Callback1() {
 func (c *testEventComponent1) Callback2() {
 }
 
-func (c *testEventComponent1) Render() *RenderResult {
+func (c *testEventComponent1) Render() RenderResult {
 	var m MarkupOrChild
 	if *c.Var == 0 {
 		m = makeTestEvent("event1", c.Callback1)
@@ -646,7 +651,7 @@ var EventComponent1 = MustRegisterComponent((*testEventComponent1)(nil))
 func TestComponentEvent1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -677,7 +682,7 @@ type testEventComponent2 struct {
 func (c *testEventComponent2) Callback1() {
 }
 
-func (c *testEventComponent2) Render() *RenderResult {
+func (c *testEventComponent2) Render() RenderResult {
 	var m MarkupOrChild
 	if *c.Var == 0 {
 		m = makeTestEvent("event1", c.Callback1)
@@ -690,7 +695,7 @@ var EventComponent2 = MustRegisterComponent((*testEventComponent2)(nil))
 func TestComponentEvent2(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -725,7 +730,7 @@ type keyTestChildComponent1 struct {
 	Var int `exciton:"var"`
 }
 
-func (c *keyTestChildComponent1) Render() *RenderResult {
+func (c *keyTestChildComponent1) Render() RenderResult {
 	if c.Var == 0 {
 		return Text("a")
 	}
@@ -739,7 +744,7 @@ type keyTestParentComponent1 struct {
 	Var *int `exciton:"var"`
 }
 
-func (c *keyTestParentComponent1) Render() *RenderResult {
+func (c *keyTestParentComponent1) Render() RenderResult {
 	if *c.Var == 0 {
 		return Tag("div",
 			Keyer("key1", KeyTestChildComponent1(Property("var", 0))),
@@ -759,7 +764,7 @@ type nonKeyTestParentComponent1 struct {
 	Var *int `exciton:"var"`
 }
 
-func (c *nonKeyTestParentComponent1) Render() *RenderResult {
+func (c *nonKeyTestParentComponent1) Render() RenderResult {
 	if *c.Var == 0 {
 		return Tag("div",
 			KeyTestChildComponent1(Property("var", 0)),
@@ -777,7 +782,7 @@ var NonKeyTestParentComponent1 = MustRegisterComponent((*nonKeyTestParentCompone
 func TestComponentNonKey1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -812,7 +817,7 @@ func TestComponentNonKey1(t *testing.T) {
 func TestComponentKey1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -849,7 +854,7 @@ type innerHTMLTestComponent1 struct {
 	Var *int `exciton:"var"`
 }
 
-func (c *innerHTMLTestComponent1) Render() *RenderResult {
+func (c *innerHTMLTestComponent1) Render() RenderResult {
 	if *c.Var == 0 {
 		return Tag("div",
 			UnsafeHTML(`<span>innerHTML</span>`),
@@ -866,7 +871,7 @@ var InnerHTMLTestComponent1 = MustRegisterComponent((*innerHTMLTestComponent1)(n
 func TestComponentInnerHTML1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder()
+	b := NewBuilder("")
 	b.UserData = td
 	b.keyGenerator = td.newKey
 
@@ -896,4 +901,73 @@ func TestComponentInnerHTML1(t *testing.T) {
 	t.Log(html)
 	// non keyed node recreate in renderer
 	assert.Equal(t, `<div><div _uuid="id2"><span>innerHTML</span></div></div>`, html)
+}
+
+type testLastComponentEraseChild struct {
+	Core
+}
+
+func (c *testLastComponentEraseChild) Render() RenderResult {
+	return Tag("span", Text("bar"))
+}
+
+var lastComponentEraseChild = MustRegisterComponent((*testLastComponentEraseChild)(nil))
+
+type testLastComponentEraseParent struct {
+	Core
+	Var *int `exciton:"var"`
+}
+
+func (c *testLastComponentEraseParent) Render() RenderResult {
+	return Tag("div",
+		Text("foo"),
+		If(*c.Var == 0, lastComponentEraseChild()),
+	)
+}
+
+var lastComponentEraseParent = MustRegisterComponent((*testLastComponentEraseParent)(nil))
+
+func TestLastComponentErase(t *testing.T) {
+	root := makeHTMLRoot()
+	td := &testData{}
+	b := NewBuilder("")
+	b.UserData = td
+	b.keyGenerator = td.newKey
+
+	v := 0
+	b.RenderBody(
+		lastComponentEraseParent(Property("var", &v)),
+	)
+	t.Log(diffSetToString(b.diffSet))
+	html := applyHTML(b.diffSet, root)
+	t.Log(html)
+	assert.Equal(t, `<div><div _uuid="id0">foo<span _uuid="id1">bar</span></div></div>`, html)
+
+	b.diffSet.reset()
+	v = 1
+	b.Rerender()
+	t.Log(diffSetToString(b.diffSet))
+	html = applyHTML(b.diffSet, root)
+	t.Log(html)
+	// non keyed node recreate in renderer
+	assert.Equal(t, `<div><div _uuid="id0">foo</div></div>`, html)
+
+	b.diffSet.reset()
+	v = 0
+	b.Rerender()
+	t.Log(diffSetToString(b.diffSet))
+	html = applyHTML(b.diffSet, root)
+	t.Log(html)
+	// non keyed node recreate in renderer
+	assert.Equal(t, `<div><div _uuid="id0">foo<span _uuid="id2">bar</span></div></div>`, html)
+
+	b.diffSet.reset()
+	v = 1
+	b.Rerender()
+	t.Log(diffSetToString(b.diffSet))
+	html = applyHTML(b.diffSet, root)
+	t.Log(html)
+	// non keyed node recreate in renderer
+	assert.Equal(t, `<div><div _uuid="id0">foo</div></div>`, html)
+
 }

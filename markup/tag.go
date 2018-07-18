@@ -11,11 +11,8 @@ type tagStack struct {
 
 func splitMarkupOrChild(mm []MarkupOrChild) (marksups []Markup, children []RenderResult, err error) {
 	for _, m := range mm {
-		if m == nil {
-			continue
-		}
-
 		switch v := m.(type) {
+		case nil:
 		case Markup:
 			marksups = append(marksups, v)
 		case RenderResult:

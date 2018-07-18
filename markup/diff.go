@@ -209,7 +209,7 @@ func isSameNodeType(n *node, vnode RenderResult, hydrating bool) bool {
 		}
 		return n.component != nil && n.component.Context().klass == vt.klass
 	default:
-		panic(fmt.Errorf("unknown type", vnode))
+		panic(fmt.Errorf("unknown type: %v", vnode))
 	}
 }
 
