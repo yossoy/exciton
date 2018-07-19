@@ -1,4 +1,5 @@
 'use strict';
+import styles from './default.css';
 const nsobj = window.exciton;
 nsobj.system = this;
 
