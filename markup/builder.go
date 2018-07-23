@@ -1,6 +1,7 @@
 package markup
 
 import (
+	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/internal/object"
 )
 
@@ -27,6 +28,7 @@ type Builder struct {
 	rootComponent    Component
 	UserData         interface{}
 	keyGenerator     func() object.ObjectKey
+	route            string
 }
 
 type Buildable interface {
@@ -123,8 +125,8 @@ func (b *Builder) enqueueRender(c Component) {
 
 func (b *Builder) rerender() {
 	for {
-		items := b.delayUpdater
-		b.delayUpdater = nil
+		var items []Component
+		items, b.delayUpdater = b.delayUpdater, nil
 		if len(items) == 0 {
 			return
 		}
@@ -287,4 +289,16 @@ func (b *Builder) flushMount() {
 		}
 	}
 	b.mounter = b.mounter[:0]
+}
+
+func (b *Builder) OnRedirect(route string) {
+	// validate path
+	if b.route != route {
+		b.route = route
+		b.Rerender()
+	}
+}
+
+func (b *Builder) Redirect(route string) {
+	event.Emit(b.hostPath+"/redirectTo", event.NewValue(route))
 }

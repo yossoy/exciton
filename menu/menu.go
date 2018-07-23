@@ -33,6 +33,8 @@ const (
 	RoleZoom                        = "zoom"
 	RoleQuit                        = "quit"
 	RoleToggleFullscreen            = "togglefullscreen"
+	RoleGoBack                      = "back"
+	RoleGoForward                   = "forward"
 )
 
 type MenuRole string

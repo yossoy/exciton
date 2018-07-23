@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+type delayApplyer func(b *Builder) interface{}
+
 type attrApplyer struct {
 	name  string
 	value interface{}
@@ -20,9 +22,13 @@ func (aa attrApplyer) applyToNode(b *Builder, n *node, on *node) {
 	if n.attributes == nil {
 		n.attributes = make(map[string]interface{})
 	}
-	n.attributes[aa.name] = aa.value
-	if !ok || ov != aa.value {
-		b.diffSet.AddAttribute(n, aa.name, aa.value)
+	val := aa.value
+	if da, ok := val.(delayApplyer); ok {
+		val = da(b)
+	}
+	n.attributes[aa.name] = val
+	if !ok || ov != val {
+		b.diffSet.AddAttribute(n, aa.name, val)
 	}
 }
 
@@ -76,8 +82,9 @@ func Attribute(name string, value interface{}) MarkupOrChild {
 }
 
 type propApplyer struct {
-	name  string
-	value interface{}
+	name       string
+	value      interface{}
+	isRedirect bool
 }
 
 func (aa propApplyer) isMarkup()        {}
@@ -90,16 +97,24 @@ func (aa propApplyer) applyToNode(b *Builder, n *node, on *node) {
 	if n.properties == nil {
 		n.properties = make(map[string]interface{})
 	}
-	n.properties[aa.name] = aa.value
-	if !ok || ov != aa.value {
-		b.diffSet.addProperty(n, aa.name, aa.value)
+	val := aa.value
+	if da, ok := val.(delayApplyer); ok {
+		val = da(b)
+	}
+	n.properties[aa.name] = val
+	if !ok || ov != val {
+		b.diffSet.addProperty(n, aa.name, val)
 	}
 }
 func (aa propApplyer) applyToComponent(c Component) {
 	core := c.Context()
 	if idx, ok := core.klass.Properties[aa.name]; ok {
 		v := reflect.ValueOf(c)
-		vv := reflect.ValueOf(aa.value)
+		val := aa.value
+		if da, ok := val.(delayApplyer); ok {
+			val = da(c.Builder())
+		}
+		vv := reflect.ValueOf(val)
 		v.Elem().Field(idx).Set(vv)
 	}
 }

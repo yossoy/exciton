@@ -46,6 +46,15 @@
                 Window *w = driver.elements[idstr];
                 [w browserSyncRequest:argument responceNo:responceNo];
               }];
+  [d addEventHandler:@"/window/:id/redirectTo"
+              handler:^(id argument,
+                        NSDictionary<NSString *, NSString *> *parameter,
+                        int responceNo) {
+                NSString *idstr = parameter[@"id"];
+                Driver *driver = [Driver current];
+                Window *w = driver.elements[idstr];
+                [w redirectTo:argument];
+              }];
 }
 
 + (BOOL)newWindow:(NSString *)id config:(NSDictionary *)cfg {
@@ -306,6 +315,22 @@
              }];);
 }
 
+- (void)redirectTo:(id)args {
+  // LOG_INFO(@"updateDiffSetHandler: %@", diff);
+  NSData *jsonData = [JSONEncoder encodeFromObject:args];
+  NSString *jsonStr =
+      [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+  NSString *jsonStr2 =
+      [jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
+  NSString *cmdstr =
+      [NSString stringWithFormat:@"window.exciton.requestBrowserEvent('"
+                                 @"redirectTo', '%@');",
+                                 jsonStr2];
+  LOG_DEBUG(@"redirectTo: ==> %@", cmdstr);
+  defer([self.webview evaluateJavaScript:cmdstr completionHandler:nil];);
+}
+
+
 - (void)windowDidResize:(NSNotification *)notification {
   Driver *driver = [Driver current];
 
@@ -401,6 +426,32 @@
   if (event.clickCount == 2) {
     [win.window zoom:nil];
   }
+}
+
+-  (WKNavigation *)goBack {
+  Window *win = (Window *)self.window.windowController;
+  LOG_DEBUG(@"goBack");
+  return [win.webview goBack];
+}
+
+-  (WKNavigation *)goForward {
+  Window *win = (Window *)self.window.windowController;
+  LOG_DEBUG(@"goForward");
+  return [win.webview goForward];
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem*)anItem
+{
+  Window *win = (Window *)self.window.windowController;
+
+  if (anItem.action == @selector(goBack:)) {
+    return win.webview.canGoBack;
+  }
+  if (anItem.action == @selector(goFront:)) {
+    return win.webview.canGoForward;
+  }
+
+  return [super validateMenuItem:anItem];
 }
 @end
 

@@ -129,6 +129,19 @@ void browserSync(const picojson::value &argument,
   LOG_INFO("updateDiffSetHandler called: %s\n", id.c_str());
   evaluateJavaScript(id, "updateDiffData", argument, responceNo);
 }
+
+void redirectTo(const picojson::value &argument,
+                          const std::map<std::string, std::string> &parameter,
+                          int responceNo) {
+  Driver &d = Driver::Current();
+  auto id = getIdFromParam(parameter);
+  if (id.empty()) {
+    LOG_ERROR("parameter['id'] not found\n");
+    return;
+  }
+  LOG_INFO("redirectTo called: %s\n", id.c_str());
+  evaluateJavaScript(id, "redirectTo", argument);
+}
 } // namespace
 
 void Window_Init() {
@@ -139,6 +152,7 @@ void Window_Init() {
   d.addDeferEventHandler("/window/:id/updateDiffSetHandler",
                          updateDiffSetHandler);
   d.addDeferEventHandler("/window/:id/browserSync", browserSync);
+  d.addDeferEventHandler("/window/:id/redirectTo", redirectTo);
 
   if (!CMenuMgr::InitClass()) {
     LOG_ERROR("menumgr::initclass failed\n");

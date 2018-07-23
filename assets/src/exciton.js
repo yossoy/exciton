@@ -34,6 +34,23 @@ nsobj.findModuleFunction = function(localJSKey, funcName) {
   return null;
 }
 
+window.addEventListener('popstate', function(e) {
+  const s = e.state;
+  nsobj.callNativeMethod('changeRoute', {'route': s.redirectRoute});
+});
+
+nsobj.redirectTo = function(route) {
+  window.history.pushState({'redirectRoute': route}, route, route);
+  nsobj.callNativeMethod('changeRoute', {'route': route});
+};
+
+nsobj.onClickRedirectTo = function(e, route) {
+  nsobj.redirectTo(route);
+  e.preventDefault();
+  e.stopPropagation();
+  return false;
+};
+
 nsobj.requestBrowerEventSync = function(method, jsonArg) {
   const arg = JSON.parse(jsonArg);
   console.log('requestBrowerEventSync', arg);
@@ -85,6 +102,10 @@ exciton.on('updateDiffData', (e) => {
   updateDiffData(nsobj, e);
 });
 
+exciton.on('redirectTo', (e) => {
+  nsobj.redirectTo(e.detail);
+});
+
 class Module {
   constructor(id, w) {
     this.id = id;
@@ -127,6 +148,9 @@ nsobj.require = function(id) {
 const loadComponentsScripts = function() {
   for (let id in nsobj.modules) {
     nsobj.require(id);
+  }
+  if (!window.history.state) {
+    window.history.replaceState({'redirectRoute': '/'}, '/', '/');
   }
   window.removeEventListener('load', loadComponentsScripts, false);
   nsobj.callNativeMethod('ready', null);

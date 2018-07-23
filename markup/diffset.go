@@ -352,17 +352,19 @@ func (ds *DiffSet) SetRootItem(t *node, id string) {
 }
 
 type dtAddClientEventItem struct {
-	ID                 string `json:"id"`
-	ClientScriptPrefix string `json:"sp"`
-	ScriptHandlerName  string `json:"sh"`
+	ID                 string        `json:"id"`
+	ClientScriptPrefix string        `json:"sp"`
+	ScriptHandlerName  string        `json:"sh"`
+	ScriptArguments    []interface{} `json:"sas"`
 }
 
-func (ds *DiffSet) AddClientEvent(t *node, name string, eventId string, clientScriptPrefix string, scriptHandlerName string) {
+func (ds *DiffSet) AddClientEvent(t *node, name string, eventId string, clientScriptPrefix string, scriptHandlerName string, scriptArguments []interface{}) {
 	ds.selectCurNode(t)
 	ds.addItemWithKey(ditAddClientEvent, name, dtAddClientEventItem{
 		ID:                 eventId,
 		ClientScriptPrefix: clientScriptPrefix,
 		ScriptHandlerName:  scriptHandlerName,
+		ScriptArguments:    scriptArguments,
 	})
 }
 

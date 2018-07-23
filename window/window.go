@@ -154,6 +154,20 @@ func onWindowBlur(e *event.Event) {
 	}
 }
 
+type changeRouteArg struct {
+	Route string `json:"route"`
+}
+
+func onChangeRoute(e *event.Event) {
+	w := getWindowByID(e.Params["id"])
+	var arg changeRouteArg
+	if err := e.Argument.Decode(&arg); err != nil {
+		panic(err)
+	}
+	log.PrintDebug("onChangeRoute: %q", arg.Route)
+	w.Builder().OnRedirect(arg.Route)
+}
+
 func InitWindows(si *driver.StartupInfo) error {
 	if err := initHTML(si); err != nil {
 		return err
@@ -170,6 +184,10 @@ func InitWindows(si *driver.StartupInfo) error {
 			event.Emit("/app/window-all-closed", nil)
 		}
 	}); err != nil {
+		return err
+	}
+	if err := event.AddHandler("/window/:id/changeRoute", onChangeRoute); err != nil {
+
 		return err
 	}
 	if err := event.AddHandler("/window/:id/closed", onWindowClosed); err != nil {

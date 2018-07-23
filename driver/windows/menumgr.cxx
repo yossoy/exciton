@@ -18,7 +18,6 @@
 #include "myjson.h"
 #include "util.h"
 
-
 namespace {
 const WCHAR MenuMgrWndClassName[] = L"exciton.MenuBar";
 const int MENUBAR_ITEM_LABEL_MAXSIZE = 32;
@@ -298,6 +297,14 @@ void CMenuMgr::OnMenuCommand(
                                   NULL);
     break;
   }
+  case RoledCommandId::HistoryGoBack:
+    pWebBrowserHost->ExecDocument(&CMDSETID_Forms3, IDM_GOBACKWARD,
+                                  OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    break;
+  case RoledCommandId::HistoryGoForward:
+    pWebBrowserHost->ExecDocument(&CMDSETID_Forms3, IDM_GOFORWARD,
+                                  OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    break;
   default: {
     // command
     handleMenuEvent(pMenu, menuItem);
@@ -347,6 +354,14 @@ void CMenuMgr::SetMenuState(HMENU hMenu, int nPos) {
           break;
         case RoledCommandId::Delete:
           pWebBrowserHost->QueryExecDocument(&CMDSETID_Forms3, IDM_DELETE,
+                                             &bEnable, &bChecked);
+          break;
+        case RoledCommandId::HistoryGoBack:
+          pWebBrowserHost->QueryExecDocument(&CMDSETID_Forms3, IDM_GOBACKWARD,
+                                             &bEnable, &bChecked);
+          break;
+        case RoledCommandId::HistoryGoForward:
+          pWebBrowserHost->QueryExecDocument(&CMDSETID_Forms3, IDM_GOFORWARD,
                                              &bEnable, &bChecked);
           break;
         default:

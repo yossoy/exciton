@@ -13,6 +13,7 @@ type EventListener struct {
 	Listener            event.Handler
 	clientScriptPrefix  string
 	scriptHandlerName   string
+	scriptArguments     []interface{}
 	callPreventDefault  bool
 	callStopPropagation bool
 	//TODO: binding position
@@ -70,7 +71,7 @@ func (l *EventListener) applyToNode(b *Builder, n *node, on *node) {
 		if l.Listener != nil {
 			b.diffSet.AddEventListener(n, l.Name, n.uuid, l.callPreventDefault, l.callStopPropagation)
 		} else {
-			b.diffSet.AddClientEvent(n, l.Name, n.uuid, l.clientScriptPrefix, l.scriptHandlerName)
+			b.diffSet.AddClientEvent(n, l.Name, n.uuid, l.clientScriptPrefix, l.scriptHandlerName, l.scriptArguments)
 		}
 	}
 }

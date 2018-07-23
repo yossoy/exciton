@@ -83,6 +83,8 @@ function addClientEventCallback(nsobj, n, name, itemv) {
   const id = itemv.id;
   const csp = itemv.sp;
   const shn = itemv.sh;
+  const sas = itemv.sas;
+  const saslen = (sas) ? sas.length : 0;
   if (n[ExcitonEventData] === undefined) {
     n[ExcitonEventData] = {};
   }
@@ -92,21 +94,26 @@ function addClientEventCallback(nsobj, n, name, itemv) {
     if (gf && typeof (gf) === 'function') {
       f = gf;
     }
+  } else if (csp === '*exciton*') {
+    const ef = nsobj[shn];
+    if (ef && typeof (ef) === 'function') {
+      f = (saslen == 0) ? ef : (e) => ef(e, ...sas);
+    }
   } else {
     const mf = nsobj.findModuleFunction(csp, shn);
     if (mf) {
       switch (mf.length) {
-        case 1:  // event only
-          f = mf;
+        case saslen + 1:  // event only
+          f = (saslen == 0) ? mf : (e) => mf(e, ...sas);
           break;
-        case 2:  // component and event
+        case saslen + 2:  // component and event
           f = (e) => {
             const cid = findExcitonComponent(nsobj, e.target);
             if (!cid) {
               throw 'invalid event target';
             }
             // TODO: check c.
-            return mf(cid, e);
+            return (saslen == 0) ? mf(cid, e) : mf(cid, e, ...sas);
           };
         default:
           break;

@@ -30,6 +30,8 @@ enum class RoledCommandId : int {
   Quit,
   ToggleFullscreen,
   ViewSource,
+  HistoryGoBack,
+  HistoryGoForward,
   UserCommand,
 };
 class MenuItem;

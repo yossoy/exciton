@@ -51,3 +51,13 @@ func (rr *componentRenderResult) isMarkupOrChild()     {}
 func (rr *componentRenderResult) isRenderResult()      {}
 func (rr *componentRenderResult) Key() interface{}     { return rr.key }
 func (rr *componentRenderResult) setKey(k interface{}) { rr.key = k }
+
+type delayRenderResult struct {
+	data    interface{}
+	proc    func(b *Builder) RenderResult
+	compare func(n *node, hydrating bool) bool
+}
+
+func (rr *delayRenderResult) isTextNode() bool { return false }
+func (rr *delayRenderResult) isMarkupOrChild() {}
+func (rr *delayRenderResult) isRenderResult()  {}

@@ -66,6 +66,8 @@ enum {
       @"zoom" : @"Zoom",                                //
       @"quit" : @"Quit %@",                             //
       @"togglefullscreen" : @"Toggle Full Screen",      //
+      @"back" : @"Back",
+      @"forward" : @"Forward",
     };
   }
   NSString *label = labelMap[role];
@@ -96,7 +98,8 @@ enum {
       @"close" : @"Command+W",                           //
       @"quit" : @"Command+Q",                            //
       @"togglefullscreen" : @"Control+Command+F",        //
-
+      @"back" : @"Command+[",
+      @"forward" : @"Command+]",
     };
   }
   return accelMap[role];
@@ -128,6 +131,8 @@ enum {
             VS(@selector(performZoom:)), @"zoom",                      //
             VS(@selector(terminate:)), @"quit",                        //
             VS(@selector(toggleFullScreen:)), @"togglefullscreen",     //
+            VS(@selector(goBack:)), @"back",
+            VS(@selector(goForward:)), @"forward",
             nil];
   }
   NSValue *val = [roleMap objectForKey:role];

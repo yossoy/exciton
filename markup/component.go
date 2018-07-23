@@ -78,7 +78,7 @@ func (c *Core) Classes(classes ...string) MarkupOrChild {
 	return ccs
 }
 
-func (c *Core) ClientJSEvent(name string, funcName string) MarkupOrChild {
+func (c *Core) ClientJSEvent(name string, funcName string, arguments ...interface{}) MarkupOrChild {
 	k := c.klass
 	prefix := ""
 	if k.localJSFile != "" {
@@ -88,6 +88,7 @@ func (c *Core) ClientJSEvent(name string, funcName string) MarkupOrChild {
 		Name:               name,
 		clientScriptPrefix: prefix,
 		scriptHandlerName:  funcName,
+		scriptArguments:    arguments,
 	}
 }
 
@@ -480,6 +481,7 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 			base = inst.Context().base
 			procComponentResult = true
 		case *textRenderResult:
+		case *delayRenderResult:
 		case *tagRenderResult:
 			if ctx.parentMarkups != nil {
 				vt.markups = append(vt.markups, ctx.parentMarkups...)
@@ -610,9 +612,6 @@ func buildComponentFromVNode(b *Builder, dom *node, vnode *componentRenderResult
 		}
 
 		c = createComponent(b, vnode)
-		if dom != nil {
-			oldDom = nil
-		}
 		setComponentProps(b, c, renderOptSync, vnode.markups, vnode.children)
 		dom = c.Context().base
 

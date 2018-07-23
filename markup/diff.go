@@ -77,10 +77,15 @@ func idiffTag(b *Builder, dom *node, vnode *tagRenderResult, componentRoot bool)
 
 func idiff(b *Builder, dom *node, vnode RenderResult, componentRoot bool) *node {
 	out := dom
-	//prevSvgMode = isSvgMode;
 
-	// empty values (null, undefined, booleans) render as empty Text nodes
-	//if (vnode==null || typeof vnode==='boolean') vnode = '';
+	for vnode != nil {
+		drr, ok := vnode.(*delayRenderResult)
+		if !ok {
+			break
+		}
+		vnode = drr.proc(b)
+	}
+
 	if vnode == nil {
 		vnode = Tag("noscript")
 	}
@@ -106,6 +111,8 @@ func idiff(b *Builder, dom *node, vnode RenderResult, componentRoot bool) *node 
 		out = buildComponentFromVNode(b, dom, vt)
 	case *tagRenderResult:
 		out = idiffTag(b, dom, vt, componentRoot)
+	case *delayRenderResult:
+		panic("invalid sequence")
 	}
 
 	return out
@@ -203,6 +210,8 @@ func isSameNodeType(n *node, vnode RenderResult, hydrating bool) bool {
 		return n.isTextNode()
 	case *tagRenderResult:
 		return n.component == nil && n.tag == vt.name && n.ns == vt.data
+	case *delayRenderResult:
+		return vt.compare(n, hydrating)
 	case *componentRenderResult:
 		if hydrating {
 			return true

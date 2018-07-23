@@ -103,6 +103,8 @@ const RoleInfo *getDefaultRoleInfo(const std::string &role) {
       {"togglefullscreen",
        {RoledCommandId::ToggleFullscreen, "Toggle Full Screen"}}, //
       {"viewsource", {RoledCommandId::ViewSource, "View Source..."}},
+      {"back", {RoledCommandId::HistoryGoBack, "Back"}},
+      {"forward", {RoledCommandId::HistoryGoForward, "Forward"}}
   };
 
   auto fiter = labelMap.find(role);
@@ -376,7 +378,7 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
         mi->cmdId_ = static_cast<int>(role->command);
         mi->enabled_ = true;
       } else if (k == "menuAcclerator") {
-        // TODO : あとで書く
+        // TODO : do later
         LOG_WARNING("[%d] MenuData::populateWithDiffset: ditAddDataSet: "
                     "menuRole[menuAccelerator] not implement yet.",
                     __LINE__);
