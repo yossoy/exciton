@@ -32,6 +32,9 @@ const ditNodeUUID = 26;
 const ditAddClientEvent = 27;
 const ditMountComponent = 28;
 const ditUnmountComponent = 29;
+const ditAttributeValueNS = 30;
+const ditDelAttributeValueNS = 31;
+
 
 function resolvePathNode(root, items) {
   let ret = root;
@@ -285,6 +288,12 @@ function updateDiffData(nsobj, e) {
         break;
       case ditUnmountComponent:
         mountUnmountComponent(nsobj, null, item.v, false);
+        break;
+      case ditAttributeValueNS:
+        curNode.setAttributeNS(item.v.ns, item.k, item.v.v);
+        break;
+      case ditDelAttributeValueNS:
+        curNode.removeAttributeNS(item.v, item.k);
         break;
       default:
         console.log('invalid type', item.t);

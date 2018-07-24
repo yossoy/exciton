@@ -9,52 +9,52 @@
 + (void)initEventHandlers {
   Driver *d = [Driver current];
   [d addEventHandler:@"/window/:id/new"
-              handler:^(id argument,
-                        NSDictionary<NSString *, NSString *> *parameter,
-                        int responceNo) {
-                NSString *idstr = parameter[@"id"];
-                NSDictionary *cfg = (NSDictionary *)argument;
-                if (![Window newWindow:idstr config:cfg]) {
-                  LOG_ERROR(@"[Window newWindow failed\n");
-                }
-                [[Driver current] responceEventResult:responceNo boolean:TRUE];
-              }];
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               NSString *idstr = parameter[@"id"];
+               NSDictionary *cfg = (NSDictionary *)argument;
+               if (![Window newWindow:idstr config:cfg]) {
+                 LOG_ERROR(@"[Window newWindow failed\n");
+               }
+               [[Driver current] responceEventResult:responceNo boolean:TRUE];
+             }];
   [d addEventHandler:@"/window/:id/requestAnimationFrame"
-              handler:^(id argument,
-                        NSDictionary<NSString *, NSString *> *parameter,
-                        int responceNo) {
-                NSString *idstr = parameter[@"id"];
-                Driver *driver = [Driver current];
-                Window *w = driver.elements[idstr];
-                [w requestAnimationFrame];
-              }];
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               NSString *idstr = parameter[@"id"];
+               Driver *driver = [Driver current];
+               Window *w = driver.elements[idstr];
+               [w requestAnimationFrame];
+             }];
   [d addEventHandler:@"/window/:id/updateDiffSetHandler"
-              handler:^(id argument,
-                        NSDictionary<NSString *, NSString *> *parameter,
-                        int responceNo) {
-                NSString *idstr = parameter[@"id"];
-                Driver *driver = [Driver current];
-                Window *w = driver.elements[idstr];
-                [w updateDiffSetHandler:argument];
-              }];
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               NSString *idstr = parameter[@"id"];
+               Driver *driver = [Driver current];
+               Window *w = driver.elements[idstr];
+               [w updateDiffSetHandler:argument];
+             }];
   [d addEventHandler:@"/window/:id/browserSync"
-              handler:^(id argument,
-                        NSDictionary<NSString *, NSString *> *parameter,
-                        int responceNo) {
-                NSString *idstr = parameter[@"id"];
-                Driver *driver = [Driver current];
-                Window *w = driver.elements[idstr];
-                [w browserSyncRequest:argument responceNo:responceNo];
-              }];
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               NSString *idstr = parameter[@"id"];
+               Driver *driver = [Driver current];
+               Window *w = driver.elements[idstr];
+               [w browserSyncRequest:argument responceNo:responceNo];
+             }];
   [d addEventHandler:@"/window/:id/redirectTo"
-              handler:^(id argument,
-                        NSDictionary<NSString *, NSString *> *parameter,
-                        int responceNo) {
-                NSString *idstr = parameter[@"id"];
-                Driver *driver = [Driver current];
-                Window *w = driver.elements[idstr];
-                [w redirectTo:argument];
-              }];
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               NSString *idstr = parameter[@"id"];
+               Driver *driver = [Driver current];
+               Window *w = driver.elements[idstr];
+               [w redirectTo:argument];
+             }];
 }
 
 + (BOOL)newWindow:(NSString *)id config:(NSDictionary *)cfg {
@@ -123,10 +123,9 @@
 
     [win showWindow:nil];
 
-    // TODO: handle fixed url?
-    //[win.webview loadRequest:[NSURLRequest requestWithURL:[NSURL
-    // URLWithString:@"http://www.google.co.jp"]]];
-    [win.webview loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:cfg[@"url"]]]];
+    [win.webview
+        loadRequest:[NSURLRequest
+                        requestWithURL:[NSURL URLWithString:cfg[@"url"]]]];
   };
 
   if ([NSThread isMainThread]) {
@@ -287,7 +286,9 @@
   NSString *jsonStr =
       [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
   NSString *jsonStr2 =
-      [jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
+      [[jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
+          stringByReplacingOccurrencesOfString:@"\'"
+                                    withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowserEvent('"
                                  @"updateDiffData', '%@');",
@@ -300,7 +301,9 @@
   NSString *jsonStr =
       [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
   NSString *jsonStr2 =
-      [jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
+      [[jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
+          stringByReplacingOccurrencesOfString:@"\'"
+                                    withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowerEventSync('"
                                  @"updateDiffData', '%@');",
@@ -321,7 +324,9 @@
   NSString *jsonStr =
       [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
   NSString *jsonStr2 =
-      [jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
+      [[jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
+          stringByReplacingOccurrencesOfString:@"\'"
+                                    withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowserEvent('"
                                  @"redirectTo', '%@');",
@@ -329,7 +334,6 @@
   LOG_DEBUG(@"redirectTo: ==> %@", cmdstr);
   defer([self.webview evaluateJavaScript:cmdstr completionHandler:nil];);
 }
-
 
 - (void)windowDidResize:(NSNotification *)notification {
   Driver *driver = [Driver current];
@@ -428,20 +432,19 @@
   }
 }
 
--  (WKNavigation *)goBack {
+- (WKNavigation *)goBack {
   Window *win = (Window *)self.window.windowController;
   LOG_DEBUG(@"goBack");
   return [win.webview goBack];
 }
 
--  (WKNavigation *)goForward {
+- (WKNavigation *)goForward {
   Window *win = (Window *)self.window.windowController;
   LOG_DEBUG(@"goForward");
   return [win.webview goForward];
 }
 
-- (BOOL)validateMenuItem:(NSMenuItem*)anItem
-{
+- (BOOL)validateMenuItem:(NSMenuItem *)anItem {
   Window *win = (Window *)self.window.windowController;
 
   if (anItem.action == @selector(goBack:)) {

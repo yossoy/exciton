@@ -462,3 +462,62 @@ func convertKlassCSS(css string, classPrefix string) (string, map[string]string,
 	}
 	return parsed, p.localNameMap, nil
 }
+
+type parseStyleState int
+
+const (
+	parseStyleStateStart = iota
+	parseStyleStateIdent
+	parseStyleStateColon
+	parseStyleStateValue
+)
+
+func StyleStringToMarkup(style string) (List, error) {
+	var l List
+	s := scanner.New(style)
+	var ident, value string
+	state := parseStyleStateStart
+	for {
+		t := s.Next()
+		if t.Type == scanner.TokenEOF {
+			break
+		}
+		switch t.Type {
+		case scanner.TokenIdent:
+			switch state {
+			case parseStyleStateColon:
+				value = t.Value
+				l = append(l, Style(ident, value))
+				state = parseStyleStateValue
+			case parseStyleStateStart:
+				ident = t.Value
+				state = parseStyleStateIdent
+			default:
+				return nil, fmt.Errorf("[start] invalid token: %v", t)
+			}
+		case scanner.TokenChar:
+			if t.Value == ":" {
+				if state != parseStyleStateIdent {
+					return nil, fmt.Errorf("[ident] invalid token: %v", t)
+				}
+				state = parseStyleStateColon
+			} else if t.Value == ";" {
+				if state != parseStyleStateValue {
+					return nil, fmt.Errorf("[value] invalid token: %v", t)
+				}
+				state = parseStyleStateStart
+			}
+		default:
+			if state != parseStyleStateColon {
+				return nil, fmt.Errorf("[colon] invalid token: %v", t)
+			}
+			value = t.Value
+			if t.Type == scanner.TokenString {
+				value = strings.Trim(value, "'")
+			}
+			l = append(l, Style(ident, value))
+			state = parseStyleStateValue
+		}
+	}
+	return l, nil
+}

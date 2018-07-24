@@ -2,6 +2,7 @@ package markup
 
 import (
 	"fmt"
+	"strings"
 )
 
 func diff(b *Builder, dom *node, vnode RenderResult, parent *node, componentRoot bool) *node {
@@ -223,8 +224,6 @@ func isSameNodeType(n *node, vnode RenderResult, hydrating bool) bool {
 }
 
 func diffMarkups(b *Builder, dom *node, markups []Markup) {
-	//TODO: メモリ確保を減らす
-	//TODO: こんな複雑な事やる必要ある?
 	on := node{}
 	dom.properties, on.properties = on.properties, dom.properties
 	dom.attributes, on.attributes = on.attributes, dom.attributes
@@ -237,7 +236,16 @@ func diffMarkups(b *Builder, dom *node, markups []Markup) {
 		m.applyToNode(b, dom, &on)
 	}
 	for k := range on.attributes {
-		b.diffSet.DelAttribute(dom, k)
+		kk := strings.Split(k, ":")
+		if dom.ns == "" && kk[0] == "" {
+			b.diffSet.DelAttribute(dom, kk[1])
+		} else {
+			var ns interface{}
+			if kk[0] != "" {
+				ns = kk[0]
+			}
+			b.diffSet.DelAttributeNS(dom, kk[1], ns)
+		}
 	}
 	for k := range on.properties {
 		b.diffSet.delProperty(dom, k)

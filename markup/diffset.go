@@ -35,6 +35,8 @@ const (
 	ditAddClientEvent
 	ditMountComponent
 	ditUnmountComponent
+	ditAttributeValueNS
+	ditDelAttributeValueNS
 )
 
 func (t diffItemType) String() string {
@@ -99,6 +101,10 @@ func (t diffItemType) String() string {
 		return "mountComponent"
 	case ditUnmountComponent:
 		return "unmountComponent"
+	case ditAttributeValueNS:
+		return "attrValueNS"
+	case ditDelAttributeValueNS:
+		return "delAttrNS"
 	default:
 		panic("invalid diffType")
 	}
@@ -266,6 +272,23 @@ func (ds *DiffSet) AddAttribute(t *node, name string, value interface{}) {
 func (ds *DiffSet) DelAttribute(t *node, name string) {
 	ds.selectCurNode(t)
 	ds.addItem(ditDelAttributeValue, name)
+}
+
+type dtAddAttributeNSItem struct {
+	Namespace interface{} `json:"ns"`
+	Value     interface{} `json:"v"`
+}
+
+func (ds *DiffSet) AddAttributeNS(t *node, name string, ns interface{}, value interface{}) {
+	ds.selectCurNode(t)
+	ds.addItemWithKey(ditAttributeValueNS, name, dtAddAttributeNSItem{
+		Namespace: ns,
+		Value:     value,
+	})
+}
+func (ds *DiffSet) DelAttributeNS(t *node, name string, ns interface{}) {
+	ds.selectCurNode(t)
+	ds.addItemWithKey(ditDelAttributeValueNS, name, ns)
 }
 
 func (ds *DiffSet) AddClassList(t *node, value string) {

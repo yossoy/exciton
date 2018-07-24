@@ -8,16 +8,18 @@ import (
 type delayApplyer func(b *Builder) interface{}
 
 type attrApplyer struct {
-	name  string
-	value interface{}
+	name      string
+	nameSpace string
+	value     interface{}
 }
 
 func (aa attrApplyer) isMarkup()        {}
 func (aa attrApplyer) isMarkupOrChild() {}
 func (aa attrApplyer) applyToNode(b *Builder, n *node, on *node) {
-	ov, ok := on.attributes[aa.name]
+	k := aa.nameSpace + ":" + aa.name
+	ov, ok := on.attributes[k]
 	if ok {
-		delete(on.attributes, aa.name)
+		delete(on.attributes, k)
 	}
 	if n.attributes == nil {
 		n.attributes = make(map[string]interface{})
@@ -26,9 +28,17 @@ func (aa attrApplyer) applyToNode(b *Builder, n *node, on *node) {
 	if da, ok := val.(delayApplyer); ok {
 		val = da(b)
 	}
-	n.attributes[aa.name] = val
+	n.attributes[k] = val
 	if !ok || ov != val {
-		b.diffSet.AddAttribute(n, aa.name, val)
+		if n.ns == "" && aa.nameSpace == "" {
+			b.diffSet.AddAttribute(n, aa.name, val)
+		} else {
+			var ns interface{}
+			if aa.nameSpace != "" {
+				ns = aa.nameSpace
+			}
+			b.diffSet.AddAttributeNS(n, aa.name, ns, val)
+		}
 	}
 }
 
@@ -78,6 +88,14 @@ func Attribute(name string, value interface{}) MarkupOrChild {
 	return attrApplyer{
 		name:  name,
 		value: value,
+	}
+}
+
+func AttributeNS(name string, nameSpace string, value interface{}) MarkupOrChild {
+	return attrApplyer{
+		name:      name,
+		nameSpace: nameSpace,
+		value:     value,
 	}
 }
 
