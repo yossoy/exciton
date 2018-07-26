@@ -149,7 +149,7 @@ function translateEvent(e) {
         while (eot != null) {
           for (let pi = 0; pi < eot.props.length; pi++) {
             const p = eot.props[pi];
-            if (p.charCodeAt(0) == 64) {
+            if (p.charCodeAt(0) == 64) { // starts with '@'
               const rp = p.substr(1);
               const pv = e[rp];
               if ((typeof pv) !== 'undefined' && pv != null) {

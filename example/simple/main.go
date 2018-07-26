@@ -5,14 +5,12 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/yossoy/exciton/menu"
-
-	"github.com/yossoy/exciton/html"
-
 	"github.com/yossoy/exciton"
 	"github.com/yossoy/exciton/dialog"
+	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
+	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
 )
 
@@ -20,11 +18,7 @@ const (
 	isDarwin = (runtime.GOOS == "darwin")
 )
 
-type menuBar struct {
-	markup.Core
-}
-
-func (m *menuBar) OnOpen(e *html.MouseEvent) {
+func onOpenFile(e *html.MouseEvent) {
 	log.PrintInfo("OnOpen...")
 	cfg := &dialog.FileDialogConfig{
 		Properties: dialog.OpenDialogForOpenFile | dialog.OpenDialogWithMultiSelections,
@@ -47,7 +41,7 @@ func (m *menuBar) OnOpen(e *html.MouseEvent) {
 
 }
 
-func (m *menuBar) OnSave(e *html.MouseEvent) {
+func onSaveFile(e *html.MouseEvent) {
 	log.PrintInfo("OnSave...")
 	cfg := &dialog.FileDialogConfig{
 		Title: "Save Files...",
@@ -69,91 +63,71 @@ func (m *menuBar) OnSave(e *html.MouseEvent) {
 
 }
 
-func (m *menuBar) Render() markup.RenderResult {
-	return menu.ApplicationMenu(
-		markup.If(
-			isDarwin,
-			menu.SubMenu("*Appname*",
-				menu.RoledItem(menu.RoleAbout),
-				menu.Separator(),
-				menu.RoledMenu(menu.RoleServices, "services"),
-				menu.Separator(),
-				menu.RoledItem(menu.RoleHideOthers),
-				menu.RoledItem(menu.RoleUnhide),
-				menu.Separator(),
-				menu.RoledItem(menu.RoleQuit),
-			),
-		),
-		menu.SubMenu("File",
-			menu.Item("Open;CommandOrControl+O", m.OnOpen),
-			menu.Item("Save;CommandOrControl+S", m.OnSave),
-			markup.If(
-				!isDarwin,
-				menu.RoledItem(menu.RoleQuit),
-			),
-		),
-		menu.SubMenu("Edit",
-			markup.If(
-				isDarwin,
-				menu.RoledItem(menu.RoleUndo),
-				menu.RoledItem(menu.RoleRedo),
-				menu.Separator(),
-			),
-			menu.RoledItem(menu.RoleCut),
-			menu.RoledItem(menu.RoleCopy),
-			menu.RoledItem(menu.RolePaste),
-			markup.If(
-				isDarwin,
-				menu.RoledItem(menu.RolePasteAndMatchStyle),
-			),
-			menu.RoledItem(menu.RoleDelete),
-			markup.If(
-				isDarwin,
-				menu.Separator(),
-				menu.RoledItem(menu.RoleStartSpeaking),
-				menu.RoledItem(menu.RoleStopSpeaking),
-			),
-		),
-		menu.RoledMenu(menu.RoleWindow, "Window",
-			menu.RoledItem(menu.RoleMinimize),
-			menu.RoledItem(menu.RoleClose),
-			markup.If(
-				isDarwin,
-				menu.Separator(),
-				menu.RoledItem(menu.RoleFront),
-			),
-		),
-		menu.RoledMenu(menu.RoleHelp, "Help",
-			markup.If(
-				!isDarwin,
-				menu.RoledItem(menu.RoleAbout),
-			),
-		),
-	)
+var appMenu = menu.AppMenuTemplate{
+	{Label: menu.AppMenuLabel, Hidden: !isDarwin,
+		SubMenu: menu.MenuTemplate{
+			{{Role: menu.RoleAbout}},
+			{{Label: "services", Role: menu.RoleServices}},
+			{
+				{Role: menu.RoleHideOthers},
+				{Role: menu.RoleUnhide},
+			},
+			{{Role: menu.RoleQuit}},
+		}},
+
+	{Label: "File",
+		SubMenu: menu.MenuTemplate{
+			{
+				{Label: "Open", Acclerator: "CommandOrControl+O", Handler: onOpenFile},
+				{Label: "Save", Acclerator: "CommandOrControl+S", Handler: onSaveFile},
+				{Hidden: isDarwin, Role: menu.RoleClose},
+			},
+			{
+				{Hidden: isDarwin, Role: menu.RoleQuit},
+			},
+		}},
+	{Label: "Edit",
+		SubMenu: menu.MenuTemplate{
+			{
+				{Hidden: !isDarwin, Role: menu.RoleUndo},
+				{Hidden: !isDarwin, Role: menu.RoleRedo},
+			},
+			{
+				{Role: menu.RoleCut},
+				{Role: menu.RoleCopy},
+				{Role: menu.RolePaste},
+				{Hidden: !isDarwin, Role: menu.RolePasteAndMatchStyle},
+				{Role: menu.RoleDelete},
+			},
+			{
+				{Hidden: !isDarwin, Role: menu.RoleStartSpeaking},
+				{Hidden: !isDarwin, Role: menu.RoleStopSpeaking},
+			},
+		}},
+	{Label: "Window", Role: menu.RoleWindow,
+		SubMenu: menu.MenuTemplate{
+			{
+				{Role: menu.RoleMinimize},
+				{Hidden: !isDarwin, Role: menu.RoleClose},
+				{Hidden: !isDarwin, Role: menu.RoleFront},
+			},
+		}},
+	{Label: "Help", Role: menu.RoleHelp,
+		SubMenu: menu.MenuTemplate{
+			{{Hidden: isDarwin, Role: menu.RoleAbout}},
+		}},
 }
 
-var MenuBar = markup.MustRegisterComponent((*menuBar)(nil))
-
-type contextMenu struct {
-	markup.Core
-}
-
-func (m *contextMenu) OnClickItem(e *html.MouseEvent) {
+func onClickPopupItem(e *html.MouseEvent) {
 	log.PrintInfo("select Item: %#v", e.Target.ElementID)
-	//TODO: Not implment menuitem.GetProp(), GetAttr(), etc...
 }
 
-func (m *contextMenu) Render() markup.RenderResult {
-	return menu.ContextMenu(
-		menu.Item("Item1", m.OnClickItem),
-		menu.Item("Item2", m.OnClickItem),
-	)
+var popupMenu = menu.MenuTemplate{
+	{
+		{Label: "Item1", Handler: onClickPopupItem},
+		{Label: "Item2", Handler: onClickPopupItem},
+	},
 }
-
-var (
-	contextMenuInst *menu.MenuInstance
-	ContextMenu     = markup.MustRegisterComponent((*contextMenu)(nil))
-)
 
 type testChildComponent struct {
 	markup.Core
@@ -174,7 +148,7 @@ func (c *testChildComponent) OnContextMenu(e *html.MouseEvent) {
 	if err != nil {
 		panic(err)
 	}
-	err = contextMenuInst.Popup(e.ScreenPos(), w)
+	err = menu.PopupMenu(popupMenu, e.ScreenPos(), w)
 	if err != nil {
 		panic(err)
 	}
@@ -190,9 +164,6 @@ type testComponent struct {
 
 func (c *testComponent) clickHandler(e *html.MouseEvent) {
 	log.PrintInfo("clickHandler is called!!")
-	if c.Context().Builder() == nil {
-		panic("Builder is NULL!!!!!!")
-	}
 	t := e.UIEvent.Event.Target
 	if t != nil {
 		v, err := t.GetProperty("type")
@@ -268,8 +239,9 @@ var TestComponent = markup.MustRegisterComponent((*testComponent)(nil))
 
 func onAppStart() {
 	log.PrintInfo("onAppStart")
-	contextMenuInst = menu.MustNew(ContextMenu())
-	menu.SetApplicationMenu(menu.MustNew(MenuBar()))
+	if err := menu.SetApplicationMenu(appMenu); err != nil {
+		panic(err)
+	}
 
 	cfg := window.WindowConfig{
 		Title: "Exciton Sample",

@@ -14,45 +14,33 @@ const (
 	isDarwin = (runtime.GOOS == "darwin")
 )
 
-type menuBar struct {
-	markup.Core
+var appMenu = menu.AppMenuTemplate{
+	{Label: menu.AppMenuLabel, Hidden: !isDarwin,
+		SubMenu: menu.MenuTemplate{
+			{{Role: menu.RoleAbout}},
+			{{Label: "services", Role: menu.RoleServices}},
+			{
+				{Role: menu.RoleHideOthers},
+				{Role: menu.RoleUnhide},
+			},
+			{{Role: menu.RoleQuit}},
+		}},
+	{Label: "File", Hidden: isDarwin,
+		SubMenu: menu.MenuTemplate{
+			{{Role: menu.RoleQuit}},
+		}},
+	{Label: "History",
+		SubMenu: menu.MenuTemplate{
+			{
+				{Role: menu.RoleGoBack},
+				{Role: menu.RoleGoForward},
+			},
+		}},
+	{Label: "Help", Hidden: isDarwin,
+		SubMenu: menu.MenuTemplate{
+			{{Role: menu.RoleHelp}},
+		}},
 }
-
-func (m *menuBar) Render() markup.RenderResult {
-	return menu.ApplicationMenu(
-		markup.If(
-			isDarwin,
-			menu.SubMenu("*Appname*",
-				menu.RoledItem(menu.RoleAbout),
-				menu.Separator(),
-				menu.RoledMenu(menu.RoleServices, "services"),
-				menu.Separator(),
-				menu.RoledItem(menu.RoleHideOthers),
-				menu.RoledItem(menu.RoleUnhide),
-				menu.Separator(),
-				menu.RoledItem(menu.RoleQuit),
-			),
-		),
-		markup.If(
-			!isDarwin,
-			menu.SubMenu("File",
-				menu.RoledItem(menu.RoleQuit),
-			),
-		),
-		menu.SubMenu("History",
-			menu.RoledItem(menu.RoleGoBack),
-			menu.RoledItem(menu.RoleGoForward),
-		),
-		menu.RoledMenu(menu.RoleHelp, "Help",
-			markup.If(
-				!isDarwin,
-				menu.RoledItem(menu.RoleAbout),
-			),
-		),
-	)
-}
-
-var MenuBar = markup.MustRegisterComponent((*menuBar)(nil))
 
 type rootComponent struct {
 	markup.Core
@@ -100,7 +88,10 @@ func (rc *rootComponent) Render() markup.RenderResult {
 
 func onAppStart() {
 	rc := markup.MustRegisterComponent((*rootComponent)(nil))
-	menu.SetApplicationMenu(menu.MustNew(MenuBar()))
+	err := menu.SetApplicationMenu(appMenu)
+	if err != nil {
+		panic(err)
+	}
 	cfg := window.WindowConfig{
 		Title: "Link Sample",
 	}

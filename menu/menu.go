@@ -1,177 +1,117 @@
 package menu
 
 import (
-	"strings"
+	"fmt"
 
-	"github.com/yossoy/exciton/event"
+	"github.com/yossoy/exciton/geom"
+	"github.com/yossoy/exciton/window"
+
 	"github.com/yossoy/exciton/html"
-	"github.com/yossoy/exciton/internal/object"
-	"github.com/yossoy/exciton/log"
+	imenu "github.com/yossoy/exciton/internal/menu"
 	"github.com/yossoy/exciton/markup"
 )
 
-type ItemRole string
+//TODO: section support for gtk
 
-const (
-	RoleAbout              ItemRole = "about"
-	RoleHide                        = "hide"
-	RoleHideOthers                  = "hideothers"
-	RoleUnhide                      = "unhide"
-	RoleFront                       = "front"
-	RoleUndo                        = "undo"
-	RoleRedo                        = "redo"
-	RoleCut                         = "cut"
-	RoleCopy                        = "copy"
-	RolePaste                       = "paste"
-	RoleDelete                      = "delete"
-	RolePasteAndMatchStyle          = "pasteandmatchstyle"
-	RoleSelectAll                   = "selectall"
-	RoleStartSpeaking               = "startspeaking"
-	RoleStopSpeaking                = "stopspeaking"
-	RoleMinimize                    = "minimize"
-	RoleClose                       = "close"
-	RoleZoom                        = "zoom"
-	RoleQuit                        = "quit"
-	RoleToggleFullscreen            = "togglefullscreen"
-	RoleGoBack                      = "back"
-	RoleGoForward                   = "forward"
-)
-
-type MenuRole string
-
-const (
-	RoleServices MenuRole = "services"
-	RoleWindow            = "window"
-	RoleHelp              = "help"
-)
-
-type MenuInstance struct {
-	builder *markup.Builder
-	mounted markup.RenderResult
-	uuid    string
-}
-
-func (m *MenuInstance) Builder() *markup.Builder {
-	return m.builder
-}
-
-func (m *MenuInstance) requestAnimationFrame() {
-	//	go func() {
-	m.builder.ProcRequestAnimationFrame()
-	//}()
-	log.PrintInfo("called requestAnimationFrame")
-}
-
-func (m *MenuInstance) updateDiffSetHandler(ds *markup.DiffSet) {
-	result := event.EmitWithResult("/menu/"+m.uuid+"/updateDiffSetHandler", event.NewValue(ds))
-	if result.Error() != nil {
-		panic(result.Error())
-	}
-	var ret bool
-	if e := result.Value().Decode(&ret); e != nil {
-		panic(e)
-	}
-	if !ret {
-		panic("invalid /menu/" + m.uuid + "/updateDiffSetHandler" + " results")
-	}
-}
-
-func SubMenu(label string, m ...markup.MarkupOrChild) markup.RenderResult {
-	if len(m) == 0 {
-		//TODO: return emtpy menu?
-		return nil
-	}
-	args := make([]markup.MarkupOrChild, 0, 1+len(m))
-	args = append(args, markup.Attribute("label", label))
-	args = append(args, m...)
-	return markup.Tag("menu", args...)
-}
-
-func Item(label string, handler func(e *html.MouseEvent)) markup.RenderResult {
-	ll := strings.Split(label, ";")
-	if len(ll) >= 2 {
-		return markup.Tag("menuitem",
-			markup.Attribute("label", strings.TrimSpace(ll[0])),
-			markup.Data("menuAcclerator", strings.TrimSpace(ll[1])),
-			html.OnClick(handler),
-		)
-	}
-	return markup.Tag("menuitem",
-		markup.Attribute("label", label),
-		html.OnClick(handler),
-	)
-}
-
-func RoledItem(role ItemRole) markup.RenderResult {
-	return markup.Tag("menuitem",
-		markup.Data("menuRole", string(role)),
-	)
-}
-
-func RoledMenu(role MenuRole, label string, childitem ...markup.MarkupOrChild) markup.RenderResult {
-	if len(childitem) == 0 {
-		return markup.Tag("menu",
-			markup.Attribute("label", label),
-			markup.Data("menuRole", string(role)),
-		)
-	}
-	args := make([]markup.MarkupOrChild, 0, 2+len(childitem))
-	args = append(args,
-		markup.Attribute("label", label),
-		markup.Data("menuRole", string(role)),
-	)
-	args = append(args, childitem...)
-	return markup.Tag("menu", args...)
-}
-
-func Separator() markup.RenderResult {
-	return html.HorizontalRule()
-}
-
-func newMenu() (*MenuInstance, error) {
-	uid := object.Menus.NewKey()
-
-	result := event.EmitWithResult("/menu/"+uid+"/new", event.NewValue(nil))
-	if result.Error() != nil {
-		return nil, result.Error()
-	}
-
-	m := &MenuInstance{
-		uuid: uid,
-	}
-	object.Menus.Put(uid, m)
-
-	return m, nil
-}
-
-func New(component markup.RenderResult) (*MenuInstance, error) {
-	m, err := newMenu()
-	if err != nil {
-		return nil, err
-	}
-
-	m.mounted = component
-	m.builder = markup.NewAsyncBuilder("/menu/"+m.uuid, m.requestAnimationFrame, m.updateDiffSetHandler)
-	m.builder.RenderBody(component)
-
-	return m, nil
-}
-
-func MustNew(component markup.RenderResult) *MenuInstance {
-	m, err := New(component)
-	if err != nil {
-		panic(err)
-	}
-	return m
-}
-
-func InitMenus() error {
-	err := event.AddHandler("/menu/:id/finalize", func(e *event.Event) {
-		id := e.Params["id"]
-		_, _, err := object.Menus.Delete(object.ObjectKey(id))
-		if err != nil {
-			panic(err)
+func toPopupMenuSub(menu MenuTemplate) ([]markup.MarkupOrChild, error) {
+	var items []markup.MarkupOrChild
+	for sidx, s := range menu {
+		firstItem := true
+		for _, m := range s {
+			if m.Hidden {
+				continue
+			}
+			if m.Label == "" && m.Role == "" {
+				return nil, fmt.Errorf("menu need Label or Role")
+			}
+			var mitems []markup.MarkupOrChild
+			if m.Label != "" {
+				mitems = append(mitems, markup.Attribute("label", m.Label))
+			}
+			if m.Role != "" {
+				mitems = append(mitems, markup.Data("menuRole", string(m.Role)))
+			}
+			if m.Acclerator != "" {
+				mitems = append(mitems, markup.Data("menuAcclerator", m.Acclerator))
+			}
+			if m.Handler != nil {
+				//TODO: modify event type
+				mitems = append(mitems, html.OnClick(m.Handler))
+			}
+			if firstItem && sidx != 0 {
+				items = append(items, html.HorizontalRule())
+				firstItem = false
+			}
+			if len(m.SubMenu) > 0 {
+				smitems, err := toPopupMenuSub(m.SubMenu)
+				if err != nil {
+					return nil, err
+				}
+				if len(smitems) > 0 {
+					mitems = append(mitems, smitems...)
+				}
+			}
+			if len(m.SubMenu) > 0 || roleIsMenuedRole(m.Role) {
+				items = append(items, markup.Tag("menu", mitems...))
+			} else {
+				items = append(items, markup.Tag("menuitem", mitems...))
+			}
 		}
-	})
-	return err
+	}
+	return items, nil
+}
+
+func toAppMenu(menu AppMenuTemplate) (markup.RenderResult, error) {
+	var items []markup.MarkupOrChild
+	for _, m := range menu {
+		if m.Hidden {
+			continue
+		}
+		var mitems []markup.MarkupOrChild
+		if m.Label == "" {
+			return nil, fmt.Errorf("Application Menu need Label")
+		}
+		mitems = append(mitems, markup.Attribute("label", m.Label))
+		if m.Role != "" {
+			mitems = append(mitems, markup.Data("menuRole", string(m.Role)))
+		}
+		if m.SubMenu != nil {
+			smitems, err := toPopupMenuSub(m.SubMenu)
+			if err != nil {
+				return nil, err
+			}
+			mitems = append(mitems, smitems...)
+		}
+		if m.SubMenu != nil || roleIsMenuedRole(m.Role) {
+			items = append(items, markup.Tag("menu", mitems...))
+		} else {
+			items = append(items, markup.Tag("menuitem", mitems...))
+		}
+	}
+	return markup.Tag("menu", items...), nil
+}
+
+func SetApplicationMenu(menu AppMenuTemplate) error {
+	r, err := toAppMenu(menu)
+	if err != nil {
+		return err
+	}
+	mi, err := imenu.New(r)
+	if err != nil {
+		return err
+	}
+	return imenu.SetApplicationMenu(mi)
+}
+
+func PopupMenu(menu MenuTemplate, mousePt geom.Point, w *window.Window) error {
+	m, err := toPopupMenuSub(menu)
+	if err != nil {
+		return err
+	}
+	r := markup.Tag("menu", m...)
+	mi, err := imenu.New(r)
+	if err != nil {
+		return err
+	}
+	return mi.Popup(mousePt, w)
 }

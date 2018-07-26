@@ -5,8 +5,8 @@ import (
 
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
+	"github.com/yossoy/exciton/internal/menu"
 	"github.com/yossoy/exciton/markup"
-	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
 )
 
