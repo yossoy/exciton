@@ -3,15 +3,72 @@ package menu
 import (
 	"fmt"
 
-	"github.com/yossoy/exciton/geom"
-	"github.com/yossoy/exciton/window"
-
+	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
-	imenu "github.com/yossoy/exciton/internal/menu"
+	"github.com/yossoy/exciton/internal/object"
+	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
 )
 
-//TODO: section support for gtk
+type MenuInstance struct {
+	builder *markup.Builder
+	mounted markup.RenderResult
+	uuid    string
+}
+
+func (m *MenuInstance) Builder() *markup.Builder {
+	return m.builder
+}
+
+func (m *MenuInstance) requestAnimationFrame() {
+	//	go func() {
+	m.builder.ProcRequestAnimationFrame()
+	//}()
+	log.PrintInfo("called requestAnimationFrame")
+}
+
+func (m *MenuInstance) updateDiffSetHandler(ds *markup.DiffSet) {
+	result := event.EmitWithResult("/menu/"+m.uuid+"/updateDiffSetHandler", event.NewValue(ds))
+	if result.Error() != nil {
+		panic(result.Error())
+	}
+	var ret bool
+	if e := result.Value().Decode(&ret); e != nil {
+		panic(e)
+	}
+	if !ret {
+		panic("invalid /menu/" + m.uuid + "/updateDiffSetHandler" + " results")
+	}
+}
+
+func newMenu() (*MenuInstance, error) {
+	uid := object.Menus.NewKey()
+
+	result := event.EmitWithResult("/menu/"+uid+"/new", event.NewValue(nil))
+	if result.Error() != nil {
+		return nil, result.Error()
+	}
+
+	m := &MenuInstance{
+		uuid: uid,
+	}
+	object.Menus.Put(uid, m)
+
+	return m, nil
+}
+
+func newInstance(component markup.RenderResult) (*MenuInstance, error) {
+	m, err := newMenu()
+	if err != nil {
+		return nil, err
+	}
+
+	m.mounted = component
+	m.builder = markup.NewAsyncBuilder("/menu/"+m.uuid, m.requestAnimationFrame, m.updateDiffSetHandler)
+	m.builder.RenderBody(component)
+
+	return m, nil
+}
 
 func toPopupMenuSub(menu MenuTemplate) ([]markup.MarkupOrChild, error) {
 	var items []markup.MarkupOrChild
@@ -91,27 +148,14 @@ func toAppMenu(menu AppMenuTemplate) (markup.RenderResult, error) {
 	return markup.Tag("menu", items...), nil
 }
 
-func SetApplicationMenu(menu AppMenuTemplate) error {
-	r, err := toAppMenu(menu)
-	if err != nil {
-		return err
-	}
-	mi, err := imenu.New(r)
-	if err != nil {
-		return err
-	}
-	return imenu.SetApplicationMenu(mi)
-}
+func InitMenus() error {
+	err := event.AddHandler("/menu/:id/finalize", func(e *event.Event) {
+		id := e.Params["id"]
+		_, _, err := object.Menus.Delete(object.ObjectKey(id))
+		if err != nil {
+			panic(err)
+		}
+	})
 
-func PopupMenu(menu MenuTemplate, mousePt geom.Point, w *window.Window) error {
-	m, err := toPopupMenuSub(menu)
-	if err != nil {
-		return err
-	}
-	r := markup.Tag("menu", m...)
-	mi, err := imenu.New(r)
-	if err != nil {
-		return err
-	}
-	return mi.Popup(mousePt, w)
+	return err
 }

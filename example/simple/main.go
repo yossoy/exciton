@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/yossoy/exciton"
+	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/log"
@@ -239,9 +240,6 @@ var TestComponent = markup.MustRegisterComponent((*testComponent)(nil))
 
 func onAppStart() {
 	log.PrintInfo("onAppStart")
-	if err := menu.SetApplicationMenu(appMenu); err != nil {
-		panic(err)
-	}
 
 	cfg := window.WindowConfig{
 		Title: "Exciton Sample",
@@ -253,7 +251,8 @@ func onAppStart() {
 	w.Mount(TestComponent())
 }
 
-func ExcitonStartup(info *exciton.StartupInfo) error {
+func ExcitonStartup(info *app.StartupInfo) error {
+	info.AppMenu = appMenu
 	info.OnAppStart = onAppStart
 	info.OnAppQuit = func() {
 		log.PrintInfo("app is terminated...")

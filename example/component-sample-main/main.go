@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/yossoy/exciton"
+	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/example/component-sample"
 	"github.com/yossoy/exciton/html"
@@ -123,7 +124,7 @@ func onAppStart() {
 	w.Mount(rc())
 }
 
-func ExcitonStartup(info *exciton.StartupInfo) error {
+func ExcitonStartup(info *app.StartupInfo) error {
 	info.OnAppStart = onAppStart
 	info.OnAppQuit = func() {}
 	if err := exciton.Init(info); err != nil {

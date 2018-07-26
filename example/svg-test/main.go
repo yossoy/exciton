@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/yossoy/exciton"
+	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/log"
@@ -57,7 +58,7 @@ func onAppStart() {
 	w.Mount(TestComponent())
 }
 
-func ExcitonStartup(info *exciton.StartupInfo) error {
+func ExcitonStartup(info *app.StartupInfo) error {
 	info.OnAppStart = onAppStart
 	info.OnAppQuit = func() {
 		log.PrintInfo("app is terminated...")

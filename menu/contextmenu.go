@@ -7,7 +7,7 @@ import (
 	"github.com/yossoy/exciton/window"
 )
 
-func ContextMenu(m ...markup.MarkupOrChild) markup.RenderResult {
+func contextMenu(m ...markup.MarkupOrChild) markup.RenderResult {
 	return markup.Tag("menu", m...)
 }
 
@@ -22,4 +22,16 @@ func (m *MenuInstance) Popup(mousePt geom.Point, parent *window.Window) error {
 		WindowID: parent.ID,
 	}
 	return event.Emit("/menu/"+m.uuid+"/popupContextMenu", event.NewValue(&arg))
+}
+
+func PopupMenu(menu MenuTemplate, mousePt geom.Point, w *window.Window) error {
+	m, err := toPopupMenuSub(menu)
+	if err != nil {
+		return err
+	}
+	mi, err := newInstance(contextMenu(m...))
+	if err != nil {
+		return err
+	}
+	return mi.Popup(mousePt, w)
 }

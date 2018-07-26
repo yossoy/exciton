@@ -4,6 +4,7 @@ import (
 	"runtime"
 
 	"github.com/yossoy/exciton"
+	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/markup"
 	"github.com/yossoy/exciton/menu"
@@ -88,10 +89,6 @@ func (rc *rootComponent) Render() markup.RenderResult {
 
 func onAppStart() {
 	rc := markup.MustRegisterComponent((*rootComponent)(nil))
-	err := menu.SetApplicationMenu(appMenu)
-	if err != nil {
-		panic(err)
-	}
 	cfg := window.WindowConfig{
 		Title: "Link Sample",
 	}
@@ -102,7 +99,8 @@ func onAppStart() {
 	w.Mount(rc())
 }
 
-func ExcitonStartup(info *exciton.StartupInfo) error {
+func ExcitonStartup(info *app.StartupInfo) error {
+	info.AppMenu = appMenu
 	info.OnAppStart = onAppStart
 	info.OnAppQuit = func() {}
 	if err := exciton.Init(info); err != nil {

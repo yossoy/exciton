@@ -9,8 +9,10 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
+	"github.com/yossoy/exciton/menu"
 )
 
 /*
@@ -262,13 +264,55 @@ func responceEventResult(crespNo C.int, cstr unsafe.Pointer, clen C.int) {
 	platform.responceCallback(jsonstr, respNo)
 }
 
-func Startup(startup driver.StartupFunc) error {
+var macDefaultAppmenu = menu.AppMenuTemplate{
+	{Label: menu.AppMenuLabel,
+		SubMenu: menu.MenuTemplate{
+			{{Role: menu.RoleAbout}},
+			{{Label: "services", Role: menu.RoleServices}},
+			{
+				{Role: menu.RoleHideOthers},
+				{Role: menu.RoleUnhide},
+			},
+			{{Role: menu.RoleQuit}},
+		}},
+	{Label: "Edit",
+		SubMenu: menu.MenuTemplate{
+			{
+				{Role: menu.RoleUndo},
+				{Role: menu.RoleRedo},
+			},
+			{
+				{Role: menu.RoleCut},
+				{Role: menu.RoleCopy},
+				{Role: menu.RolePaste},
+				{Role: menu.RolePasteAndMatchStyle},
+				{Role: menu.RoleDelete},
+			},
+			{
+				{Role: menu.RoleStartSpeaking},
+				{Role: menu.RoleStopSpeaking},
+			},
+		}},
+	{Label: "Window", Role: menu.RoleWindow,
+		SubMenu: menu.MenuTemplate{
+			{
+				{Role: menu.RoleMinimize},
+				{Role: menu.RoleClose},
+				{Role: menu.RoleFront},
+			},
+		}},
+}
+
+func Startup(startup app.StartupFunc) error {
 	runtime.LockOSThread()
 	event.StartEventMgr()
 	defer event.StopEventMgr()
+	si := &app.StartupInfo{
+		AppMenu: macDefaultAppmenu,
+	}
 	d := newDriver()
 	if err := d.Init(); err != nil {
 		return err
 	}
-	return driver.Startup(d, startup)
+	return driver.Startup(d, &si.StartupInfo, func() error { return startup(si) })
 }

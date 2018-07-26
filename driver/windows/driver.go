@@ -7,6 +7,9 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/yossoy/exciton/app"
+	"github.com/yossoy/exciton/menu"
+
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 )
@@ -205,14 +208,42 @@ func responceEventResult(crespNo C.int, cstr unsafe.Pointer, clen C.int) {
 	platform.responceCallback(jsonstr, respNo)
 }
 
+var windowsDefaultMenu = menu.AppMenuTemplate{
+	{Label: "File",
+		SubMenu: menu.MenuTemplate{
+			{
+				{Role: menu.RoleClose},
+			},
+			{
+				{Role: menu.RoleQuit},
+			},
+		}},
+	{Label: "Edit",
+		SubMenu: menu.MenuTemplate{
+			{
+				{Role: menu.RoleCut},
+				{Role: menu.RoleCopy},
+				{Role: menu.RolePaste},
+				{Role: menu.RoleDelete},
+			},
+		}},
+	{Label: "Help", Role: menu.RoleHelp,
+		SubMenu: menu.MenuTemplate{
+			{{Role: menu.RoleAbout}},
+		}},
+}
+
 // Startup is startup function in windows.
-func Startup(startup driver.StartupFunc) error {
+func Startup(startup app.StartupFunc) error {
 	runtime.LockOSThread()
 	event.StartEventMgr()
 	defer event.StopEventMgr()
+	si := &app.StartupInfo{
+		AppMenu: windowsDefaultMenu,
+	}
 	d := newDriver()
 	if err := d.Init(); err != nil {
 		return err
 	}
-	return driver.Startup(d, startup)
+	return driver.Startup(d, &si.StartupInfo, func() error { return startup(si) })
 }

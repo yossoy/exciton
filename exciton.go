@@ -3,20 +3,16 @@ package exciton
 import (
 	"errors"
 
-	"github.com/yossoy/exciton/driver"
+	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/event"
-	"github.com/yossoy/exciton/internal/menu"
 	"github.com/yossoy/exciton/markup"
+	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
 )
 
 // RunCallback is called at ready application
 
-type StartupFunc = driver.StartupFunc
-
-type StartupInfo = driver.StartupInfo
-
-func Init(info *driver.StartupInfo) error {
+func Init(info *app.StartupInfo) error {
 	//event.StartEventMgr()
 	if info.OnAppStart == nil {
 		return errors.New("Need to set a StartupInfo.OnAppQuit handler.")
@@ -27,11 +23,12 @@ func Init(info *driver.StartupInfo) error {
 		})
 	}
 	if err := event.AddHandler("/app/init", func(e *event.Event) {
+		menu.SetApplicationMenu(info.AppMenu)
 		info.OnAppStart()
 	}); err != nil {
 		return err
 	}
-	if err := window.InitWindows(info); err != nil {
+	if err := window.InitWindows(&info.StartupInfo); err != nil {
 		return err
 	}
 	if err := menu.InitMenus(); err != nil {

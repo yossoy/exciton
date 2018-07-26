@@ -60,12 +60,10 @@ type StartupInfo struct {
 	OnAppQuit  func()
 }
 
-type StartupFunc func(info *StartupInfo) error
+type StartupFunc func() error
 
-func newStartupInfo() *StartupInfo {
-	return &StartupInfo{
-		Router: newRouter(),
-	}
+func initStartupInfo(si *StartupInfo) {
+	si.Router = newRouter()
 }
 
 var BaseURL string
@@ -104,13 +102,13 @@ func callInitProc(timing InitProcTiming, si *StartupInfo) error {
 	return nil
 }
 
-func Startup(driver Driver, startup StartupFunc) error {
+func Startup(driver Driver, si *StartupInfo, startup StartupFunc) error {
 	platform = driver
-	si := newStartupInfo()
+	initStartupInfo(si)
 	if err := callInitProc(InitProcTimingPreStartup, si); err != nil {
 		return err
 	}
-	if err := startup(si); err != nil {
+	if err := startup(); err != nil {
 		return err
 	}
 
