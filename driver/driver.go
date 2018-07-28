@@ -54,10 +54,8 @@ func NativeRequestJSMethod() string {
 }
 
 type StartupInfo struct {
-	PortNo     int
-	Router     Router
-	OnAppStart func()
-	OnAppQuit  func()
+	PortNo int
+	Router Router
 }
 
 type StartupFunc func() error

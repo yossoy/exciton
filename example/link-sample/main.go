@@ -3,7 +3,6 @@ package main
 import (
 	"runtime"
 
-	"github.com/yossoy/exciton"
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/markup"
@@ -87,24 +86,17 @@ func (rc *rootComponent) Render() markup.RenderResult {
 	)
 }
 
-func onAppStart() {
-	rc := markup.MustRegisterComponent((*rootComponent)(nil))
-	cfg := window.WindowConfig{
-		Title: "Link Sample",
-	}
-	w, err := window.NewWindow(cfg)
+func onNewWindow(cfg *window.WindowConfig) (markup.RenderResult, error) {
+	cfg.Title = "Link Sample"
+	rc, err := markup.RegisterComponent((*rootComponent)(nil))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	w.Mount(rc())
+	return rc(), nil
 }
 
 func ExcitonStartup(info *app.StartupInfo) error {
 	info.AppMenu = appMenu
-	info.OnAppStart = onAppStart
-	info.OnAppQuit = func() {}
-	if err := exciton.Init(info); err != nil {
-		return err
-	}
+	info.OnNewWindow = onNewWindow
 	return nil
 }

@@ -1,8 +1,6 @@
 package exciton
 
 import (
-	"errors"
-
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/markup"
@@ -10,21 +8,19 @@ import (
 	"github.com/yossoy/exciton/window"
 )
 
-// RunCallback is called at ready application
+type InternalInitFunc func(info *app.StartupInfo) error
 
-func Init(info *app.StartupInfo) error {
-	//event.StartEventMgr()
-	if info.OnAppStart == nil {
-		return errors.New("Need to set a StartupInfo.OnAppQuit handler.")
-	}
+func Init(info *app.StartupInfo, initFunc InternalInitFunc) error {
 	if info.OnAppQuit != nil {
 		event.AddHandler("/app/finalize", func(e *event.Event) {
 			info.OnAppQuit()
 		})
 	}
 	if err := event.AddHandler("/app/init", func(e *event.Event) {
-		menu.SetApplicationMenu(info.AppMenu)
-		info.OnAppStart()
+		err := initFunc(info)
+		if err != nil {
+			panic(err) //TODO: error handlig
+		}
 	}); err != nil {
 		return err
 	}
@@ -39,5 +35,3 @@ func Init(info *app.StartupInfo) error {
 	}
 	return nil
 }
-
-//	driver.Run()

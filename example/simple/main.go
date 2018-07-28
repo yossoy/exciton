@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/yossoy/exciton"
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/html"
@@ -238,27 +237,22 @@ func (c *testComponent) Render() markup.RenderResult {
 
 var TestComponent = markup.MustRegisterComponent((*testComponent)(nil))
 
-func onAppStart() {
-	log.PrintInfo("onAppStart")
+func onNewWindow(cfg *window.WindowConfig) (markup.RenderResult, error) {
+	cfg.Title = "Exciton Sample"
+	return TestComponent(), nil
+}
 
-	cfg := window.WindowConfig{
-		Title: "Exciton Sample",
-	}
-	w, err := window.NewWindow(cfg)
-	if err != nil {
-		panic(err)
-	}
-	w.Mount(TestComponent())
+func onAppStart(info *app.StartupInfo) error {
+	log.PrintInfo("onAppStart")
+	return nil
 }
 
 func ExcitonStartup(info *app.StartupInfo) error {
 	info.AppMenu = appMenu
 	info.OnAppStart = onAppStart
+	info.OnNewWindow = onNewWindow
 	info.OnAppQuit = func() {
 		log.PrintInfo("app is terminated...")
-	}
-	if err := exciton.Init(info); err != nil {
-		return err
 	}
 	return nil
 }

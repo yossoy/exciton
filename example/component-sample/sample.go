@@ -51,7 +51,6 @@ func (s *sampleComponent) Render() markup.RenderResult {
 			html.Button(
 				s.Classes("Button"),
 				markup.Text("Kill ME!"),
-				//s.ClientJSEvent("click", "onClickKillME"),
 				markup.If(
 					s.KillMeClicked != nil,
 					html.OnClick(s.KillMeClicked),

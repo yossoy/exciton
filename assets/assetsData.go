@@ -13,7 +13,12 @@ var _assetsDatae41ed0de15e775cee0d9a53ce55f8f8d1f867985 = "(function() {\n// pol
 
 // assetsData returns go-assets FileSystem
 var assetsData = assets.NewFileSystem(map[string][]string{"/": []string{"default.css", "default.gohtml", "exciton.js", "pollyfill-ie.js"}}, map[string]*assets.File{
-	"/pollyfill-ie.js": &assets.File{
+	"/exciton.js": &assets.File{
+		Path:     "/exciton.js",
+		FileMode: 0x1a4,
+		Mtime:    time.Unix(1532750494, 1532750494000000000),
+		Data:     []byte(_assetsData93230c0b55e1bbb180784ccfda809ad1ec02b78a),
+	}, "/pollyfill-ie.js": &assets.File{
 		Path:     "/pollyfill-ie.js",
 		FileMode: 0x1a4,
 		Mtime:    time.Unix(1530412424, 1530412424000000000),
@@ -26,16 +31,11 @@ var assetsData = assets.NewFileSystem(map[string][]string{"/": []string{"default
 	}, "/default.css": &assets.File{
 		Path:     "/default.css",
 		FileMode: 0x1a4,
-		Mtime:    time.Unix(1532575482, 1532575482000000000),
+		Mtime:    time.Unix(1532750494, 1532750494000000000),
 		Data:     []byte(_assetsData2cf41a63e4e00f4bc88131fa6c0de3f6cc4c3a6d),
 	}, "/default.gohtml": &assets.File{
 		Path:     "/default.gohtml",
 		FileMode: 0x1a4,
 		Mtime:    time.Unix(1531229936, 1531229936000000000),
 		Data:     []byte(_assetsData0288a6d4746eeeb2ae655bb8828f58908ef8ae3d),
-	}, "/exciton.js": &assets.File{
-		Path:     "/exciton.js",
-		FileMode: 0x1a4,
-		Mtime:    time.Unix(1532575482, 1532575482000000000),
-		Data:     []byte(_assetsData93230c0b55e1bbb180784ccfda809ad1ec02b78a),
 	}}, "")

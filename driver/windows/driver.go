@@ -7,11 +7,14 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/yossoy/exciton"
 	"github.com/yossoy/exciton/app"
-	"github.com/yossoy/exciton/menu"
-
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
+	"github.com/yossoy/exciton/html"
+	"github.com/yossoy/exciton/markup"
+	"github.com/yossoy/exciton/menu"
+	"github.com/yossoy/exciton/window"
 )
 
 /*
@@ -233,6 +236,39 @@ var windowsDefaultMenu = menu.AppMenuTemplate{
 		}},
 }
 
+func emptyPage() markup.RenderResult {
+	return html.Div(
+		markup.Text("Empty"),
+	)
+}
+
+func internalInitFunc(info *app.StartupInfo) error {
+	menu.SetApplicationMenu(info.AppMenu)
+	if info.OnAppStart != nil {
+		err := info.OnAppStart(info)
+		if err != nil {
+			return err
+		}
+	}
+
+	winCfg := &window.WindowConfig{}
+	var rr markup.RenderResult
+	if info.OnNewWindow != nil {
+		var err error
+		rr, err = info.OnNewWindow(winCfg)
+		if err != nil {
+			return err
+		}
+	} else {
+		rr = emptyPage()
+	}
+	w, err := window.NewWindow(*winCfg)
+	if err != nil {
+		return err
+	}
+	return w.Mount(rr)
+}
+
 // Startup is startup function in windows.
 func Startup(startup app.StartupFunc) error {
 	runtime.LockOSThread()
@@ -245,5 +281,14 @@ func Startup(startup app.StartupFunc) error {
 	if err := d.Init(); err != nil {
 		return err
 	}
-	return driver.Startup(d, &si.StartupInfo, func() error { return startup(si) })
+	sf := func() error {
+		if err := startup(si); err != nil {
+			return err
+		}
+		if err := exciton.Init(si, internalInitFunc); err != nil {
+			return err
+		}
+		return nil
+	}
+	return driver.Startup(d, &si.StartupInfo, sf)
 }
