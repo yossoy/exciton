@@ -33,6 +33,7 @@ type Builder struct {
 
 type Buildable interface {
 	Builder() *Builder
+	EventRoot() string
 }
 
 func NewBuilder(hostPath string) *Builder {

@@ -17,6 +17,7 @@ type UserData interface{}
 
 // Window is browser window
 type Window struct {
+	AppID             string
 	ID                string
 	UserData          UserData
 	builder           *markup.Builder
@@ -27,6 +28,7 @@ type Window struct {
 	title             string
 	lang              string
 	cachedHTML        []byte
+	eventRoot         string
 }
 
 var activeWindow *Window
@@ -39,13 +41,17 @@ func (w *Window) Builder() *markup.Builder {
 	return w.builder
 }
 
+func (w *Window) EventRoot() string {
+	return w.eventRoot
+}
+
 func (w *Window) requestAnimationFrame() {
-	event.Emit("/window/"+w.ID+"/requestAnimationFrame", nil)
+	event.Emit(w.eventRoot+"/window/"+w.ID+"/requestAnimationFrame", nil)
 }
 
 func (w *Window) updateDiffSetHandler(ds *markup.DiffSet) {
 	//log.PrintDebug("updateDiffSetHandler: %v", ds)
-	event.Emit("/window/"+w.ID+"/updateDiffSetHandler", event.NewValue(ds))
+	event.Emit(w.eventRoot+"/window/"+w.ID+"/updateDiffSetHandler", event.NewValue(ds))
 }
 
 func (w *Window) onReady() {
@@ -168,11 +174,11 @@ func onChangeRoute(e *event.Event) {
 	w.Builder().OnRedirect(arg.Route)
 }
 
-func InitWindows(si *driver.StartupInfo) error {
+func InitWindows(appg event.Group, si *driver.StartupInfo) error {
 	if err := initHTML(si); err != nil {
 		return err
 	}
-	if err := event.AddHandler("/window/:id/finalize", func(e *event.Event) {
+	if err := appg.AddHandler("/window/:id/finalize", func(e *event.Event) {
 		id := e.Params["id"]
 		log.PrintInfo("finalized: %q", id)
 		_, empty, err := object.Windows.Delete(object.ObjectKey(id))
@@ -186,24 +192,23 @@ func InitWindows(si *driver.StartupInfo) error {
 	}); err != nil {
 		return err
 	}
-	if err := event.AddHandler("/window/:id/changeRoute", onChangeRoute); err != nil {
-
+	if err := appg.AddHandler("/window/:id/changeRoute", onChangeRoute); err != nil {
 		return err
 	}
-	if err := event.AddHandler("/window/:id/closed", onWindowClosed); err != nil {
+	if err := appg.AddHandler("/window/:id/closed", onWindowClosed); err != nil {
 		return err
 	}
-	if err := event.AddHandler("/window/:id/resize", onWindowResized); err != nil {
+	if err := appg.AddHandler("/window/:id/resize", onWindowResized); err != nil {
 		return err
 	}
-	if err := event.AddHandler("/window/:id/focus", onWindowFocus); err != nil {
+	if err := appg.AddHandler("/window/:id/focus", onWindowFocus); err != nil {
 		return err
 	}
 	if err := event.AddHandler("/window/:id/blur", onWindowBlur); err != nil {
 		return err
 	}
 
-	if err := event.AddHandler("/window/:id/onRequestAnimationFrame", func(e *event.Event) {
+	if err := appg.AddHandler("/window/:id/onRequestAnimationFrame", func(e *event.Event) {
 		w := getWindowByID(e.Params["id"])
 		var tick float64
 		if err := e.Argument.Decode(&tick); err != nil {
@@ -214,7 +219,7 @@ func InitWindows(si *driver.StartupInfo) error {
 		return err
 	}
 
-	if err := event.AddHandler("/window/:id/ready", func(e *event.Event) {
+	if err := appg.AddHandler("/window/:id/ready", func(e *event.Event) {
 		w := getWindowByID(e.Params["id"])
 		w.onReady()
 	}); err != nil {
@@ -225,22 +230,32 @@ func InitWindows(si *driver.StartupInfo) error {
 }
 
 // NewWindow create new browser window
-func NewWindow(cfg WindowConfig) (*Window, error) {
+func NewWindow(appid string, cfg *WindowConfig) (*Window, error) {
 	if cfg.Size == nil {
 		cfg.Size = &geom.Size{Width: stdWinWidth, Height: stdWinHeight}
 	}
 	id := object.Windows.NewKey()
 	cfg.ID = id
 	if cfg.URL == "" {
-		cfg.URL = fmt.Sprintf("%s/window/%s/", driver.BaseURL, id)
+		appURLBase := ""
+		if appid != "" {
+			appURLBase = "/exciton/" + appid
+		}
+		cfg.URL = fmt.Sprintf("%s"+appURLBase+"/window/%s/", driver.BaseURL, id)
+	}
+	eventRoot := ""
+	if appid != "" {
+		eventRoot = "/exciton/" + appid
 	}
 
 	w := &Window{
-		ID:    id,
-		title: cfg.Title,
-		lang:  cfg.Lang,
+		AppID:     appid,
+		ID:        id,
+		title:     cfg.Title,
+		lang:      cfg.Lang,
+		eventRoot: eventRoot,
 	}
-	hostPath := "/window/" + string(id)
+	hostPath := eventRoot + "/window/" + string(id)
 	object.Windows.Put(id, w)
 	r := event.EmitWithResult(hostPath+"/new", event.NewValue(cfg))
 	if r.Error() != nil {

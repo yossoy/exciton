@@ -76,8 +76,8 @@ func (l *EventListener) applyToNode(b *Builder, n *node, on *node) {
 	}
 }
 
-func InitEvents() error {
-	err := event.AddHandler("/:evtroot/:id/html/:html/:event", func(e *event.Event) {
+func InitEvents(appg event.Group) error {
+	err := appg.AddHandler("/:evtroot/:id/html/:html/:event", func(e *event.Event) {
 		//id := e.Params["id"]
 		eventRoot := e.Params["evtroot"]
 		id := e.Params["id"]

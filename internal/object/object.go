@@ -61,6 +61,9 @@ func NewObjectMap() *ObjectMap {
 }
 
 var (
+	Apps    = NewObjectMap()
 	Windows = NewObjectMap()
 	Menus   = NewObjectMap()
 )
+
+const SingletonName = "*singleton*"

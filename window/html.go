@@ -19,7 +19,7 @@ type htmlContext struct {
 	ID                    string
 	Title                 string
 	Lang                  string
-	IsIE                  bool
+	DriverType            string
 	ResourcesURL          template.URL
 	MesonJS               template.JS
 	NativeRequestJSMethod template.JS
@@ -48,6 +48,7 @@ func toTemplateURL(ss []string) []template.URL {
 }
 
 func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
+	log.PrintDebug("rootHTMLHandler: %q", r.RequestURI)
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if !ok {
@@ -66,10 +67,10 @@ func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx := htmlContext{
-			ID:    id,
-			Title: win.title,
-			Lang:  win.lang,
-			IsIE:  driver.IsIE(),
+			ID:                    id,
+			Title:                 win.title,
+			Lang:                  win.lang,
+			DriverType:            driver.Type(),
 			NativeRequestJSMethod: template.JS(driver.NativeRequestJSMethod()),
 			IsReleaseBuild:        driver.ReleaseBuild,
 			ComponentCSSFiles:     toTemplateURL(markup.GetComponentCSSURLs()),
@@ -96,7 +97,7 @@ func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
 
 func initHTML(info *driver.StartupInfo) error {
 	markup.HandleComponentResource(info.Router)
-	info.Router.HandleFunc("/window/{id}/", rootHTMLHandler)
+	info.Router.HandleFunc(info.AppURLBase+"/window/{id}/", rootHTMLHandler)
 	//TODO: assetsのマウントは別の場所で行う?
 	info.Router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(assets.FileSystem)))
 	return nil

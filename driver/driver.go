@@ -27,7 +27,7 @@ type DriverEvent struct {
 
 type Driver interface {
 	Run()
-	IsIE() bool
+	DriverType() string
 	ResourcesFileSystem() (http.FileSystem, error)
 	NativeRequestJSMethod() string
 	Log(lvl LogLevel, msg string, args ...interface{})
@@ -41,8 +41,8 @@ func Run() {
 	platform.Run()
 }
 
-func IsIE() bool {
-	return platform.IsIE()
+func Type() string {
+	return platform.DriverType()
 }
 
 func Log(lvl LogLevel, fmt string, args ...interface{}) {
@@ -54,8 +54,9 @@ func NativeRequestJSMethod() string {
 }
 
 type StartupInfo struct {
-	PortNo int
-	Router Router
+	PortNo     int
+	Router     Router
+	AppURLBase string
 }
 
 type StartupFunc func() error

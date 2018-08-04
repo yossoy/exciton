@@ -1,3 +1,4 @@
 .vscode/
 assets/node_modules
+driver/web/node_modules
 example/component-sample/node_modules

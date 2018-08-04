@@ -11,13 +11,18 @@ import (
 )
 
 type MenuInstance struct {
-	builder *markup.Builder
-	mounted markup.RenderResult
-	uuid    string
+	builder   *markup.Builder
+	mounted   markup.RenderResult
+	uuid      string
+	eventRoot string
 }
 
 func (m *MenuInstance) Builder() *markup.Builder {
 	return m.builder
+}
+
+func (m *MenuInstance) EventRoot() string {
+	return m.eventRoot
 }
 
 func (m *MenuInstance) requestAnimationFrame() {
@@ -28,7 +33,7 @@ func (m *MenuInstance) requestAnimationFrame() {
 }
 
 func (m *MenuInstance) updateDiffSetHandler(ds *markup.DiffSet) {
-	result := event.EmitWithResult("/menu/"+m.uuid+"/updateDiffSetHandler", event.NewValue(ds))
+	result := event.EmitWithResult(m.eventRoot+"/menu/"+m.uuid+"/updateDiffSetHandler", event.NewValue(ds))
 	if result.Error() != nil {
 		panic(result.Error())
 	}
@@ -41,30 +46,31 @@ func (m *MenuInstance) updateDiffSetHandler(ds *markup.DiffSet) {
 	}
 }
 
-func newMenu() (*MenuInstance, error) {
+func newMenu(eventRoot string) (*MenuInstance, error) {
 	uid := object.Menus.NewKey()
 
-	result := event.EmitWithResult("/menu/"+uid+"/new", event.NewValue(nil))
+	result := event.EmitWithResult(eventRoot+"/menu/"+uid+"/new", event.NewValue(nil))
 	if result.Error() != nil {
 		return nil, result.Error()
 	}
 
 	m := &MenuInstance{
-		uuid: uid,
+		uuid:      uid,
+		eventRoot: eventRoot,
 	}
 	object.Menus.Put(uid, m)
 
 	return m, nil
 }
 
-func newInstance(component markup.RenderResult) (*MenuInstance, error) {
-	m, err := newMenu()
+func newInstance(eventRoot string, component markup.RenderResult) (*MenuInstance, error) {
+	m, err := newMenu(eventRoot)
 	if err != nil {
 		return nil, err
 	}
 
 	m.mounted = component
-	m.builder = markup.NewAsyncBuilder("/menu/"+m.uuid, m.requestAnimationFrame, m.updateDiffSetHandler)
+	m.builder = markup.NewAsyncBuilder(eventRoot+"/menu/"+m.uuid, m.requestAnimationFrame, m.updateDiffSetHandler)
 	m.builder.RenderBody(component)
 
 	return m, nil
@@ -148,8 +154,8 @@ func toAppMenu(menu AppMenuTemplate) (markup.RenderResult, error) {
 	return markup.Tag("menu", items...), nil
 }
 
-func InitMenus() error {
-	err := event.AddHandler("/menu/:id/finalize", func(e *event.Event) {
+func InitMenus(gg event.Group) error {
+	err := gg.AddHandler("/menu/:id/finalize", func(e *event.Event) {
 		id := e.Params["id"]
 		_, _, err := object.Menus.Delete(object.ObjectKey(id))
 		if err != nil {

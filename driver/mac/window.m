@@ -291,7 +291,7 @@
                                     withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowserEvent('"
-                                 @"updateDiffData', '%@');",
+                                 @"updateDiffSetHandler', '%@');",
                                  jsonStr2];
   defer([self.webview evaluateJavaScript:cmdstr completionHandler:nil];);
 }
@@ -306,7 +306,7 @@
                                     withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowerEventSync('"
-                                 @"updateDiffData', '%@');",
+                                 @"browserSync', '%@');",
                                  jsonStr2];
   defer([self.webview
             evaluateJavaScript:cmdstr

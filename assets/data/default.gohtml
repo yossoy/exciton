@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{if .Lang}}{{.Lang}}{{else}}en{{end}}">
 <head>
-    {{if .IsIE}}<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    {{if eq .DriverType "ie"}}<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="UTF-8">
     {{end}}
     <link type="text/css" rel="stylesheet" href="/assets/default.css"></link>

@@ -66,6 +66,26 @@ type eventGroup struct {
 	subRouter *Router
 }
 
+type rootGroup struct {
+}
+
+func (rg *rootGroup) AddHandler(name string, handler Handler) error {
+	return AddHandler(name, handler)
+}
+func (rg *rootGroup) AddHandlerWithResult(name string, handler HandlerWithResult) error {
+	return AddHandlerWithResult(name, handler)
+}
+func (rg *rootGroup) AddGroup(name string) (Group, error) {
+	return AddGroup(name)
+}
+func (rg *rootGroup) SetUnmatchedHandler(handler UnmatchedHandler) {
+	SetUnmatchedHandler(handler)
+}
+
+func RootGroup() Group {
+	return &rootGroup{}
+}
+
 func (em *eventMgr) addHandler(tr *Router, name string, handler interface{}) error {
 	rc := makeResultChan()
 
@@ -179,8 +199,7 @@ func (em *eventMgr) eventMain() {
 					}
 				}
 			case group:
-				gr := NewRouter()
-				err := c.targetRouter.AddRoute(c.name, gr)
+				gr, err := c.targetRouter.AddRoute(c.name, NewRouter())
 				if err != nil {
 					c.resultChan <- err
 				} else {

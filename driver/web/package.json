@@ -1,0 +1,35 @@
+{
+  "name": "exciton",
+  "version": "0.0.1",
+  "description": "exciton runtime",
+  "main": "src/exciton.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "go",
+    "exciton",
+    "gui"
+  ],
+  "author": "YOSHIKAWA Hiroki",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.0.0-beta.53",
+    "dialog-polyfill": "^0.4.10",
+    "normalize.css": "^8.0.0"
+  },
+  "private": true,
+  "devDependencies": {
+    "@babel/polyfill": "^7.0.0-beta.53",
+    "@babel/preset-env": "^7.0.0-beta.53",
+    "babel-cli": "^6.26.0",
+    "babel-loader": "^8.0.0-beta.4",
+    "css-loader": "^1.0.0",
+    "event-emitter": "^0.3.5",
+    "mini-css-extract-plugin": "^0.4.1",
+    "optimize-css-assets-webpack-plugin": "^5.0.0",
+    "uglifyjs-webpack-plugin": "^1.2.7",
+    "webpack": "^4.15.1",
+    "webpack-cli": "^3.0.8"
+  }
+}

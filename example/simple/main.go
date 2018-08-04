@@ -7,15 +7,12 @@ import (
 
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/dialog"
+	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
 	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
-)
-
-const (
-	isDarwin = (runtime.GOOS == "darwin")
 )
 
 func onOpenFile(e *html.MouseEvent) {
@@ -63,59 +60,61 @@ func onSaveFile(e *html.MouseEvent) {
 
 }
 
-var appMenu = menu.AppMenuTemplate{
-	{Label: menu.AppMenuLabel, Hidden: !isDarwin,
-		SubMenu: menu.MenuTemplate{
-			{{Role: menu.RoleAbout}},
-			{{Label: "services", Role: menu.RoleServices}},
-			{
-				{Role: menu.RoleHideOthers},
-				{Role: menu.RoleUnhide},
-			},
-			{{Role: menu.RoleQuit}},
-		}},
+func appMenu(isDarwin bool) menu.AppMenuTemplate {
+	return menu.AppMenuTemplate{
+		{Label: menu.AppMenuLabel, Hidden: !isDarwin,
+			SubMenu: menu.MenuTemplate{
+				{{Role: menu.RoleAbout}},
+				{{Label: "services", Role: menu.RoleServices}},
+				{
+					{Role: menu.RoleHideOthers},
+					{Role: menu.RoleUnhide},
+				},
+				{{Role: menu.RoleQuit}},
+			}},
 
-	{Label: "File",
-		SubMenu: menu.MenuTemplate{
-			{
-				{Label: "Open", Acclerator: "CommandOrControl+O", Handler: onOpenFile},
-				{Label: "Save", Acclerator: "CommandOrControl+S", Handler: onSaveFile},
-				{Hidden: isDarwin, Role: menu.RoleClose},
-			},
-			{
-				{Hidden: isDarwin, Role: menu.RoleQuit},
-			},
-		}},
-	{Label: "Edit",
-		SubMenu: menu.MenuTemplate{
-			{
-				{Hidden: !isDarwin, Role: menu.RoleUndo},
-				{Hidden: !isDarwin, Role: menu.RoleRedo},
-			},
-			{
-				{Role: menu.RoleCut},
-				{Role: menu.RoleCopy},
-				{Role: menu.RolePaste},
-				{Hidden: !isDarwin, Role: menu.RolePasteAndMatchStyle},
-				{Role: menu.RoleDelete},
-			},
-			{
-				{Hidden: !isDarwin, Role: menu.RoleStartSpeaking},
-				{Hidden: !isDarwin, Role: menu.RoleStopSpeaking},
-			},
-		}},
-	{Label: "Window", Role: menu.RoleWindow,
-		SubMenu: menu.MenuTemplate{
-			{
-				{Role: menu.RoleMinimize},
-				{Hidden: !isDarwin, Role: menu.RoleClose},
-				{Hidden: !isDarwin, Role: menu.RoleFront},
-			},
-		}},
-	{Label: "Help", Role: menu.RoleHelp,
-		SubMenu: menu.MenuTemplate{
-			{{Hidden: isDarwin, Role: menu.RoleAbout}},
-		}},
+		{Label: "File",
+			SubMenu: menu.MenuTemplate{
+				{
+					{Label: "Open", Acclerator: "CommandOrControl+O", Handler: onOpenFile},
+					{Label: "Save", Acclerator: "CommandOrControl+S", Handler: onSaveFile},
+					{Hidden: isDarwin, Role: menu.RoleClose},
+				},
+				{
+					{Hidden: isDarwin, Role: menu.RoleQuit},
+				},
+			}},
+		{Label: "Edit",
+			SubMenu: menu.MenuTemplate{
+				{
+					{Hidden: !isDarwin, Role: menu.RoleUndo},
+					{Hidden: !isDarwin, Role: menu.RoleRedo},
+				},
+				{
+					{Role: menu.RoleCut},
+					{Role: menu.RoleCopy},
+					{Role: menu.RolePaste},
+					{Hidden: !isDarwin, Role: menu.RolePasteAndMatchStyle},
+					{Role: menu.RoleDelete},
+				},
+				{
+					{Hidden: !isDarwin, Role: menu.RoleStartSpeaking},
+					{Hidden: !isDarwin, Role: menu.RoleStopSpeaking},
+				},
+			}},
+		{Label: "Window", Role: menu.RoleWindow,
+			SubMenu: menu.MenuTemplate{
+				{
+					{Role: menu.RoleMinimize},
+					{Hidden: !isDarwin, Role: menu.RoleClose},
+					{Hidden: !isDarwin, Role: menu.RoleFront},
+				},
+			}},
+		{Label: "Help", Role: menu.RoleHelp,
+			SubMenu: menu.MenuTemplate{
+				{{Hidden: isDarwin, Role: menu.RoleAbout}},
+			}},
+	}
 }
 
 func onClickPopupItem(e *html.MouseEvent) {
@@ -237,18 +236,19 @@ func (c *testComponent) Render() markup.RenderResult {
 
 var TestComponent = markup.MustRegisterComponent((*testComponent)(nil))
 
-func onNewWindow(cfg *window.WindowConfig) (markup.RenderResult, error) {
+func onNewWindow(app *app.App, cfg *window.WindowConfig) (markup.RenderResult, error) {
 	cfg.Title = "Exciton Sample"
 	return TestComponent(), nil
 }
 
-func onAppStart(info *app.StartupInfo) error {
+func onAppStart(app *app.App, info *app.StartupInfo) error {
 	log.PrintInfo("onAppStart")
 	return nil
 }
 
 func ExcitonStartup(info *app.StartupInfo) error {
-	info.AppMenu = appMenu
+	isDarwinApp := (runtime.GOOS == "darwin") && (driver.Type() != "web")
+	info.AppMenu = appMenu(isDarwinApp)
 	info.OnAppStart = onAppStart
 	info.OnNewWindow = onNewWindow
 	info.OnAppQuit = func() {

@@ -31,6 +31,19 @@ func (et *EventTarget) Builder() *Builder {
 	return buildable.Builder()
 }
 
+func (et *EventTarget) eventRoot() string {
+	var buildable Buildable
+	switch {
+	case et.WindowID != "":
+		buildable = object.Windows.Get(et.WindowID).(Buildable)
+	case et.MenuID != "":
+		buildable = object.Menus.Get(et.MenuID).(Buildable)
+	default:
+		return ""
+	}
+	return buildable.EventRoot()
+}
+
 func (et *EventTarget) Node() *node {
 	builder := et.Builder()
 	if builder == nil {
@@ -75,11 +88,12 @@ func (et *EventTarget) GetProperty(name string) (interface{}, error) {
 		Target:   et.ElementID,
 		Argument: name,
 	}
+	eventRoot := et.eventRoot()
 	var result event.Result
 	if et.WindowID != "" {
-		result = event.EmitWithResult("/window/"+et.WindowID+"/browserSync", event.NewValue(arg))
+		result = event.EmitWithResult(eventRoot+"/window/"+et.WindowID+"/browserSync", event.NewValue(arg))
 	} else if et.MenuID != "" {
-		result = event.EmitWithResult("/menu"+et.MenuID+"/browserSync", event.NewValue(arg))
+		result = event.EmitWithResult(eventRoot+"/menu"+et.MenuID+"/browserSync", event.NewValue(arg))
 	}
 	if result.Error() != nil {
 		return nil, errors.Wrap(result.Error(), "EmitEventWithResult fail:")

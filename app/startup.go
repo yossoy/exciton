@@ -10,9 +10,9 @@ import (
 type StartupInfo struct {
 	driver.StartupInfo
 	AppMenu     menu.AppMenuTemplate
-	OnAppStart  func(*StartupInfo) error
+	OnAppStart  func(*App, *StartupInfo) error
 	OnAppQuit   func()
-	OnNewWindow func(cfg *window.WindowConfig) (markup.RenderResult, error)
+	OnNewWindow func(*App, *window.WindowConfig) (markup.RenderResult, error)
 }
 
 type StartupFunc func(*StartupInfo) error

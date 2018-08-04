@@ -86,7 +86,7 @@ func (rc *rootComponent) Render() markup.RenderResult {
 	)
 }
 
-func onNewWindow(cfg *window.WindowConfig) (markup.RenderResult, error) {
+func onNewWindow(app *app.App, cfg *window.WindowConfig) (markup.RenderResult, error) {
 	cfg.Title = "Link Sample"
 	rc, err := markup.RegisterComponent((*rootComponent)(nil))
 	if err != nil {

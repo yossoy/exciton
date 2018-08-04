@@ -165,9 +165,7 @@ function mountUnmountComponent(nsobj, n, itemv, mounted) {
   }
 }
 
-function updateDiffData(nsobj, e) {
-  const rootObj = document.getElementById(nsobj.ID);
-  const diff = e.detail;
+function updateDiffData(nsobj, rootObj, diff) {
   let curNode = null;
   let arg1Node = null;
   let arg2Node = null;

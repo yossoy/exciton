@@ -29,7 +29,7 @@ func PopupMenu(menu MenuTemplate, mousePt geom.Point, w *window.Window) error {
 	if err != nil {
 		return err
 	}
-	mi, err := newInstance(contextMenu(m...))
+	mi, err := newInstance(w.EventRoot(), contextMenu(m...))
 	if err != nil {
 		return err
 	}

@@ -183,8 +183,8 @@ func createDirIfNotExists(name string) {
 	}
 }
 
-func (d *mac) IsIE() bool {
-	return false
+func (d *mac) DriverType() string {
+	return "mac"
 }
 
 func (d *mac) ResourcesFileSystem() (http.FileSystem, error) {
@@ -313,10 +313,10 @@ func emptyPage() markup.RenderResult {
 	)
 }
 
-func internalInitFunc(info *app.StartupInfo) error {
-	menu.SetApplicationMenu(info.AppMenu)
+func internalInitFunc(a *app.App, info *app.StartupInfo) error {
+	menu.SetApplicationMenu("", info.AppMenu)
 	if info.OnAppStart != nil {
-		err := info.OnAppStart(info)
+		err := info.OnAppStart(a, info)
 		if err != nil {
 			return err
 		}
@@ -326,14 +326,14 @@ func internalInitFunc(info *app.StartupInfo) error {
 	var rr markup.RenderResult
 	if info.OnNewWindow != nil {
 		var err error
-		rr, err = info.OnNewWindow(winCfg)
+		rr, err = info.OnNewWindow(a, winCfg)
 		if err != nil {
 			return err
 		}
 	} else {
 		rr = emptyPage()
 	}
-	w, err := window.NewWindow(*winCfg)
+	w, err := window.NewWindow("", winCfg)
 	if err != nil {
 		return err
 	}
@@ -355,7 +355,8 @@ func Startup(startup app.StartupFunc) error {
 		if err := startup(si); err != nil {
 			return err
 		}
-		if err := exciton.Init(si, internalInitFunc); err != nil {
+		app.NewSingletonApp(nil)
+		if err := exciton.Init(event.RootGroup(), si, internalInitFunc); err != nil {
 			return err
 		}
 		return nil

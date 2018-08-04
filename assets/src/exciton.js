@@ -98,8 +98,9 @@ exciton.on('requestAnimationFrame', function(e) {
   });
 });
 
-exciton.on('updateDiffData', (e) => {
-  updateDiffData(nsobj, e);
+exciton.on('updateDiffSetHandler', (e) => {
+  const rootObj = document.getElementById(nsobj.ID);
+  updateDiffData(nsobj, rootObj, e.detail);
 });
 
 exciton.on('redirectTo', (e) => {

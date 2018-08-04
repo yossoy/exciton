@@ -1,3 +1,5 @@
+// +build !nonative
+
 package main
 
 import (

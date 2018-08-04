@@ -156,26 +156,32 @@ func (rr *Router) Match(s string) (RouteItem, map[string]string, string, error) 
 	return r, p, joinPathSegments(sss), err
 }
 
-func (rr *Router) isExistPath(ss []string) bool {
+func (rr *Router) isExistPath(ss []string) (*routeItem, bool) {
 	for _, r := range rr.routes {
 		if len(ss) != len(r.substrs) {
 			continue
 		}
 		matched := true
+		completeMatched := true
 		for idx, rs := range r.substrs {
 			s := ss[idx]
-			if s[0] != ':' && rs[0] != ':' {
-				if s != rs {
+			if s != rs {
+				if s[0] == ':' && rs[0] == ':' {
+					completeMatched = false
+				} else if s[0] != ':' || rs[0] != ':' {
 					matched = false
-					break
 				}
 			}
 		}
 		if matched {
-			return true
+			if completeMatched {
+				return r, true
+			} else {
+				return nil, true
+			}
 		}
 	}
-	return false
+	return nil, false
 }
 
 // Add add route item
@@ -184,8 +190,8 @@ func (rr *Router) Add(s string, item interface{}) error {
 	if err != nil {
 		return err
 	}
-	if rr.isExistPath(ss) {
-		return errors.New("already registerd: " + s) //TODO:
+	if _, ok := rr.isExistPath(ss); ok {
+		return errors.New("already registerd: " + s)
 	}
 	r := &routeItem{
 		substrs: ss,
@@ -211,20 +217,24 @@ func (rr *Router) Delete(s string) error {
 }
 
 // AddRoute add sub route
-func (rr *Router) AddRoute(s string, router *Router) error {
+func (rr *Router) AddRoute(s string, router *Router) (*Router, error) {
 	ss, err := splitRouterPath(s)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if rr.isExistPath(ss) {
-		return errors.New("already registerd: " + s) //TODO:
+	if ri, ok := rr.isExistPath(ss); ok {
+		if ri != nil {
+			return ri.children, nil
+		} else {
+			return nil, errors.New("already registerd: " + s) //TODO:
+		}
 	}
 	r := &routeItem{
 		substrs:  ss,
 		children: router,
 	}
 	rr.routes = append(rr.routes, r)
-	return nil
+	return router, nil
 }
 
 // SetUnmatchedItem set results used path is unmatched

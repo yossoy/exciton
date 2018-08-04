@@ -114,7 +114,7 @@ void updateDiffSetHandler(const picojson::value &argument,
     return;
   }
   LOG_INFO("updateDiffSetHandler called: %s\n", id.c_str());
-  evaluateJavaScript(id, "updateDiffData", argument);
+  evaluateJavaScript(id, "updateDiffSetHandler", argument);
 }
 
 void browserSync(const picojson::value &argument,
@@ -126,8 +126,8 @@ void browserSync(const picojson::value &argument,
     LOG_ERROR("parameter['id'] not found\n");
     return;
   }
-  LOG_INFO("updateDiffSetHandler called: %s\n", id.c_str());
-  evaluateJavaScript(id, "updateDiffData", argument, responceNo);
+  LOG_INFO("browserSync called: %s\n", id.c_str());
+  evaluateJavaScript(id, "browserSync", argument, responceNo);
 }
 
 void redirectTo(const picojson::value &argument,
