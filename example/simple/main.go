@@ -16,20 +16,29 @@ import (
 )
 
 func onOpenFile(e *html.MouseEvent) {
+	app, err := app.GetAppFromEventTarget(e.Target)
+	if err != nil {
+		panic(err)
+	}
 	log.PrintInfo("OnOpen...")
 	cfg := &dialog.FileDialogConfig{
 		Properties: dialog.OpenDialogForOpenFile | dialog.OpenDialogWithMultiSelections,
 		Title:      "Open Files...",
 	}
-	files, err := dialog.ShowOpenDialog(nil, cfg)
+	files, err := app.ShowOpenDialog(cfg)
 	if err != nil {
 		log.PrintError("ShowOpenFiles error: %q", err)
 		return
 	}
+	defer files.Cleanup()
 
 	log.PrintInfo("select files: %#v", files)
+	fileNames := []string{}
+	for _, f := range files.Items {
+		fileNames = append(fileNames, f.Name())
+	}
 
-	r, err := dialog.ShowMessageBox(nil, strings.Join(files, "\n"), "Open files:", dialog.MessageBoxTypeInfo, nil)
+	r, err := app.ShowMessageBox(strings.Join(fileNames, "\n"), "Open files:", dialog.MessageBoxTypeInfo, nil)
 	if err != nil {
 		log.PrintError("ShowMessageBox error: %q", err)
 	} else {
@@ -39,11 +48,15 @@ func onOpenFile(e *html.MouseEvent) {
 }
 
 func onSaveFile(e *html.MouseEvent) {
+	app, err := app.GetAppFromEventTarget(e.Target)
+	if err != nil {
+		panic(err)
+	}
 	log.PrintInfo("OnSave...")
 	cfg := &dialog.FileDialogConfig{
 		Title: "Save Files...",
 	}
-	file, err := dialog.ShowSaveDialog(nil, cfg)
+	file, err := app.ShowSaveDialog(cfg)
 	if err != nil {
 		log.PrintError("ShowOpenFiles error: %q", err)
 		return
@@ -51,7 +64,7 @@ func onSaveFile(e *html.MouseEvent) {
 
 	log.PrintInfo("select file: %#v", file)
 
-	r, err := dialog.ShowMessageBox(nil, file, "Save files:", dialog.MessageBoxTypeWarning, nil)
+	r, err := app.ShowMessageBox(file, "Save files:", dialog.MessageBoxTypeWarning, nil)
 	if err != nil {
 		log.PrintError("ShowMessageBox error: %q", err)
 	} else {

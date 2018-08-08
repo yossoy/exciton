@@ -3,13 +3,23 @@ package app
 import (
 	"fmt"
 
+	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/event"
+	idialog "github.com/yossoy/exciton/internal/dialog"
 	"github.com/yossoy/exciton/internal/object"
+	"github.com/yossoy/exciton/markup"
 )
 
 type App struct {
 	ID         string
 	DriverData interface{}
+}
+
+func (app *App) eventRoot() string {
+	if app.ID == object.SingletonName {
+		return ""
+	}
+	return "/exciton/" + app.ID
 }
 
 func NewApp(driverData interface{}) *App {
@@ -43,6 +53,18 @@ func GetAppByID(id string) *App {
 	return nil
 }
 
+func GetAppFromEventTarget(e *markup.EventTarget) (*App, error) {
+	appid := e.AppID
+	if appid == "" {
+		appid = object.SingletonName
+	}
+	a := GetAppByID(appid)
+	if a == nil {
+		return nil, fmt.Errorf("App not found")
+	}
+	return a, nil
+}
+
 func GetAppFromEvent(e *event.Event) (*App, error) {
 	appid, ok := e.Params["appid"]
 	if !ok {
@@ -53,4 +75,28 @@ func GetAppFromEvent(e *event.Event) (*App, error) {
 		return nil, fmt.Errorf("App not found")
 	}
 	return a, nil
+}
+
+func (app *App) ShowMessageBoxAsync(message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {
+	return idialog.ShowMessageBoxAsync(app.eventRoot(), "", message, title, messageBoxType, cfg, handler)
+}
+
+func (app *App) ShowMessageBox(message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig) (int, error) {
+	return idialog.ShowMessageBox(app.eventRoot(), "", message, title, messageBoxType, cfg)
+}
+
+func (app *App) ShowOpenDialogAsync(cfg *dialog.FileDialogConfig, handler func(*dialog.OpenFileResult, error)) error {
+	return idialog.ShowOpenDialogAsync(app.eventRoot(), "", cfg, handler)
+}
+
+func (app *App) ShowOpenDialog(cfg *dialog.FileDialogConfig) (*dialog.OpenFileResult, error) {
+	return idialog.ShowOpenDialog(app.eventRoot(), "", cfg)
+}
+
+func (app *App) ShowSaveDialogAsync(cfg *dialog.FileDialogConfig, handler func(string, error)) error {
+	return idialog.ShowSaveDialogAsync(app.eventRoot(), "", cfg, handler)
+}
+
+func (app *App) ShowSaveDialog(cfg *dialog.FileDialogConfig) (string, error) {
+	return idialog.ShowSaveDialog(app.eventRoot(), "", cfg)
 }

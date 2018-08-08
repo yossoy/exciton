@@ -7,6 +7,7 @@ import (
 )
 
 type EventTarget struct {
+	AppID     string `json:"appId,omitempty"`
 	WindowID  string `json:"windowId,omitempty"`
 	MenuID    string `json:"menuId,omitempty"`
 	ElementID string `json:"elementId,omitempty"`

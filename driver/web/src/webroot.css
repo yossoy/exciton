@@ -203,7 +203,11 @@ dialog footer {
     display: flex;
 }
 
-dialog footer form input {
+dialog footer form button {
     flex: auto;
 }
 
+.dialogContentDetail {
+    font-size: 80%;
+    display: none;
+}

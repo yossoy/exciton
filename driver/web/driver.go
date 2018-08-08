@@ -77,6 +77,24 @@ func (d *web) responceCallback(jsonstr []byte, responceNo int) {
 	callback(event.NewValueResult(event.NewJSONEncodedValueByEncodedBytes(jsonstr)))
 }
 
+func (d *web) responceCallbackByValue(value interface{}, responceNo int) {
+	d.lock.Lock()
+	callback := d.respCallbacks[responceNo]
+	d.respCallbacks[responceNo] = nil
+	defer d.lock.Unlock()
+	driverLogDebug("responceEventResult: %d => %v", responceNo, value)
+	callback(event.NewValueResult(event.NewValue(value)))
+}
+
+func (d *web) responceCallbackError(err error, responceNo int) {
+	d.lock.Lock()
+	callback := d.respCallbacks[responceNo]
+	d.respCallbacks[responceNo] = nil
+	defer d.lock.Unlock()
+	driverLogDebug("responceCallbackError: %d => %v", responceNo, err)
+	callback(event.NewErrorResult(err))
+}
+
 func (d *web) relayEventToNative(e *event.Event) {
 	appid, ok := e.Params["appid"]
 	if !ok {
@@ -162,10 +180,10 @@ func (d *web) Init() error {
 		return err
 	}
 
-	// err = initializeDialog()
-	// if err != nil {
-	// 	return err
-	// }
+	err = initializeDialog(g)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -21,6 +21,7 @@ sock.onmessage = function (e) {
     const d = ed.data;
     const winPrefix = '/exciton/:appid/window/:id/';
     const menuPrefix = '/exciton/:appid/menu/:id/';
+    const dialogPrefix = '/exciton/:appid/dialog/:id/';
     console.log(ed);
     if (ed.sync) {
         if (d.name == (winPrefix + 'new')) {
@@ -41,8 +42,18 @@ sock.onmessage = function (e) {
             const menuevt = d.name.slice(menuPrefix.length);
             switch (menuevt) {
                 case 'updateDiffSetHandler':
-                menu.updateDiffSetHandler(nsobj, d);
-                break;
+                    menu.updateDiffSetHandler(nsobj, d);
+                    break;
+            }
+        } else if (d.name.startsWith(dialogPrefix)) {
+            const dlgevt = d.name.slice(dialogPrefix.length);
+            switch (dlgevt) {
+                case 'showMessageBox':
+                    nsobj.showMessageBox(d);
+                    break;
+                case 'showOpenDialog':
+                    nsobj.showOpenDialog(d);
+                    break;
             }
         } else {
             throw 'invalid event: ' + d.name;
@@ -115,9 +126,134 @@ nsobj.callnative = function (data) {
     sock.send(JSON.stringify(data));
 };
 
-nsobj.showAboutDialog = function() {
-    const dlg = document.getElementById('aboutDialog');
-    dialogPolyfill.registerDialog(dlg);
+nsobj.showAboutDialog = function () {
+    //TODO: app icon
+    nsobj.showMessageBoxCore('', 'About...', 'TODO: App name', '', ['OK'], 0, null);
+};
+
+let mesasgeBoxRegisterd = false;
+
+nsobj.showMessageBoxCore = function (iconSrc, title, message, detail, buttons, defaultId, respCallback) {
+    const dlg = document.getElementById('messageBox');
+    const icon = document.getElementById('messageBoxIcon');
+    icon.src = iconSrc;
+    icon.style.display = (iconSrc === '') ? 'none' : 'inline';
+    document.getElementById('messageBoxTitle').innerText = title;
+    document.getElementById('messageBoxContent').innerText = message;
+    const detailElem = document.getElementById('messageBoxDetail');
+    detailElem.innerText = detail;
+    detailElem.style.display = (detail === '') ? 'none' : 'block';
+    const buttonBase = document.getElementById('messageBoxButtons');
+    while (buttonBase.firstChild) {
+        buttonBase.removeChild(buttonBase.firstChild);
+    }
+    for (let i = 0; i < buttons.length; i++) {
+        const b = document.createElement('button');
+        b.type = 'submit';
+        b.value = i;
+        b.innerText = buttons[i];
+        b.autofocus = (i == defaultId);
+        buttonBase.appendChild(b);
+    }
+    if (!mesasgeBoxRegisterd) {
+        dialogPolyfill.registerDialog(dlg);
+        mesasgeBoxRegisterd = true;
+    }
+    if (respCallback) {
+        dlg.addEventListener('close', (e) => {
+            respCallback(e, parseInt(dlg.returnValue));
+        }, {
+            once: true
+        });
+    }
+
     dlg.showModal();
-    console.log('roleCmdAbout!');
+};
+
+nsobj.showMessageBox = function (dd) {
+    console.log('window/new', dd);
+    let iconSrc = '';
+    const type = dd.argument['type'];
+    switch (type) {
+        case 0: // none
+            break;
+        case 1: // info
+            iconSrc = '/exciton/web/assets/info.svg'
+            break;
+        case 2: // warning
+            iconSrc = '/exciton/web/assets/warning.svg'
+            break;
+        case 3: // error
+            iconSrc = '/exciton/web/assets/error.svg'
+            break;
+        case 4: // question
+            iconSrc = '/exciton/web/assets/question.svg'
+            break;
+        default:
+            console.warn('invalid icon type: ' + type);
+            break;
+    }
+    let buttons = dd.argument['buttons'];
+    let defaultId = dd.argument['defaultId'];
+    if (buttons.length == 0) {
+        if (type == 4 /*question*/ ) {
+            buttons = ['YES', 'NO'];
+            defaultId = 1;
+        } else {
+            buttons = ['OK'];
+            defaultId = 0;
+        }
+    }
+    const title = dd.argument['title'];
+    const message = dd.argument['message'];
+    const detail = dd.argument['detail'];
+    const ret = nsobj.showMessageBoxCore(iconSrc, title, message, detail, buttons, defaultId, (e, returnValue) => {
+        nsobj.responceValue(returnValue, dd.respCallbackNo);
+    });
+};
+
+let fileOpenDialogRegisterd = false;
+nsobj.showOpenDialog = function (dd) {
+    const dlg = document.getElementById('fileOpenDialog');
+    const title = (dd.argument['title']) ? dd.argument['title'] : "Open File";
+    document.getElementById('fileOpenDialogTitle').innerText = title;
+    const buttonLabel = (dd.argument['buttonLabel']) ? dd.argument['buttonLabel'] : "OK";
+    document.getElementById('fileOpenOK').innerText = buttonLabel;
+    let accept = null;
+    if (dd.argument['filters']) {
+        let exts = [];
+        for (let filter of dd.argument['filters']) {
+            for (let ext of filter['extensions']) {
+                exts.push(ext);
+            }
+        }
+        accept = exts.join(' ')
+    }
+    const infile = document.getElementById('selFile');
+    if (accept) {
+        infile.setAttribute('accept', accept);
+    } else {
+        infile.removeAttribute('accept');
+    }
+    const prop = dd.argument['properties'];
+    infile.multiple = (prop & 4) != 0;
+    if (!fileOpenDialogRegisterd) {
+        dialogPolyfill.registerDialog(dlg);
+        fileOpenDialogRegisterd = true;
+        dlg.addEventListener('close', (e) => {
+            if (dlg.returnValue === 'ok') {
+                const form = document.getElementById('fileUploadForm');
+                document.getElementById('openDialogResponceNo').value = dd.respCallbackNo;
+                const XHR = new XMLHttpRequest();
+                const FD = new FormData(form);
+                XHR.open('POST', '/webFileOpenDialog');
+                XHR.send(FD);
+                //TODO: error
+            } else {
+                console.log('file open');
+                //TODO: cancel proc
+            }
+        });
+    }
+    dlg.showModal();
 };

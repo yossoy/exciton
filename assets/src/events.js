@@ -156,11 +156,17 @@ function translateEvent(e) {
                 // console.log(rp, pv);
                 if (rp === 'view') {
                   result[rp] = { windowId: pv.exciton.ID }
+                  if (pv.parent && pv.parent.exciton) {
+                    result[rp]['appId'] = pv.parent.exciton.ID;
+                  }
                 } else {
                   result[rp] = {
                     windowId: pv.ownerDocument.defaultView.exciton.ID,
                     elementId: pv.dataset['excitonId']
                   };
+                  if (pv.ownerDocument.defaultView.parent && pv.ownerDocument.defaultView.parent.exciton) {
+                    result[rp]['appId'] = pv.ownerDocument.defaultView.parent.ID;
+                  }
                 }
                 // console.log("==>", result[p]);
               }

@@ -241,7 +241,7 @@ const defaultRoleInfo = {
   },
 };
 
-function translateEvent(e, id, menuData) {
+function translateEvent(nsobj, e, id, menuData) {
   const eventProps = [
     // Event
     'bubbles', 'cancelBubble', 'cancelable', 'composed',
@@ -268,6 +268,7 @@ function translateEvent(e, id, menuData) {
   const target = {
     'menuId': menuData.id,
     'elementId': id,
+    'appId': nsobj.ID,
   };
   ee['currentTarget'] = target;
   ee['target'] = target;
@@ -466,7 +467,7 @@ class MenuData {
             mi.handler = (e) => {
               e.preventDefault();
               e.stopPropagation();
-              const ee = translateEvent(e, id, this.menu);
+              const ee = translateEvent(nsobj, e, id, this.menu);
               console.log('fakeEvent ==> ', ee);
               nsobj.callNativeMethod('/menu/' + this.menu.id + '/html/' +id + '/click', ee);
             };

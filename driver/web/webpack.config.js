@@ -3,7 +3,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 const webapp = {
-  mode: 'development',
+  mode: 'production',
   entry: ['./src/exciton-ws.js'],
   optimization:
       {usedExports: true, concatenateModules: true, occurrenceOrder: true},
@@ -20,9 +20,9 @@ const webapp = {
         uglifyOptions: {
           safari10: true,
           compress: {
-            drop_console: false,
+            drop_console: true,
           },
-          sourceMap: true
+          sourceMap: false
         },
       }),
       new OptimizeCSSAssetsPlugin({})
