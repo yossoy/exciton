@@ -114,7 +114,7 @@ func (r *routing) procSub(src string) RenderResult {
 	return nil
 }
 
-func (r *routing) proc(b *Builder) RenderResult {
+func (r *routing) proc(b *builder) RenderResult {
 	src := r.path
 	if src == "" {
 		src = b.route // BrowserRouter

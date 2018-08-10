@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type delayApplyer func(b *Builder) interface{}
+type delayApplyer func(b Builder) interface{}
 
 type attrApplyer struct {
 	name      string
@@ -15,29 +15,32 @@ type attrApplyer struct {
 
 func (aa attrApplyer) isMarkup()        {}
 func (aa attrApplyer) isMarkupOrChild() {}
-func (aa attrApplyer) applyToNode(b *Builder, n *node, on *node) {
+func (aa attrApplyer) applyToNode(b Builder, n Node, on Node) {
+	bb := b.(*builder)
+	nn := n.(*node)
+	onn := on.(*node)
 	k := aa.nameSpace + ":" + aa.name
-	ov, ok := on.attributes[k]
+	ov, ok := onn.attributes[k]
 	if ok {
-		delete(on.attributes, k)
+		delete(onn.attributes, k)
 	}
-	if n.attributes == nil {
-		n.attributes = make(map[string]interface{})
+	if nn.attributes == nil {
+		nn.attributes = make(map[string]interface{})
 	}
 	val := aa.value
 	if da, ok := val.(delayApplyer); ok {
 		val = da(b)
 	}
-	n.attributes[k] = val
+	nn.attributes[k] = val
 	if !ok || ov != val {
-		if n.ns == "" && aa.nameSpace == "" {
-			b.diffSet.AddAttribute(n, aa.name, val)
+		if nn.ns == "" && aa.nameSpace == "" {
+			bb.diffSet.AddAttribute(nn, aa.name, val)
 		} else {
 			var ns interface{}
 			if aa.nameSpace != "" {
 				ns = aa.nameSpace
 			}
-			b.diffSet.AddAttributeNS(n, aa.name, ns, val)
+			bb.diffSet.AddAttributeNS(nn, aa.name, ns, val)
 		}
 	}
 }
@@ -107,21 +110,24 @@ type propApplyer struct {
 
 func (aa propApplyer) isMarkup()        {}
 func (aa propApplyer) isMarkupOrChild() {}
-func (aa propApplyer) applyToNode(b *Builder, n *node, on *node) {
-	ov, ok := on.properties[aa.name]
+func (aa propApplyer) applyToNode(b Builder, n Node, on Node) {
+	bb := b.(*builder)
+	nn := n.(*node)
+	onn := on.(*node)
+	ov, ok := onn.properties[aa.name]
 	if ok {
-		delete(on.properties, aa.name)
+		delete(onn.properties, aa.name)
 	}
-	if n.properties == nil {
-		n.properties = make(map[string]interface{})
+	if nn.properties == nil {
+		nn.properties = make(map[string]interface{})
 	}
 	val := aa.value
 	if da, ok := val.(delayApplyer); ok {
 		val = da(b)
 	}
-	n.properties[aa.name] = val
+	nn.properties[aa.name] = val
 	if !ok || ov != val {
-		b.diffSet.addProperty(n, aa.name, val)
+		bb.diffSet.addProperty(nn, aa.name, val)
 	}
 }
 func (aa propApplyer) applyToComponent(c Component) {
@@ -151,17 +157,20 @@ type dataApplyer struct {
 
 func (da dataApplyer) isMarkup()        {}
 func (da dataApplyer) isMarkupOrChild() {}
-func (da dataApplyer) applyToNode(b *Builder, n *node, on *node) {
-	ov, ok := on.dataset[da.name]
+func (da dataApplyer) applyToNode(b Builder, n Node, on Node) {
+	bb := b.(*builder)
+	nn := n.(*node)
+	onn := on.(*node)
+	ov, ok := onn.dataset[da.name]
 	if ok {
-		delete(on.dataset, da.name)
+		delete(onn.dataset, da.name)
 	}
-	if n.dataset == nil {
-		n.dataset = make(map[string]string)
+	if nn.dataset == nil {
+		nn.dataset = make(map[string]string)
 	}
-	n.dataset[da.name] = da.value
+	nn.dataset[da.name] = da.value
 	if !ok || ov != da.value {
-		b.diffSet.AddDataSet(n, da.name, da.value)
+		bb.diffSet.AddDataSet(nn, da.name, da.value)
 	}
 }
 
@@ -176,18 +185,21 @@ type classApplyer []string
 
 func (ca classApplyer) isMarkup()        {}
 func (ca classApplyer) isMarkupOrChild() {}
-func (ca classApplyer) applyToNode(b *Builder, n *node, on *node) {
+func (ca classApplyer) applyToNode(b Builder, n Node, on Node) {
+	bb := b.(*builder)
+	nn := n.(*node)
+	onn := on.(*node)
 	for _, c := range ca {
-		_, ok := on.classes[c]
+		_, ok := onn.classes[c]
 		if ok {
-			delete(on.classes, c)
+			delete(onn.classes, c)
 		}
-		if n.classes == nil {
-			n.classes = make(map[string]struct{})
+		if nn.classes == nil {
+			nn.classes = make(map[string]struct{})
 		}
-		n.classes[c] = struct{}{}
+		nn.classes[c] = struct{}{}
 		if !ok {
-			b.diffSet.AddClassList(n, c)
+			bb.diffSet.AddClassList(nn, c)
 		}
 	}
 }
@@ -203,17 +215,20 @@ type styleApplyer struct {
 
 func (sa styleApplyer) isMarkup()        {}
 func (sa styleApplyer) isMarkupOrChild() {}
-func (sa styleApplyer) applyToNode(b *Builder, n *node, on *node) {
-	ov, ok := on.styles[sa.name]
+func (sa styleApplyer) applyToNode(b Builder, n Node, on Node) {
+	bb := b.(*builder)
+	nn := n.(*node)
+	onn := on.(*node)
+	ov, ok := onn.styles[sa.name]
 	if ok {
-		delete(on.styles, sa.name)
+		delete(onn.styles, sa.name)
 	}
-	if n.styles == nil {
-		n.styles = make(map[string]string)
+	if nn.styles == nil {
+		nn.styles = make(map[string]string)
 	}
-	n.styles[sa.name] = sa.value
+	nn.styles[sa.name] = sa.value
 	if !ok || ov != sa.value {
-		b.diffSet.AddStyle(n, sa.name, sa.value)
+		bb.diffSet.AddStyle(nn, sa.name, sa.value)
 	}
 }
 
@@ -228,12 +243,14 @@ type innerHTMLApplyer string
 
 func (iha innerHTMLApplyer) isMarkup()        {}
 func (iha innerHTMLApplyer) isMarkupOrChild() {}
-func (iha innerHTMLApplyer) applyToNode(b *Builder, n *node, on *node) {
+func (iha innerHTMLApplyer) applyToNode(b Builder, n Node, on Node) {
+	nn := n.(*node)
+	onn := on.(*node)
 	nv := string(iha)
-	ov := on.innerHTML
-	n.innerHTML = nv
+	ov := onn.innerHTML
+	nn.innerHTML = nv
 	if ov != nv {
-		b.diffSet.AddInnerHTML(n, nv)
+		b.(*builder).diffSet.AddInnerHTML(nn, nv)
 	}
 }
 func UnsafeHTML(html string) MarkupOrChild {

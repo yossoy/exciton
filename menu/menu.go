@@ -11,13 +11,13 @@ import (
 )
 
 type MenuInstance struct {
-	builder   *markup.Builder
+	builder   markup.Builder
 	mounted   markup.RenderResult
 	uuid      string
 	eventRoot string
 }
 
-func (m *MenuInstance) Builder() *markup.Builder {
+func (m *MenuInstance) Builder() markup.Builder {
 	return m.builder
 }
 

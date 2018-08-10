@@ -20,7 +20,7 @@ type Window struct {
 	AppID             string
 	ID                string
 	UserData          UserData
-	builder           *markup.Builder
+	builder           markup.Builder
 	isReady           bool
 	OnClosed          func(e *event.Event)
 	OnResize          func(width, height float64)
@@ -37,7 +37,7 @@ func ActiveWindow() *Window {
 	return activeWindow
 }
 
-func (w *Window) Builder() *markup.Builder {
+func (w *Window) Builder() markup.Builder {
 	return w.builder
 }
 

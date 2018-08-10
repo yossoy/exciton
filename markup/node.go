@@ -4,6 +4,26 @@ import (
 	"github.com/yossoy/exciton/internal/object"
 )
 
+type Node interface {
+	NodeName() string
+}
+
+type Element interface {
+	Node
+}
+
+type elemBody struct {
+	n *node
+}
+
+type TextNode interface {
+	Node
+}
+
+type textNodeBody struct {
+	n *node
+}
+
 type node struct {
 	tag, ns, text, innerHTML string
 	parent                   *node
@@ -17,17 +37,21 @@ type node struct {
 	eventListeners         map[string]*EventListener
 	index                  int
 	uuid                   object.ObjectKey
+	rootNode               bool
 }
 
-func (n *node) isMount(rootNode *node) bool {
-	switch n.parent {
-	case rootNode:
-		return true
-	case nil:
+func (n *node) NodeName() string {
+	return n.tag
+}
+
+func (n *node) isMount() bool {
+	if n == nil {
 		return false
-	default:
-		return n.parent.isMount(rootNode)
 	}
+	if n.rootNode {
+		return true
+	}
+	return n.parent.isMount()
 }
 
 func (n *node) indexPath(rootNode *node) []int {

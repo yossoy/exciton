@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func diff(b *Builder, dom *node, vnode RenderResult, parent *node, componentRoot bool) *node {
+func diff(b *builder, dom *node, vnode RenderResult, parent *node, componentRoot bool) *node {
 	if b.nestLevel == 0 {
 		if dom != nil && dom.uuid == "" {
 			b.hydrating = true
@@ -34,7 +34,7 @@ func diff(b *Builder, dom *node, vnode RenderResult, parent *node, componentRoot
 	return ret
 }
 
-func idiffTag(b *Builder, dom *node, vnode *tagRenderResult, componentRoot bool) *node {
+func idiffTag(b *builder, dom *node, vnode *tagRenderResult, componentRoot bool) *node {
 	out := dom
 	if dom == nil || dom.tag != vnode.name {
 		out = b.createNode(vnode)
@@ -76,7 +76,7 @@ func idiffTag(b *Builder, dom *node, vnode *tagRenderResult, componentRoot bool)
 	return out
 }
 
-func idiff(b *Builder, dom *node, vnode RenderResult, componentRoot bool) *node {
+func idiff(b *builder, dom *node, vnode RenderResult, componentRoot bool) *node {
 	out := dom
 
 	for vnode != nil {
@@ -119,7 +119,7 @@ func idiff(b *Builder, dom *node, vnode RenderResult, componentRoot bool) *node 
 	return out
 }
 
-func innerDiffNode(b *Builder, dom *node, vchildren []RenderResult, isHydrating bool) {
+func innerDiffNode(b *builder, dom *node, vchildren []RenderResult, isHydrating bool) {
 	//originalChildren := dom.children
 	children := make([]*node, 0, len(dom.children))
 	keyed := make(map[interface{}]*node)
@@ -223,7 +223,7 @@ func isSameNodeType(n *node, vnode RenderResult, hydrating bool) bool {
 	}
 }
 
-func diffMarkups(b *Builder, dom *node, markups []Markup) {
+func diffMarkups(b *builder, dom *node, markups []Markup) {
 	on := node{}
 	dom.properties, on.properties = on.properties, dom.properties
 	dom.attributes, on.attributes = on.attributes, dom.attributes

@@ -8,7 +8,20 @@ import (
 type RequestAnimationFrameHandler func()
 type UpdateDiffSetHandler func(ds *DiffSet)
 
-type Builder struct {
+type Builder interface {
+	RenderBody(RenderResult)
+	Rerender(...Component)
+
+	ProcRequestAnimationFrame()
+
+	Redirect(route string)
+	OnRedirect(route string)
+
+	UserData() interface{}
+	SetUserData(interface{})
+}
+
+type builder struct {
 	hostPath         string
 	diffSet          *DiffSet
 	renderingDiffSet *DiffSet
@@ -26,19 +39,19 @@ type Builder struct {
 	rootRenderResult RenderResult
 	rootRenderNode   *node
 	rootComponent    Component
-	UserData         interface{}
+	userData         interface{}
 	keyGenerator     func() object.ObjectKey
 	route            string
 }
 
 type Buildable interface {
-	Builder() *Builder
+	Builder() Builder
 	EventRoot() string
 }
 
-func NewBuilder(hostPath string) *Builder {
-	rn := &node{}
-	b := &Builder{
+func NewBuilder(hostPath string) Builder {
+	rn := &node{rootNode: true}
+	b := &builder{
 		hostPath:         hostPath,
 		diffSet:          &DiffSet{rootNode: rn},
 		renderingDiffSet: &DiffSet{rootNode: rn},
@@ -50,9 +63,9 @@ func NewBuilder(hostPath string) *Builder {
 	return b
 }
 
-func NewAsyncBuilder(hostPath string, raf RequestAnimationFrameHandler, udh UpdateDiffSetHandler) *Builder {
-	rn := &node{}
-	b := &Builder{
+func NewAsyncBuilder(hostPath string, raf RequestAnimationFrameHandler, udh UpdateDiffSetHandler) Builder {
+	rn := &node{rootNode: true}
+	b := &builder{
 		hostPath:         hostPath,
 		diffSet:          &DiffSet{rootNode: rn},
 		renderingDiffSet: &DiffSet{rootNode: rn},
@@ -66,7 +79,7 @@ func NewAsyncBuilder(hostPath string, raf RequestAnimationFrameHandler, udh Upda
 	return b
 }
 
-func (b *Builder) RenderBody(rr RenderResult) {
+func (b *builder) RenderBody(rr RenderResult) {
 	b.diffSet.reset()
 
 	b.rootRenderResult = rr
@@ -81,7 +94,7 @@ func (b *Builder) RenderBody(rr RenderResult) {
 	}
 }
 
-func (b *Builder) ProcRequestAnimationFrame() {
+func (b *builder) ProcRequestAnimationFrame() {
 	if b.rafHandler == nil || b.updateHandler == nil {
 		return
 	}
@@ -94,7 +107,7 @@ func (b *Builder) ProcRequestAnimationFrame() {
 	}
 }
 
-func (b *Builder) Rerender(c ...Component) {
+func (b *builder) Rerender(c ...Component) {
 	if len(c) == 0 {
 		b.delayUpdater = b.delayUpdater[0:0]
 		b.delayUpdater = append(b.delayUpdater, nil)
@@ -113,7 +126,7 @@ func (b *Builder) Rerender(c ...Component) {
 	b.rerender()
 }
 
-func (b *Builder) enqueueRender(c Component) {
+func (b *builder) enqueueRender(c Component) {
 	if len(b.delayUpdater) == 1 && b.delayUpdater[0] == nil {
 		return
 	}
@@ -124,7 +137,7 @@ func (b *Builder) enqueueRender(c Component) {
 	}
 }
 
-func (b *Builder) rerender() {
+func (b *builder) rerender() {
 	for {
 		var items []Component
 		items, b.delayUpdater = b.delayUpdater, nil
@@ -140,19 +153,23 @@ func (b *Builder) rerender() {
 			if ctx.dirty {
 				renderComponent(b, c, renderOptSync, false)
 				if c == b.rootComponent {
-					b.rootRenderNode = c.Context().base
+					if c.Context().base != nil {
+						b.rootRenderNode = c.Context().base.(*node)
+					} else {
+						b.rootRenderNode = nil
+					}
 				}
 			}
 		}
 	}
 }
 
-func (b *Builder) setNodeValue(n *node, text string) {
+func (b *builder) setNodeValue(n *node, text string) {
 	b.diffSet.setNodeValue(n, text)
 	n.text = text
 }
 
-func (b *Builder) addElement(n *node) {
+func (b *builder) addElement(n *node) {
 	if n.uuid == "" {
 		if b.keyGenerator != nil {
 			n.uuid = b.keyGenerator()
@@ -164,14 +181,14 @@ func (b *Builder) addElement(n *node) {
 	}
 }
 
-func (b *Builder) deleteElement(n *node) {
+func (b *builder) deleteElement(n *node) {
 	if n.uuid != "" {
 		b.elements.Delete(n.uuid)
 		n.uuid = ""
 	}
 }
 
-func (b *Builder) createNode(v *tagRenderResult) *node {
+func (b *builder) createNode(v *tagRenderResult) *node {
 	n := &node{
 		tag: v.name,
 	}
@@ -185,45 +202,49 @@ func (b *Builder) createNode(v *tagRenderResult) *node {
 	return n
 }
 
-func (b *Builder) createTextNode(text string) *node {
+func (b *builder) createTextNode(text string) *node {
 	n := &node{text: text}
 	b.diffSet.createTextNode(n)
 	return n
 }
 
-func (b *Builder) removeChild(p *node, c *node) {
+func (b *builder) removeChild(p *node, c *node) {
 	b.diffSet.RemoveChild(p, c)
 	p.removeChild(c)
 	b.deleteElement(c)
 }
 
-func (b *Builder) replaceChild(p *node, e *node, d *node) /**node*/ {
+func (b *builder) replaceChild(p *node, e *node, d *node) /**node*/ {
 	b.diffSet.ReplaceChild(p, e, d)
 	r := p.replaceChild(e, d)
 	//return r
 	b.deleteElement(r)
 }
 
-func (b *Builder) appendChild(p *node, c *node) {
+func (b *builder) appendChild(p *node, c *node) {
 	b.diffSet.appendChild(p, c)
 	p.appendChild(c)
 }
 
-func (b *Builder) insertBefore(t *node, c *node, pos *node) {
+func (b *builder) insertBefore(t *node, c *node, pos *node) {
 	b.diffSet.insertBefore(t, c, pos)
 	t.insertBefore(c, pos)
 }
 
-func (b *Builder) mountComponent(c Component) {
+func (b *builder) mountComponent(c Component) {
 	ctx := c.Context()
-	b.diffSet.addMountComponent(ctx.base, c)
+	var cb *node
+	if ctx.base != nil {
+		cb = ctx.base.(*node)
+	}
+	b.diffSet.addMountComponent(cb, c)
 	b.components.Put(ctx.id, c)
 	if m, ok := c.(Mounter); ok {
 		b.mounter = append(b.mounter, m)
 	}
 }
 
-func (b *Builder) unmountComponent(c Component) {
+func (b *builder) unmountComponent(c Component) {
 	//	if (options.beforeUnmount) options.beforeUnmount(component);
 	ctx := c.Context()
 	base := ctx.base
@@ -242,15 +263,14 @@ func (b *Builder) unmountComponent(c Component) {
 	if inner != nil {
 		b.unmountComponent(inner)
 	} else if base != nil {
-		//base.component = nil
-
+		bn := base.(*node)
 		//swap order?
-		b.removeNode(base)
-		b.removeChildren(base)
+		b.removeNode(bn)
+		b.removeChildren(bn)
 	}
 }
 
-func (b *Builder) removeNode(n *node) {
+func (b *builder) removeNode(n *node) {
 	if p := n.parent; p != nil {
 		b.removeChild(p, n)
 	} else {
@@ -258,7 +278,7 @@ func (b *Builder) removeNode(n *node) {
 	}
 }
 
-func (b *Builder) recollectNodeTree(n *node, unmountOnly bool) {
+func (b *builder) recollectNodeTree(n *node, unmountOnly bool) {
 	if c := n.component; c != nil {
 		// if node is owned by a Component, unmount that component (ends up recursing back here)
 		b.unmountComponent(c)
@@ -274,7 +294,7 @@ func (b *Builder) recollectNodeTree(n *node, unmountOnly bool) {
 	//swap order?
 }
 
-func (b *Builder) removeChildren(n *node) {
+func (b *builder) removeChildren(n *node) {
 	nn := n.lastChild()
 	for nn != nil {
 		next := nn.previousSibling()
@@ -283,7 +303,7 @@ func (b *Builder) removeChildren(n *node) {
 	}
 }
 
-func (b *Builder) flushMount() {
+func (b *builder) flushMount() {
 	for _, c := range b.mounter {
 		if m, ok := c.(Mounter); ok {
 			m.Mount()
@@ -292,7 +312,7 @@ func (b *Builder) flushMount() {
 	b.mounter = b.mounter[:0]
 }
 
-func (b *Builder) OnRedirect(route string) {
+func (b *builder) OnRedirect(route string) {
 	// validate path
 	if b.route != route {
 		b.route = route
@@ -300,6 +320,14 @@ func (b *Builder) OnRedirect(route string) {
 	}
 }
 
-func (b *Builder) Redirect(route string) {
+func (b *builder) Redirect(route string) {
 	event.Emit(b.hostPath+"/redirectTo", event.NewValue(route))
+}
+
+func (b *builder) UserData() interface{} {
+	return b.userData
+}
+
+func (b *builder) SetUserData(data interface{}) {
+	b.userData = data
 }

@@ -45,7 +45,7 @@ type testErrorCompoent1 struct {
 func (tec1 testErrorCompoent1) Context() *Core                              { return nil }
 func (tec1 testErrorCompoent1) Render() RenderResult                        { return nil }
 func (tec1 testErrorCompoent1) Key() interface{}                            { return nil }
-func (tec1 testErrorCompoent1) Builder() *Builder                           { return nil }
+func (tec1 testErrorCompoent1) Builder() Builder                            { return nil }
 func (tec1 testErrorCompoent1) Classes(classes ...string) MarkupOrChild     { return nil }
 func (tec1 testErrorCompoent1) ID() string                                  { return "" }
 func (tec1 testErrorCompoent1) GetProperty(name string) (interface{}, bool) { return nil, false }
@@ -56,7 +56,7 @@ type testErrorCompoent2 int
 func (tec2 *testErrorCompoent2) Context() *Core                              { return nil }
 func (tec2 *testErrorCompoent2) Render() RenderResult                        { return nil }
 func (tec2 *testErrorCompoent2) Key() interface{}                            { return nil }
-func (tec2 *testErrorCompoent2) Builder() *Builder                           { return nil }
+func (tec2 *testErrorCompoent2) Builder() Builder                            { return nil }
 func (tec2 *testErrorCompoent2) Classes(classes ...string) MarkupOrChild     { return nil }
 func (tec2 *testErrorCompoent2) ID() string                                  { return "" }
 func (tec2 *testErrorCompoent2) GetProperty(name string) (interface{}, bool) { return nil, false }
@@ -115,7 +115,7 @@ type testComponentProps1 struct {
 }
 
 func (tcp1 *testComponentProps1) Initialize() {
-	td := tcp1.Builder().UserData.(*testData)
+	td := tcp1.Builder().UserData().(*testData)
 	if td.parentComponent != nil {
 		panic("already create component instance")
 	}
@@ -127,12 +127,12 @@ func (tcp1 *testComponentProps1) Render() RenderResult {
 }
 
 func (tcp1 *testComponentProps1) Mount() {
-	td := tcp1.Builder().UserData.(*testData)
+	td := tcp1.Builder().UserData().(*testData)
 	td.parentMountCount++
 }
 
 func (tcp1 *testComponentProps1) Unmount() {
-	td := tcp1.Builder().UserData.(*testData)
+	td := tcp1.Builder().UserData().(*testData)
 	td.parentMountCount++
 }
 
@@ -140,8 +140,8 @@ func TestComponentProps(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
 	ci := MustRegisterComponent((*testComponentProps1)(nil))
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 100
@@ -180,11 +180,11 @@ func (ncc1 *nestComponentChild1) Render() RenderResult {
 }
 
 func (ncc1 *nestComponentChild1) Mount() {
-	td := ncc1.Builder().UserData.(*testData)
+	td := ncc1.Builder().UserData().(*testData)
 	td.child1MountCount++
 }
 func (ncc1 *nestComponentChild1) Unmount() {
-	td := ncc1.Builder().UserData.(*testData)
+	td := ncc1.Builder().UserData().(*testData)
 	td.child1UnmountCount++
 }
 
@@ -199,11 +199,11 @@ func (ncc1 *nestComponentChild2) Render() RenderResult {
 	)
 }
 func (ncc1 *nestComponentChild2) Mount() {
-	td := ncc1.Builder().UserData.(*testData)
+	td := ncc1.Builder().UserData().(*testData)
 	td.child2MountCount++
 }
 func (ncc1 *nestComponentChild2) Unmount() {
-	td := ncc1.Builder().UserData.(*testData)
+	td := ncc1.Builder().UserData().(*testData)
 	td.child2UnmountCount++
 }
 
@@ -226,18 +226,18 @@ func (ncp1 *nestComponentParent1) Render() RenderResult {
 }
 
 func (ncp1 *nestComponentParent1) Initialize() {
-	td := ncp1.Builder().UserData.(*testData)
+	td := ncp1.Builder().UserData().(*testData)
 	if td.parentComponent != nil {
 		panic("already create component instance")
 	}
 	td.parentComponent = ncp1
 }
 func (ncc1 *nestComponentParent1) Mount() {
-	td := ncc1.Builder().UserData.(*testData)
+	td := ncc1.Builder().UserData().(*testData)
 	td.parentMountCount++
 }
 func (ncc1 *nestComponentParent1) Unmount() {
-	td := ncc1.Builder().UserData.(*testData)
+	td := ncc1.Builder().UserData().(*testData)
 	td.parentUnmountCount++
 }
 
@@ -248,8 +248,8 @@ var NestComponentParent1 = MustRegisterComponent((*nestComponentParent1)(nil))
 func TestComponentNest1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -299,9 +299,9 @@ func TestComponentNest1(t *testing.T) {
 func TestComponentNestAsync1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	var bp **Builder
+	var bp *Builder
 	ch := make(chan string, 1)
-	b := NewAsyncBuilder(
+	bb := NewAsyncBuilder(
 		"",
 		func() {
 			(*bp).ProcRequestAnimationFrame()
@@ -311,8 +311,9 @@ func TestComponentNestAsync1(t *testing.T) {
 			ch <- html
 		},
 	)
-	bp = &b
-	b.UserData = td
+	bp = &bb
+	b := bb.(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -351,7 +352,7 @@ func (ncp1 *nestComponentParent2) Render() RenderResult {
 }
 
 func (ncp1 *nestComponentParent2) Initialize() {
-	td := ncp1.Builder().UserData.(*testData)
+	td := ncp1.Builder().UserData().(*testData)
 	if td.parentComponent != nil {
 		panic("already create component instance")
 	}
@@ -359,11 +360,11 @@ func (ncp1 *nestComponentParent2) Initialize() {
 }
 
 func (ncp1 *nestComponentParent2) Mount() {
-	td := ncp1.Builder().UserData.(*testData)
+	td := ncp1.Builder().UserData().(*testData)
 	td.parentMountCount++
 }
 func (ncp1 *nestComponentParent2) Unmount() {
-	td := ncp1.Builder().UserData.(*testData)
+	td := ncp1.Builder().UserData().(*testData)
 	td.parentUnmountCount++
 }
 
@@ -372,8 +373,8 @@ var NestComponentParent2 = MustRegisterComponent((*nestComponentParent2)(nil))
 func TestComponentNest2(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -433,18 +434,18 @@ func (ncp3 *nestComponentParent3) Render() RenderResult {
 }
 
 func (ncp3 *nestComponentParent3) Initialize() {
-	td := ncp3.Builder().UserData.(*testData)
+	td := ncp3.Builder().UserData().(*testData)
 	if td.parentComponent != nil {
 		panic("already create component instance")
 	}
 	td.parentComponent = ncp3
 }
 func (ncp3 *nestComponentParent3) Mount() {
-	td := ncp3.Builder().UserData.(*testData)
+	td := ncp3.Builder().UserData().(*testData)
 	td.parentMountCount++
 }
 func (ncp3 *nestComponentParent3) Unmount() {
-	td := ncp3.Builder().UserData.(*testData)
+	td := ncp3.Builder().UserData().(*testData)
 	td.parentUnmountCount++
 }
 
@@ -453,8 +454,8 @@ var NestComponentParent3 = MustRegisterComponent((*nestComponentParent3)(nil))
 func TestComponentNest3(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -514,18 +515,18 @@ func (ncp4 *nestComponentParent4) Render() RenderResult {
 }
 
 func (ncp4 *nestComponentParent4) Initialize() {
-	td := ncp4.Builder().UserData.(*testData)
+	td := ncp4.Builder().UserData().(*testData)
 	if td.parentComponent != nil {
 		panic("already create component instance")
 	}
 	td.parentComponent = ncp4
 }
 func (ncp4 *nestComponentParent4) Mount() {
-	td := ncp4.Builder().UserData.(*testData)
+	td := ncp4.Builder().UserData().(*testData)
 	td.parentMountCount++
 }
 func (ncp4 *nestComponentParent4) Unmount() {
-	td := ncp4.Builder().UserData.(*testData)
+	td := ncp4.Builder().UserData().(*testData)
 	td.parentUnmountCount++
 }
 
@@ -534,8 +535,8 @@ var NestComponentParent4 = MustRegisterComponent((*nestComponentParent4)(nil))
 func TestComponentNest4(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -589,11 +590,11 @@ func (cpc1 *childParentComponent1) Render() RenderResult {
 	return Tag("div", m...)
 }
 func (cpc1 *childParentComponent1) Mount() {
-	td := cpc1.Builder().UserData.(*testData)
+	td := cpc1.Builder().UserData().(*testData)
 	td.parentMountCount++
 }
 func (cpc1 *childParentComponent1) Unmount() {
-	td := cpc1.Builder().UserData.(*testData)
+	td := cpc1.Builder().UserData().(*testData)
 	td.parentUnmountCount++
 }
 
@@ -602,8 +603,8 @@ var ChildParentComponent1 = MustRegisterComponent((*childParentComponent1)(nil))
 func TestComponentChild1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	b.RenderBody(ChildParentComponent1(
@@ -651,8 +652,8 @@ var EventComponent1 = MustRegisterComponent((*testEventComponent1)(nil))
 func TestComponentEvent1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -695,8 +696,8 @@ var EventComponent2 = MustRegisterComponent((*testEventComponent2)(nil))
 func TestComponentEvent2(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -782,8 +783,8 @@ var NonKeyTestParentComponent1 = MustRegisterComponent((*nonKeyTestParentCompone
 func TestComponentNonKey1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -817,8 +818,8 @@ func TestComponentNonKey1(t *testing.T) {
 func TestComponentKey1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -871,8 +872,8 @@ var InnerHTMLTestComponent1 = MustRegisterComponent((*innerHTMLTestComponent1)(n
 func TestComponentInnerHTML1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0
@@ -930,8 +931,8 @@ var lastComponentEraseParent = MustRegisterComponent((*testLastComponentErasePar
 func TestLastComponentErase(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
 	v := 0

@@ -42,11 +42,14 @@ func (l *EventListener) StopPropagation() *EventListener {
 }
 
 // Apply implements the Applyer interface.
-func (l *EventListener) applyToNode(b *Builder, n *node, on *node) {
+func (l *EventListener) applyToNode(b Builder, n Node, on Node) {
+	bb := b.(*builder)
+	nn := n.(*node)
+	onn := on.(*node)
 	match := false
 	exist := false
-	if on.eventListeners != nil {
-		if oe, ok := on.eventListeners[l.Name]; ok {
+	if onn.eventListeners != nil {
+		if oe, ok := onn.eventListeners[l.Name]; ok {
 			if l.callPreventDefault == oe.callPreventDefault && l.callStopPropagation == oe.callStopPropagation {
 				if l.Listener != nil && oe.Listener != nil {
 					// There is not need to compare Listener,
@@ -57,21 +60,21 @@ func (l *EventListener) applyToNode(b *Builder, n *node, on *node) {
 				}
 			}
 			exist = true
-			delete(on.eventListeners, l.Name)
+			delete(onn.eventListeners, l.Name)
 		}
 	}
-	if n.eventListeners == nil {
-		n.eventListeners = make(map[string]*EventListener)
+	if nn.eventListeners == nil {
+		nn.eventListeners = make(map[string]*EventListener)
 	}
-	n.eventListeners[l.Name] = l
+	nn.eventListeners[l.Name] = l
 	if !match {
 		if exist {
-			b.diffSet.RemoveEventListener(n, l.Name)
+			bb.diffSet.RemoveEventListener(nn, l.Name)
 		}
 		if l.Listener != nil {
-			b.diffSet.AddEventListener(n, l.Name, n.uuid, l.callPreventDefault, l.callStopPropagation)
+			bb.diffSet.AddEventListener(nn, l.Name, nn.uuid, l.callPreventDefault, l.callStopPropagation)
 		} else {
-			b.diffSet.AddClientEvent(n, l.Name, n.uuid, l.clientScriptPrefix, l.scriptHandlerName, l.scriptArguments)
+			bb.diffSet.AddClientEvent(nn, l.Name, nn.uuid, l.clientScriptPrefix, l.scriptHandlerName, l.scriptArguments)
 		}
 	}
 }
@@ -93,7 +96,7 @@ func InitEvents(appg event.Group) error {
 		default:
 			panic("invalid html event path:/" + eventRoot + "/...")
 		}
-		itm := buildable.Builder().elements.Get(html)
+		itm := buildable.Builder().(*builder).elements.Get(html)
 		if itm == nil {
 			log.PrintError("obj not found: %q", html)
 			return

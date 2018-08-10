@@ -19,7 +19,7 @@ type browserCommand struct {
 	Argument interface{} `json:"argument"`
 }
 
-func (et *EventTarget) Builder() *Builder {
+func (et *EventTarget) Builder() Builder {
 	var buildable Buildable
 	switch {
 	case et.WindowID != "":
@@ -46,11 +46,11 @@ func (et *EventTarget) eventRoot() string {
 }
 
 func (et *EventTarget) Node() *node {
-	builder := et.Builder()
-	if builder == nil {
+	b := et.Builder()
+	if b == nil {
 		return nil
 	}
-	itm := builder.elements.Get(et.ElementID)
+	itm := b.(*builder).elements.Get(et.ElementID)
 	if n, ok := itm.(*node); ok {
 		return n
 	}
@@ -58,17 +58,18 @@ func (et *EventTarget) Node() *node {
 }
 
 func (et *EventTarget) HostComponent() Component {
-	builder := et.Builder()
-	if builder == nil {
+	b := et.Builder()
+	if b == nil {
 		return nil
 	}
-	itm := builder.elements.Get(et.ElementID)
+	bb := b.(*builder)
+	itm := bb.elements.Get(et.ElementID)
 	n, ok := itm.(*node)
 	if !ok {
 		return nil
 	}
 	for n != nil {
-		if n == builder.rootNode {
+		if n == bb.rootNode {
 			break
 		}
 		if n.component != nil {

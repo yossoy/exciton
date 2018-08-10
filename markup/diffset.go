@@ -1,7 +1,5 @@
 package markup
 
-import "github.com/yossoy/exciton/log"
-
 type diffItemType int
 
 const (
@@ -184,13 +182,12 @@ func (ds *DiffSet) selectCurNode(t *node) {
 		ds.addItem(ditSelectCurNode, ds.rootNode.indexPath(ds.rootNode))
 	case ds.curNode == t:
 		return
-	case t.isMount(ds.rootNode):
+	case t.isMount():
 		ds.addItem(ditSelectCurNode, t.indexPath(ds.rootNode))
 	default:
 		if idx, ok := ds.newNodes[t]; ok {
 			ds.addItem(ditSelectCurNode, idx)
 		} else {
-			log.PrintError("invalid node!: %#v\n", t.parent)
 			panic("exciton: invalid sequence[unmounted node select]")
 		}
 	}
@@ -203,7 +200,7 @@ func (ds *DiffSet) selectArg1Node(t *node) {
 		ds.addItem(ditSelectCurNode, ds.rootNode.indexPath(ds.rootNode))
 	case ds.arg1Node == t:
 		return
-	case t.isMount(ds.rootNode):
+	case t.isMount():
 		ds.addItem(ditSelectArg1Node, t.indexPath(ds.rootNode))
 	default:
 		if idx, ok := ds.newNodes[t]; ok {
@@ -221,7 +218,7 @@ func (ds *DiffSet) selectArg2Node(t *node) {
 		ds.addItem(ditSelectCurNode, ds.rootNode.indexPath(ds.rootNode))
 	case ds.arg2Node == t:
 		return
-	case t.isMount(ds.rootNode):
+	case t.isMount():
 		ds.addItem(ditSelectArg2Node, t.indexPath(ds.rootNode))
 	default:
 		if idx, ok := ds.newNodes[t]; ok {

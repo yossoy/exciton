@@ -7,7 +7,7 @@ type MarkupOrChild interface {
 type Markup interface {
 	isMarkup()
 	isMarkupOrChild()
-	applyToNode(b *Builder, n *node, on *node)
+	applyToNode(b Builder, n Node, on Node)
 }
 
 type ComponentMarkup interface {

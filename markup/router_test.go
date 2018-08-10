@@ -22,7 +22,7 @@ func (c *testRoute1) Render() RenderResult {
 
 var route1 = MustRegisterComponent((*testRoute1)(nil))
 
-func testRouterSub(t *testing.T, b *Builder, root *html.Node, path string, expected string) {
+func testRouterSub(t *testing.T, b *builder, root *html.Node, path string, expected string) {
 	b.diffSet.reset()
 	b.route = path
 	b.Rerender()
@@ -36,8 +36,8 @@ func testRouterSub(t *testing.T, b *Builder, root *html.Node, path string, expec
 func TestRouterBasic(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = func() object.ObjectKey { return "-" } // always -
 	const unmatchedResult = `<div><noscript _uuid="-"></noscript></div>`
 
@@ -68,8 +68,8 @@ func TestRouterBasic(t *testing.T) {
 func TestRouterWithVar(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("")
-	b.UserData = td
+	b := NewBuilder("").(*builder)
+	b.SetUserData(td)
 	b.keyGenerator = func() object.ObjectKey { return "-" } // always -
 	const unmatchedResult = `<div>fallbacked</div>`
 

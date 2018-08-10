@@ -54,7 +54,7 @@ func (rr *componentRenderResult) setKey(k interface{}) { rr.key = k }
 
 type delayRenderResult struct {
 	data    interface{}
-	proc    func(b *Builder) RenderResult
+	proc    func(b *builder) RenderResult
 	compare func(n *node, hydrating bool) bool
 }
 

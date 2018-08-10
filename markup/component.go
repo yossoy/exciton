@@ -22,9 +22,9 @@ type Core struct {
 	childComponent  Component
 	parentComponent Component
 	children        []RenderResult
-	base            *node
+	base            Node
 	disabled        bool
-	builder         *Builder
+	builder         Builder
 	dirty           bool
 	key             interface{}
 	parentMarkups   []Markup
@@ -41,7 +41,7 @@ const (
 type Component interface {
 	json.Marshaler
 	Context() *Core
-	Builder() *Builder
+	Builder() Builder
 	Key() interface{}
 	Render() RenderResult
 	Classes(...string) MarkupOrChild
@@ -51,7 +51,7 @@ type Component interface {
 
 func (c *Core) Context() *Core           { return c }
 func (c *Core) Key() interface{}         { return c.key }
-func (c *Core) Builder() *Builder        { return c.builder }
+func (c *Core) Builder() Builder         { return c.builder }
 func (c *Core) Children() []RenderResult { return c.children }
 func (c *Core) ID() string               { return c.id }
 func (c *Core) GetProperty(name string) (interface{}, bool) {
@@ -105,7 +105,7 @@ func (c *Core) CallClientFunction(funcName string, arguments ...interface{}) (js
 		Target:   c,
 		Argument: &arg,
 	}
-	result := event.EmitWithResult(c.Builder().hostPath+"/browserSync", event.NewValue(bc))
+	result := event.EmitWithResult(c.Builder().(*builder).hostPath+"/browserSync", event.NewValue(bc))
 	log.PrintDebug("call result: %v", result)
 	if err := result.Error(); err != nil {
 		return nil, err
@@ -261,7 +261,7 @@ func eventToComponent(e *event.Event) (Component, error) {
 	if wi == nil {
 		return nil, fmt.Errorf("window not found: %s", wid)
 	}
-	b := wi.(Buildable).Builder()
+	b := wi.(Buildable).Builder().(*builder)
 	ci := b.components.Get(id)
 	if ci == nil {
 		return nil, fmt.Errorf("component not found: %s", id)
@@ -425,7 +425,7 @@ func unregisterComponent(ci ComponentInstance) {
 	deleteKlass(rrr.klass)
 }
 
-func createComponent(b *Builder, vnode *componentRenderResult) Component {
+func createComponent(b *builder, vnode *componentRenderResult) Component {
 	c := vnode.klass.NewInstance()
 	c.Context().builder = b
 	c.Context().id = b.components.NewKey()
@@ -437,9 +437,12 @@ func createComponent(b *Builder, vnode *componentRenderResult) Component {
 	return c
 }
 
-func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild bool) {
+func renderComponent(b *builder, c Component, renderOpt renderOptType, isChild bool) {
 	ctx := c.Context()
-	initialBase := ctx.base
+	var initialBase *node
+	if ctx.base != nil {
+		initialBase = ctx.base.(*node)
+	}
 	bUpdate := initialBase != nil
 	skip := false
 	initialChildComponent := ctx.childComponent
@@ -478,7 +481,7 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 				setComponentProps(b, inst, renderOptNone, vt.markups, vt.children)
 				renderComponent(b, inst, renderOptSync, true)
 			}
-			base = inst.Context().base
+			base = inst.Context().base.(*node)
 			procComponentResult = true
 		case *textRenderResult:
 		case *delayRenderResult:
@@ -490,7 +493,10 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 			panic(fmt.Errorf("type not implement!: %v", vt))
 		}
 		if !procComponentResult {
-			cbase := ctx.base
+			var cbase *node
+			if ctx.base != nil {
+				cbase = ctx.base.(*node)
+			}
 			toUnmount = initialChildComponent
 			if toUnmount != nil {
 				ctx.childComponent = nil
@@ -548,7 +554,7 @@ func renderComponent(b *Builder, c Component, renderOpt renderOptType, isChild b
 	}
 }
 
-func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups []Markup, children []RenderResult) {
+func setComponentProps(b *builder, c Component, renderOpt renderOptType, markups []Markup, children []RenderResult) {
 	ctx := c.Context()
 	if ctx.disabled {
 		return
@@ -584,7 +590,7 @@ func setComponentProps(b *Builder, c Component, renderOpt renderOptType, markups
 	}
 }
 
-func buildComponentFromVNode(b *Builder, dom *node, vnode *componentRenderResult) *node {
+func buildComponentFromVNode(b *builder, dom *node, vnode *componentRenderResult) *node {
 	var c Component
 	if dom != nil {
 		c = dom.component
@@ -603,7 +609,11 @@ func buildComponentFromVNode(b *Builder, dom *node, vnode *componentRenderResult
 	}
 	if c != nil && isOwner && (!b.mountAll || c.Context().childComponent != nil) {
 		setComponentProps(b, c, renderOptAsync, vnode.markups, vnode.children)
-		dom = c.Context().base
+		if c.Context().base != nil {
+			dom = c.Context().base.(*node)
+		} else {
+			dom = nil
+		}
 	} else {
 		if origComponent != nil && !isDirectOwner {
 			b.unmountComponent(origComponent)
@@ -613,7 +623,11 @@ func buildComponentFromVNode(b *Builder, dom *node, vnode *componentRenderResult
 
 		c = createComponent(b, vnode)
 		setComponentProps(b, c, renderOptSync, vnode.markups, vnode.children)
-		dom = c.Context().base
+		if c.Context().base != nil {
+			dom = c.Context().base.(*node)
+		} else {
+			dom = nil
+		}
 
 		if oldDom != nil && dom != oldDom {
 			oldDom.component = nil
