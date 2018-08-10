@@ -21,7 +21,7 @@ func (m *MenuInstance) Popup(mousePt geom.Point, parent *window.Window) error {
 		Position: mousePt,
 		WindowID: parent.ID,
 	}
-	return event.Emit("/menu/"+m.uuid+"/popupContextMenu", event.NewValue(&arg))
+	return event.Emit(parent.EventRoot()+"/menu/"+m.uuid+"/popupContextMenu", event.NewValue(&arg))
 }
 
 func PopupMenu(menu MenuTemplate, mousePt geom.Point, w *window.Window) error {
