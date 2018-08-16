@@ -5,6 +5,7 @@ import (
 
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
+	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
@@ -33,7 +34,7 @@ func (m *MenuInstance) requestAnimationFrame() {
 }
 
 func (m *MenuInstance) updateDiffSetHandler(ds *markup.DiffSet) {
-	result := event.EmitWithResult(m.eventRoot+"/menu/"+m.uuid+"/updateDiffSetHandler", event.NewValue(ds))
+	result := ievent.EmitWithResult(m.eventRoot+"/menu/"+m.uuid+"/updateDiffSetHandler", event.NewValue(ds))
 	if result.Error() != nil {
 		panic(result.Error())
 	}
@@ -49,7 +50,7 @@ func (m *MenuInstance) updateDiffSetHandler(ds *markup.DiffSet) {
 func newMenu(eventRoot string) (*MenuInstance, error) {
 	uid := object.Menus.NewKey()
 
-	result := event.EmitWithResult(eventRoot+"/menu/"+uid+"/new", event.NewValue(nil))
+	result := ievent.EmitWithResult(eventRoot+"/menu/"+uid+"/new", event.NewValue(nil))
 	if result.Error() != nil {
 		return nil, result.Error()
 	}

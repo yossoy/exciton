@@ -5,10 +5,13 @@ package mac
 #include "window.h"
 */
 import "C"
-import "github.com/yossoy/exciton/event"
+import (
+	"github.com/yossoy/exciton/event"
+	ievent "github.com/yossoy/exciton/internal/event"
+)
 
 func initializeWindow() error {
-	g, err := event.AddGroup("/window/:id")
+	g, err := ievent.AddGroup("/window/:id")
 	if err != nil {
 		return err
 	}

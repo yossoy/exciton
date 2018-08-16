@@ -2,14 +2,9 @@ package web
 
 import (
 	"bytes"
-	"io/ioutil"
-
-	"github.com/yossoy/exciton/window"
-
-	"github.com/yossoy/exciton"
-
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,15 +12,17 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
-
 	"github.com/gorilla/websocket"
 
+	"github.com/yossoy/exciton"
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
+	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/markup"
 	"github.com/yossoy/exciton/menu"
+	"github.com/yossoy/exciton/window"
 )
 
 type sendMessageItem struct {
@@ -154,7 +151,7 @@ func (d *web) relayEventWithResultToNative(e *event.Event, respCallback event.Re
 }
 
 func (d *web) Init() error {
-	g, err := event.AddGroup("/exciton/:appid")
+	g, err := ievent.AddGroup("/exciton/:appid")
 	if err != nil {
 		return err
 	}
@@ -374,7 +371,7 @@ func driverWebSockHandler(si *app.StartupInfo) http.HandlerFunc {
 			driverLogDebug("driverEvent ==> %v", devt)
 			if devt.ResponceCallbackNo < 0 {
 				v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
-				if err := event.Emit(devt.Name, v); err != nil {
+				if err := ievent.Emit(devt.Name, v); err != nil {
 					driverLogDebug("event.Emit error: %v", err)
 					//panic(err)
 				}
@@ -402,8 +399,8 @@ func addWebRootResources(si *driver.StartupInfo) error {
 // Startup is startup function in windows.
 func Startup(startup app.StartupFunc) error {
 	runtime.LockOSThread()
-	event.StartEventMgr()
-	defer event.StopEventMgr()
+	ievent.StartEventMgr()
+	defer ievent.StopEventMgr()
 	si := &app.StartupInfo{}
 	si.StartupInfo.PortNo = 8080
 	si.StartupInfo.AppURLBase = "/exciton/{appid}"
@@ -415,7 +412,7 @@ func Startup(startup app.StartupFunc) error {
 		if err := startup(si); err != nil {
 			return err
 		}
-		rootGroup, err := event.AddGroup("/exciton/:appid")
+		rootGroup, err := ievent.AddGroup("/exciton/:appid")
 		if err != nil {
 			return err
 		}

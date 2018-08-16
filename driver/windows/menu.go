@@ -8,10 +8,11 @@ import "C"
 
 import (
 	"github.com/yossoy/exciton/event"
+	ievent "github.com/yossoy/exciton/internal/event"
 )
 
 func initializeMenu() error {
-	g, err := event.AddGroup("/menu/:id")
+	g, err := ievent.AddGroup("/menu/:id")
 	if err != nil {
 		return err
 	}

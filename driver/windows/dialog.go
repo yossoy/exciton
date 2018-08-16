@@ -12,6 +12,7 @@ import (
 
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/event"
+	ievent "github.com/yossoy/exciton/internal/event"
 )
 
 type openFileItem struct {
@@ -48,7 +49,7 @@ func (ofi *openFileItem) IsTemporary() bool {
 }
 
 func initializeDialog() error {
-	g, err := event.AddGroup("/dialog/:id")
+	g, err := ievent.AddGroup("/dialog/:id")
 	if err != nil {
 		return err
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/geom"
+	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
@@ -46,12 +47,12 @@ func (w *Window) EventRoot() string {
 }
 
 func (w *Window) requestAnimationFrame() {
-	event.Emit(w.eventRoot+"/window/"+w.ID+"/requestAnimationFrame", nil)
+	ievent.Emit(w.eventRoot+"/window/"+w.ID+"/requestAnimationFrame", nil)
 }
 
 func (w *Window) updateDiffSetHandler(ds *markup.DiffSet) {
 	//log.PrintDebug("updateDiffSetHandler: %v", ds)
-	event.Emit(w.eventRoot+"/window/"+w.ID+"/updateDiffSetHandler", event.NewValue(ds))
+	ievent.Emit(w.eventRoot+"/window/"+w.ID+"/updateDiffSetHandler", event.NewValue(ds))
 }
 
 func (w *Window) onReady() {
@@ -187,7 +188,7 @@ func InitWindows(appg event.Group, si *driver.StartupInfo) error {
 			return
 		}
 		if empty {
-			event.Emit("/app/window-all-closed", nil)
+			ievent.Emit("/app/window-all-closed", nil)
 		}
 	}); err != nil {
 		return err
@@ -204,7 +205,7 @@ func InitWindows(appg event.Group, si *driver.StartupInfo) error {
 	if err := appg.AddHandler("/window/:id/focus", onWindowFocus); err != nil {
 		return err
 	}
-	if err := event.AddHandler("/window/:id/blur", onWindowBlur); err != nil {
+	if err := ievent.AddHandler("/window/:id/blur", onWindowBlur); err != nil {
 		return err
 	}
 
@@ -257,7 +258,7 @@ func NewWindow(appid string, cfg *WindowConfig) (*Window, error) {
 	}
 	hostPath := eventRoot + "/window/" + string(id)
 	object.Windows.Put(id, w)
-	r := event.EmitWithResult(hostPath+"/new", event.NewValue(cfg))
+	r := ievent.EmitWithResult(hostPath+"/new", event.NewValue(cfg))
 	if r.Error() != nil {
 		object.Windows.Delete(id)
 		return nil, r.Error()

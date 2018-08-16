@@ -14,6 +14,7 @@ import (
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
+	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/markup"
 	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
@@ -120,7 +121,7 @@ func (d *mac) requestEventEmit(devt *driver.DriverEvent) error {
 	driverLogInfo("requestEventEmit: %v", devt)
 	if devt.ResponceCallbackNo < 0 {
 		v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
-		return event.Emit(devt.Name, v)
+		return ievent.Emit(devt.Name, v)
 	}
 	panic("not implement yet.")
 }
@@ -130,7 +131,7 @@ func (d *mac) Init() error {
 
 	driverLogInfo("driverMac.Init called")
 
-	err := event.AddHandler("/app/quit", func(e *event.Event) {
+	err := ievent.AddHandler("/app/quit", func(e *event.Event) {
 		driverLogInfo("driver::terminate!!")
 		C.Driver_Terminate()
 	})
@@ -342,8 +343,8 @@ func internalInitFunc(a *app.App, info *app.StartupInfo) error {
 
 func Startup(startup app.StartupFunc) error {
 	runtime.LockOSThread()
-	event.StartEventMgr()
-	defer event.StopEventMgr()
+	ievent.StartEventMgr()
+	defer ievent.StopEventMgr()
 	si := &app.StartupInfo{
 		AppMenu: macDefaultAppmenu,
 	}
@@ -356,7 +357,7 @@ func Startup(startup app.StartupFunc) error {
 			return err
 		}
 		app.NewSingletonApp(nil)
-		if err := exciton.Init(event.RootGroup(), si, internalInitFunc); err != nil {
+		if err := exciton.Init(ievent.RootGroup(), si, internalInitFunc); err != nil {
 			return err
 		}
 		return nil

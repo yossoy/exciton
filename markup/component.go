@@ -11,6 +11,7 @@ import (
 
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
+	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/log"
 )
@@ -105,7 +106,7 @@ func (c *Core) CallClientFunction(funcName string, arguments ...interface{}) (js
 		Target:   c,
 		Argument: &arg,
 	}
-	result := event.EmitWithResult(c.Builder().(*builder).hostPath+"/browserSync", event.NewValue(bc))
+	result := ievent.EmitWithResult(c.Builder().(*builder).hostPath+"/browserSync", event.NewValue(bc))
 	log.PrintDebug("call result: %v", result)
 	if err := result.Error(); err != nil {
 		return nil, err
@@ -246,7 +247,7 @@ func addEventHandlerSub(timing driver.InitProcTiming) (event.Group, error) {
 	}
 	if eventGroup == nil {
 		var err error
-		eventGroup, err = event.AddGroup("/components/:windowId/:instanceId")
+		eventGroup, err = ievent.AddGroup("/components/:windowId/:instanceId")
 		if err != nil {
 			return nil, err
 		}

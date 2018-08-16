@@ -2,6 +2,7 @@ package markup
 
 import (
 	"github.com/yossoy/exciton/event"
+	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/object"
 )
 
@@ -321,7 +322,7 @@ func (b *builder) OnRedirect(route string) {
 }
 
 func (b *builder) Redirect(route string) {
-	event.Emit(b.hostPath+"/redirectTo", event.NewValue(route))
+	ievent.Emit(b.hostPath+"/redirectTo", event.NewValue(route))
 }
 
 func (b *builder) UserData() interface{} {

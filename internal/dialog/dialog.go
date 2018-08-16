@@ -3,6 +3,7 @@ package dialog
 import (
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/event"
+	ievent "github.com/yossoy/exciton/internal/event"
 )
 
 type msgBoxOpt struct {
@@ -34,7 +35,7 @@ func makeMsgBoxOpt(parent string, message string, title string, messageBoxType d
 
 func ShowMessageBoxAsync(eventRoot string, windowID string, message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {
 	opt := makeMsgBoxOpt(windowID, message, title, messageBoxType, cfg)
-	err := event.EmitWithCallback(eventRoot+"/dialog/-/showMessageBox", event.NewValue(opt), func(result event.Result) {
+	err := ievent.EmitWithCallback(eventRoot+"/dialog/-/showMessageBox", event.NewValue(opt), func(result event.Result) {
 		if result.Error() != nil {
 			handler(-1, result.Error())
 			return
@@ -87,7 +88,7 @@ func ShowOpenDialogAsync(eventRoot string, windowID string, cfg *dialog.FileDial
 	if opt.Properties == 0 {
 		opt.Properties = dialog.OpenDialogForOpenFile
 	}
-	err := event.EmitWithCallback(eventRoot+"/dialog/-/showOpenDialog", event.NewValue(opt), func(e event.Result) {
+	err := ievent.EmitWithCallback(eventRoot+"/dialog/-/showOpenDialog", event.NewValue(opt), func(e event.Result) {
 		if e.Error() != nil {
 			handler(nil, e.Error())
 			return
@@ -131,7 +132,7 @@ func ShowSaveDialogAsync(eventRoot string, windowID string, cfg *dialog.FileDial
 	if opt.Title == "" {
 		opt.Title = "Save"
 	}
-	err := event.EmitWithCallback(eventRoot+"/dialog/-/showSaveDialog", event.NewValue(opt), func(e event.Result) {
+	err := ievent.EmitWithCallback(eventRoot+"/dialog/-/showSaveDialog", event.NewValue(opt), func(e event.Result) {
 		if e.Error() != nil {
 			handler("", e.Error())
 			return

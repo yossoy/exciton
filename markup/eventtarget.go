@@ -2,7 +2,9 @@ package markup
 
 import (
 	"github.com/pkg/errors"
+
 	"github.com/yossoy/exciton/event"
+	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/object"
 )
 
@@ -93,9 +95,9 @@ func (et *EventTarget) GetProperty(name string) (interface{}, error) {
 	eventRoot := et.eventRoot()
 	var result event.Result
 	if et.WindowID != "" {
-		result = event.EmitWithResult(eventRoot+"/window/"+et.WindowID+"/browserSync", event.NewValue(arg))
+		result = ievent.EmitWithResult(eventRoot+"/window/"+et.WindowID+"/browserSync", event.NewValue(arg))
 	} else if et.MenuID != "" {
-		result = event.EmitWithResult(eventRoot+"/menu"+et.MenuID+"/browserSync", event.NewValue(arg))
+		result = ievent.EmitWithResult(eventRoot+"/menu"+et.MenuID+"/browserSync", event.NewValue(arg))
 	}
 	if result.Error() != nil {
 		return nil, errors.Wrap(result.Error(), "EmitEventWithResult fail:")

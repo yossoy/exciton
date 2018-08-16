@@ -1,9 +1,8 @@
 package markup
 
 import (
-	"github.com/yossoy/exciton/internal/object"
-
 	"github.com/yossoy/exciton/event"
+	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/log"
 )
 

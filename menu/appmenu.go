@@ -2,6 +2,7 @@ package menu
 
 import (
 	"github.com/yossoy/exciton/event"
+	ievent "github.com/yossoy/exciton/internal/event"
 )
 
 func SetApplicationMenu(eventRoot string, menu AppMenuTemplate) error {
@@ -13,5 +14,5 @@ func SetApplicationMenu(eventRoot string, menu AppMenuTemplate) error {
 	if err != nil {
 		return err
 	}
-	return event.Emit(eventRoot+"/menu/"+mi.uuid+"/setApplicationMenu", event.NewValue(nil))
+	return ievent.Emit(eventRoot+"/menu/"+mi.uuid+"/setApplicationMenu", event.NewValue(nil))
 }
