@@ -1,11 +1,16 @@
 package markup
 
 import (
+	"fmt"
+
+	"github.com/yossoy/exciton/event"
+	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/object"
 )
 
 type Node interface {
 	NodeName() string
+	GetProperty(string) (interface{}, error)
 }
 
 type Element interface {
@@ -16,12 +21,28 @@ type elemBody struct {
 	n *node
 }
 
+func (e *elemBody) NodeName() string {
+	return e.n.NodeName()
+}
+
+func (e *elemBody) GetProperty(name string) (interface{}, error) {
+	return e.GetProperty(name)
+}
+
 type TextNode interface {
 	Node
 }
 
 type textNodeBody struct {
 	n *node
+}
+
+func (e *textNodeBody) NodeName() string {
+	return "#text"
+}
+
+func (e *textNodeBody) GetProperty(name string) (interface{}, error) {
+	return e.GetProperty(name)
 }
 
 type node struct {
@@ -37,18 +58,69 @@ type node struct {
 	eventListeners         map[string]*EventListener
 	index                  int
 	uuid                   object.ObjectKey
-	rootNode               bool
+	builder                *builder
+}
+
+func (n *node) Node() Node {
+	if n.tag == "" {
+		return &textNodeBody{
+			n: n,
+		}
+	}
+	return &elemBody{
+		n: n,
+	}
 }
 
 func (n *node) NodeName() string {
+	if n.tag == "" {
+		return "#text"
+	}
 	return n.tag
+}
+
+type browserCommand struct {
+	Command  string      `json:"cmd"`
+	Target   interface{} `json:"target"`
+	Argument interface{} `json:"argument"`
+}
+
+func rootBuilder(n *node) *builder {
+	if n == nil {
+		return nil
+	}
+	if n.builder != nil {
+		return n.builder
+	}
+	return rootBuilder(n.parent)
+}
+
+func (n *node) GetProperty(name string) (interface{}, error) {
+	arg := &browserCommand{
+		Command:  "getProp",
+		Target:   n.uuid,
+		Argument: name,
+	}
+	b := rootBuilder(n)
+	if b == nil {
+		return nil, fmt.Errorf("Unmounted node")
+	}
+	result := ievent.EmitWithResult(b.hostPath+"/browserSync", event.NewValue(arg))
+	if result.Error() != nil {
+		return nil, result.Error()
+	}
+	var ret interface{}
+	if err := result.Value().Decode(&ret); err != nil {
+		return nil, fmt.Errorf("value decode fauled: %v", err)
+	}
+	return ret, nil
 }
 
 func (n *node) isMount() bool {
 	if n == nil {
 		return false
 	}
-	if n.rootNode {
+	if n.builder != nil {
 		return true
 	}
 	return n.parent.isMount()

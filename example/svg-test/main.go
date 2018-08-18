@@ -42,7 +42,7 @@ func (c *rootComponent) Render() markup.RenderResult {
 	)
 }
 
-func onNewWindow(cfg *window.WindowConfig) (markup.RenderResult, error) {
+func onNewWindow(app *app.App, cfg *window.WindowConfig) (markup.RenderResult, error) {
 	cfg.Title = "SVG Example"
 	rc, err := markup.RegisterComponent((*rootComponent)(nil))
 	if err != nil {

@@ -51,7 +51,7 @@ func (rc *rootComponent) onClickServerRedirect(path string) {
 }
 
 func (rc *rootComponent) onChangeSelect(e *html.Event) {
-	v, err := e.Target.GetProperty("value")
+	v, err := e.Target.Node().GetProperty("value")
 	if err != nil {
 		panic(err)
 	}

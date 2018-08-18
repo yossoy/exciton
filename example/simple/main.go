@@ -176,9 +176,9 @@ type testComponent struct {
 
 func (c *testComponent) clickHandler(e *html.MouseEvent) {
 	log.PrintInfo("clickHandler is called!!")
-	t := e.UIEvent.Event.Target
-	if t != nil {
-		v, err := t.GetProperty("type")
+	n := e.UIEvent.Event.Target.Node()
+	if n != nil {
+		v, err := n.GetProperty("type")
 		if err != nil {
 			log.PrintError(fmt.Sprint(err))
 		} else {
@@ -191,9 +191,9 @@ func (c *testComponent) clickHandler(e *html.MouseEvent) {
 }
 
 func (c *testComponent) checkHandler(e *html.MouseEvent) {
-	t := e.UIEvent.Event.Target
-	if t != nil {
-		v, err := t.GetProperty("checked")
+	n := e.UIEvent.Event.Target.Node()
+	if n != nil {
+		v, err := n.GetProperty("checked")
 		if err != nil {
 			log.PrintError(fmt.Sprint(err))
 		} else {

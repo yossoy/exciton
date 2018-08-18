@@ -51,7 +51,7 @@ type Buildable interface {
 }
 
 func NewBuilder(hostPath string) Builder {
-	rn := &node{rootNode: true}
+	rn := &node{}
 	b := &builder{
 		hostPath:         hostPath,
 		diffSet:          &DiffSet{rootNode: rn},
@@ -61,11 +61,12 @@ func NewBuilder(hostPath string) Builder {
 		components:       object.NewObjectMap(),
 		delayUpdater:     make([]Component, 0, 16),
 	}
+	rn.builder = b
 	return b
 }
 
 func NewAsyncBuilder(hostPath string, raf RequestAnimationFrameHandler, udh UpdateDiffSetHandler) Builder {
-	rn := &node{rootNode: true}
+	rn := &node{}
 	b := &builder{
 		hostPath:         hostPath,
 		diffSet:          &DiffSet{rootNode: rn},
@@ -77,6 +78,7 @@ func NewAsyncBuilder(hostPath string, raf RequestAnimationFrameHandler, udh Upda
 		rafHandler:       raf,
 		updateHandler:    udh,
 	}
+	rn.builder = b
 	return b
 }
 

@@ -42,7 +42,7 @@ func (rc *rootComponent) onClickButton1(e *html.MouseEvent) {
 		panic(err)
 	}
 	msg := fmt.Sprintf("Component button1 clicked!: %d", cc)
-	dialog.ShowMessageBox(win, msg, "sample", dialog.MessageBoxTypeInfo, nil)
+	win.ShowMessageBox(msg, "sample", dialog.MessageBoxTypeInfo, nil)
 }
 
 func (rc *rootComponent) onClickAddComponent(e *html.MouseEvent) {

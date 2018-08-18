@@ -1,10 +1,6 @@
 package markup
 
 import (
-	"github.com/pkg/errors"
-
-	"github.com/yossoy/exciton/event"
-	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/object"
 )
 
@@ -13,12 +9,6 @@ type EventTarget struct {
 	WindowID  string `json:"windowId,omitempty"`
 	MenuID    string `json:"menuId,omitempty"`
 	ElementID string `json:"elementId,omitempty"`
-}
-
-type browserCommand struct {
-	Command  string      `json:"cmd"`
-	Target   interface{} `json:"target"`
-	Argument interface{} `json:"argument"`
 }
 
 func (et *EventTarget) Builder() Builder {
@@ -47,7 +37,10 @@ func (et *EventTarget) eventRoot() string {
 	return buildable.EventRoot()
 }
 
-func (et *EventTarget) Node() *node {
+func (et *EventTarget) Node() Node {
+	if et == nil {
+		return nil
+	}
 	b := et.Builder()
 	if b == nil {
 		return nil
@@ -80,31 +73,4 @@ func (et *EventTarget) HostComponent() Component {
 		n = n.parent
 	}
 	return nil
-}
-
-func (et *EventTarget) GetProperty(name string) (interface{}, error) {
-	if et.ElementID == "" {
-		// target is window
-		panic("not implement yet")
-	}
-	arg := &browserCommand{
-		Command:  "getProp",
-		Target:   et.ElementID,
-		Argument: name,
-	}
-	eventRoot := et.eventRoot()
-	var result event.Result
-	if et.WindowID != "" {
-		result = ievent.EmitWithResult(eventRoot+"/window/"+et.WindowID+"/browserSync", event.NewValue(arg))
-	} else if et.MenuID != "" {
-		result = ievent.EmitWithResult(eventRoot+"/menu"+et.MenuID+"/browserSync", event.NewValue(arg))
-	}
-	if result.Error() != nil {
-		return nil, errors.Wrap(result.Error(), "EmitEventWithResult fail:")
-	}
-	var ret interface{}
-	if err := result.Value().Decode(&ret); err != nil {
-		return nil, errors.Wrap(err, "Value.Decode() fail.:")
-	}
-	return ret, nil
 }
