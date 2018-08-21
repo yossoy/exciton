@@ -47,7 +47,7 @@ func (et *EventTarget) Node() Node {
 	}
 	itm := b.(*builder).elements.Get(et.ElementID)
 	if n, ok := itm.(*node); ok {
-		return n
+		return n.Node()
 	}
 	return nil
 }

@@ -29,6 +29,7 @@ type Core struct {
 	dirty           bool
 	key             interface{}
 	parentMarkups   []Markup
+	idmap           map[string]string
 }
 
 type renderOptType int
@@ -46,7 +47,7 @@ type Component interface {
 	Key() interface{}
 	Render() RenderResult
 	Classes(...string) MarkupOrChild
-	ID() string
+	ID(string) MarkupOrChild
 	GetProperty(string) (interface{}, bool)
 }
 
@@ -54,7 +55,25 @@ func (c *Core) Context() *Core           { return c }
 func (c *Core) Key() interface{}         { return c.key }
 func (c *Core) Builder() Builder         { return c.builder }
 func (c *Core) Children() []RenderResult { return c.children }
-func (c *Core) ID() string               { return c.id }
+
+type componentIDApplyer struct {
+	c     *Core
+	idstr string
+}
+
+func (cia componentIDApplyer) isMarkup()        {}
+func (cia componentIDApplyer) isMarkupOrChild() {}
+func (cia componentIDApplyer) applyToNode(b Builder, n Node, on Node) {
+	nn := n.(*node)
+	cia.c.idmap[cia.idstr] = nn.uuid
+}
+
+func (c *Core) ID(id string) MarkupOrChild {
+	return componentIDApplyer{
+		c:     c,
+		idstr: id,
+	}
+}
 func (c *Core) GetProperty(name string) (interface{}, bool) {
 	if c.self == nil {
 		return nil, false

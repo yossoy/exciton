@@ -150,10 +150,16 @@ function mountUnmountComponent(nsobj, n, itemv, mounted) {
   if (localJSKey !== '') {
     const m = nsobj.modules[localJSKey];
     if (m) {
-      const f =
-          mounted ? m.exports['mountComponent'] : m.exports['unmountComponent'];
-      if (f && typeof (f) === 'function' && f.length == 2) {
-        f(n, instanceData)
+      if (mounted) {
+        const f = m.exports['mountComponent'];
+        if (f && typeof (f) === 'function' && f.length == 2) {
+          f(n, instanceData)
+        }
+      } else {
+        const f = m.exports['unmountComponent'];
+        if (f && typeof (f) === 'function' && f.length == 1) {
+          f(instanceData);
+        }
       }
     }
   }

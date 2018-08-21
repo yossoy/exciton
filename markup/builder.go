@@ -187,6 +187,15 @@ func (b *builder) addElement(n *node) {
 func (b *builder) deleteElement(n *node) {
 	if n.uuid != "" {
 		b.elements.Delete(n.uuid)
+		if n.component != nil {
+			idmap := n.component.Context().idmap
+			for k, v := range idmap {
+				if v == n.uuid {
+					delete(idmap, k)
+					break
+				}
+			}
+		}
 		n.uuid = ""
 	}
 }

@@ -9,8 +9,8 @@ export function mountComponent(n, inst) {
     inst.callNativeEvent('/on-mount', 'called')
 }
 
-export function unmountComponent(n, inst) {
-    console.log('mountComponent', n, inst);
+export function unmountComponent(inst) {
+    console.log('mountComponent', inst);
 }
 
 export function clientFunc1(c, add) {

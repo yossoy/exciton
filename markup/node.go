@@ -26,7 +26,7 @@ func (e *elemBody) NodeName() string {
 }
 
 func (e *elemBody) GetProperty(name string) (interface{}, error) {
-	return e.GetProperty(name)
+	return e.n.GetProperty(name)
 }
 
 type TextNode interface {
@@ -42,7 +42,7 @@ func (e *textNodeBody) NodeName() string {
 }
 
 func (e *textNodeBody) GetProperty(name string) (interface{}, error) {
-	return e.GetProperty(name)
+	return e.n.GetProperty(name)
 }
 
 type node struct {
@@ -51,14 +51,13 @@ type node struct {
 	component                Component
 	key                      interface{}
 	children                 []*node
-	// markups
-	classes                map[string]struct{}
-	styles, dataset        map[string]string
-	properties, attributes map[string]interface{}
-	eventListeners         map[string]*EventListener
-	index                  int
-	uuid                   object.ObjectKey
-	builder                *builder
+	classes                  map[string]struct{}
+	styles, dataset          map[string]string
+	properties, attributes   map[string]interface{}
+	eventListeners           map[string]*EventListener
+	index                    int
+	uuid                     object.ObjectKey
+	builder                  *builder
 }
 
 func (n *node) Node() Node {
