@@ -7,12 +7,9 @@ import (
 	"mime"
 	"net/http"
 	"path"
-	"regexp"
 	"strings"
 
 	"github.com/yossoy/exciton/driver"
-
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -31,7 +28,7 @@ func (k *Klass) ResourcePathBase() string {
 }
 
 func HandleComponentResource(r driver.Router) {
-	r.PathPrefix("/components/{id}/resources/").HandlerFunc(componentResourceFileHandle)
+	r.HandleFunc("/components/{id}/resources/{fn:.*}", componentResourceFileHandle)
 }
 
 func getKlassPathInfoFromID(id string) *klassPathInfo {
@@ -42,13 +39,13 @@ func getKlassPathInfoFromID(id string) *klassPathInfo {
 }
 
 func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
-	route := mux.CurrentRoute(r)
-	reg, _ := route.GetPathRegexp()
-	rc := regexp.MustCompile(reg)
-	fs := rc.FindString(r.URL.String())
-	fn := strings.TrimPrefix(r.URL.String(), fs)
-	vars := mux.Vars(r)
+	vars := driver.RequestVars(r)
 	id, ok := vars["id"]
+	if !ok {
+		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
+		return
+	}
+	fn, ok := vars["fn"]
 	if !ok {
 		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
 		return
@@ -106,7 +103,7 @@ func componentResourceFileHandle(w http.ResponseWriter, r *http.Request) {
 			js = stripShebang(js)
 			prefix := id + "-" + strings.TrimSuffix(fn, ext)
 			jsStr := fmt.Sprintf(jsTemplate, prefix, string(js))
-			fmt.Printf("*********** jsStr = %s\n", jsStr)
+			//fmt.Printf("*********** jsStr = %s\n", jsStr)
 			w.Header().Add("Content-Length", fmt.Sprintf("%d", len(jsStr)))
 			w.WriteHeader(http.StatusOK)
 			io.WriteString(w, jsStr)

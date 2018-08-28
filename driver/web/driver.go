@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 
 	"github.com/yossoy/exciton"
@@ -339,7 +338,7 @@ func driverWebSockHandler(si *app.StartupInfo) http.HandlerFunc {
 	upgrader := websocket.Upgrader{}
 	return func(w http.ResponseWriter, r *http.Request) {
 		driverLogDebug("driverWebSockHandler!!")
-		appid, ok := mux.Vars(r)["appid"]
+		appid, ok := driver.RequestVars(r)["appid"]
 		if !ok {
 			driverLogDebug("invalid path")
 			http.Error(w, "invalid path", http.StatusNotFound)
@@ -404,6 +403,12 @@ func Startup(startup app.StartupFunc) error {
 	si := &app.StartupInfo{}
 	si.StartupInfo.PortNo = 8080
 	si.StartupInfo.AppURLBase = "/exciton/{appid}"
+	rootGroup, err := ievent.AddGroup("/exciton/:appid")
+	if err != nil {
+		return err
+	}
+	si.StartupInfo.AppEventRoot = rootGroup
+
 	d := newDriver()
 	if err := d.Init(); err != nil {
 		return err
@@ -412,11 +417,7 @@ func Startup(startup app.StartupFunc) error {
 		if err := startup(si); err != nil {
 			return err
 		}
-		rootGroup, err := ievent.AddGroup("/exciton/:appid")
-		if err != nil {
-			return err
-		}
-		if err := exciton.Init(rootGroup, si, internalInitFunc); err != nil {
+		if err := exciton.Init(si, internalInitFunc); err != nil {
 			return err
 		}
 		si.Router.HandleFunc("/exciton/{appid}/ws", driverWebSockHandler(si))

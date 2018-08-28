@@ -175,7 +175,8 @@ func onChangeRoute(e *event.Event) {
 	w.Builder().OnRedirect(arg.Route)
 }
 
-func InitWindows(appg event.Group, si *driver.StartupInfo) error {
+func InitWindows(si *driver.StartupInfo) error {
+	appg := si.AppEventRoot
 	if err := initHTML(si); err != nil {
 		return err
 	}

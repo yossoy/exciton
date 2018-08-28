@@ -10,7 +10,7 @@
     <title>{{.Title}}</title>
 </head>
 <body>
-    <div id="{{.ID}}"></div>
+    <div id="{{.ID}}" class="excitonRoot"></div>
     <script>window.exciton={ID: {{.ID}}, modules: {}, components:{}, callnative: function(a){ {{.NativeRequestJSMethod }}(a);}};</script>
     <script src="/assets/exciton.js"></script>
     {{range .JS}}<script src="/resources/js/{{.}}" defer></script>{{end}}

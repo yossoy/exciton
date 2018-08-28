@@ -79,7 +79,8 @@ func onClientMount(c markup.Component, e *event.Event) {
 		log.PrintDebug("invalid argument: %v", c)
 		return
 	}
-	var arg string
+	log.PrintDebug("argument = %v", e.Argument)
+	var arg []string
 	err := e.Argument.Decode(&arg)
 	if err != nil {
 		log.PrintDebug("argument decode failed: %v", err)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"path"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -55,6 +56,9 @@ func (c *Core) Context() *Core           { return c }
 func (c *Core) Key() interface{}         { return c.key }
 func (c *Core) Builder() Builder         { return c.builder }
 func (c *Core) Children() []RenderResult { return c.children }
+func (c *Core) ResourcesFilePath(fn string) string {
+	return path.Join(c.klass.ResourcePathBase(), "resources", fn)
+}
 
 type componentIDApplyer struct {
 	c     *Core
@@ -138,10 +142,12 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 		ClassID    string `json:"classId"`
 		ID         string `json:"id"`
 		LocalJSKey string `json:"localJSKey"`
+		URLBase    string `json:"urlBase"`
 	}{
 		ClassID:    c.klass.Name(),
 		ID:         c.id,
 		LocalJSKey: c.klass.localJSKey(),
+		URLBase:    c.klass.ResourcePathBase(),
 	}
 	return json.Marshal(&s)
 }
@@ -260,13 +266,13 @@ type EventHandler func(c Component, e *event.Event)
 
 var eventGroup event.Group
 
-func addEventHandlerSub(timing driver.InitProcTiming) (event.Group, error) {
+func addEventHandlerSub(eventRoot event.Group, timing driver.InitProcTiming) (event.Group, error) {
 	if timing == driver.InitProcTimingPreStartup {
 		return nil, fmt.Errorf("cannot initialize event in InitProcTimingPreStartup: %d", timing)
 	}
 	if eventGroup == nil {
 		var err error
-		eventGroup, err = ievent.AddGroup("/components/:windowId/:instanceId")
+		eventGroup, err = eventRoot.AddGroup("/components/:windowId/:instanceId")
 		if err != nil {
 			return nil, err
 		}
@@ -294,7 +300,7 @@ func eventToComponent(e *event.Event) (Component, error) {
 }
 
 func (ii *InitInfo) AddHandler(name string, handler EventHandler) error {
-	group, err := addEventHandlerSub(ii.timing)
+	group, err := addEventHandlerSub(ii.si.AppEventRoot, ii.timing)
 	if err != nil {
 		return err
 	}
@@ -307,6 +313,10 @@ func (ii *InitInfo) AddHandler(name string, handler EventHandler) error {
 		}
 		handler(c, e)
 	})
+}
+
+func (ii *InitInfo) Router() driver.Router {
+	return ii.si.Router
 }
 
 type ClassInitProc func(k *Klass, si *InitInfo) error

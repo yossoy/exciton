@@ -220,19 +220,20 @@
     decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
                     decisionHandler:
                         (void (^)(WKNavigationActionPolicy))decisionHandler {
+  LOG_DEBUG(@"decidePolicyForNavigationAction:%@", navigationAction.request.URL);
   if (navigationAction.navigationType == WKNavigationTypeReload ||
       navigationAction.navigationType == WKNavigationTypeOther) {
-    if (navigationAction.targetFrame.request != nil) {
-      decisionHandler(WKNavigationActionPolicyCancel);
-      return;
-    }
+    LOG_DEBUG(@"decidePolicyForNavigationAction: %ld", (long )navigationAction.navigationType);
 
     decisionHandler(WKNavigationActionPolicyAllow);
     return;
   }
 
   NSURL *url = navigationAction.request.URL;
-  LOG_DEBUG(@"decidePolicyForNavigationAction:%@", url);
+  LOG_DEBUG(@"decidePolicyForNavigationAction:%@, %d", url, navigationAction.sourceFrame.mainFrame);
+  if (!navigationAction.sourceFrame.mainFrame) {
+    decisionHandler(WKNavigationActionPolicyAllow);
+  }
   // TO DO:
   // Call go request to navigate to anoter component.
   decisionHandler(WKNavigationActionPolicyCancel);

@@ -36,7 +36,10 @@ sock.onmessage = function (e) {
             const w = document.getElementById(winid);
             console.log('call child event: ' + winevnt, d.argument);
             const resultStr = w.contentWindow.exciton.requestBrowerEventSync(winevnt, JSON.stringify(d.argument));
-            const result = JSON.parse(resultStr);
+            let result;
+            if (resultStr) {
+                result = JSON.parse(resultStr);
+            }
             nsobj.responceValue(result, d.respCallbackNo);
         } else if (d.name.startsWith(menuPrefix)) {
             const menuevt = d.name.slice(menuPrefix.length);

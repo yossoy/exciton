@@ -278,6 +278,7 @@ func Startup(startup app.StartupFunc) error {
 	si := &app.StartupInfo{
 		AppMenu: windowsDefaultMenu,
 	}
+	si.StartupInfo.AppEventRoot = ievent.RootGroup()
 	d := newDriver()
 	if err := d.Init(); err != nil {
 		return err
@@ -287,7 +288,7 @@ func Startup(startup app.StartupFunc) error {
 			return err
 		}
 		app.NewSingletonApp(nil)
-		if err := exciton.Init(ievent.RootGroup(), si, internalInitFunc); err != nil {
+		if err := exciton.Init(si, internalInitFunc); err != nil {
 			return err
 		}
 		return nil

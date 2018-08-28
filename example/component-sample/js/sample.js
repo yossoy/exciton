@@ -4,13 +4,13 @@ export function onClickClient1(c, e) {
     c.clickCount++;
     e.currentTarget.innerHTML = '<b>clicked!</b>: ' + c.clickCount;
 }
-export function mountComponent(n, inst) {
-    inst.clickCount = 0;
+export function mountComponent(n, c) {
+    c.clickCount = 0;
     inst.callNativeEvent('/on-mount', 'called')
 }
 
-export function unmountComponent(inst) {
-    console.log('mountComponent', inst);
+export function unmountComponent(c) {
+    console.log('mountComponent', c);
 }
 
 export function clientFunc1(c, add) {

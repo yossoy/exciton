@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
-
-	"github.com/yossoy/exciton/log"
 )
 
 // Value is hold event value like argument, return value, etc.
@@ -20,7 +18,6 @@ func (ev jsonEncodedValue) Encode() ([]byte, error) {
 	return ev, nil
 }
 func (ev jsonEncodedValue) Decode(data interface{}) error {
-	log.PrintDebug("JsonEncodeValue: Decode: %s", string(ev))
 	return json.Unmarshal(ev, data)
 }
 

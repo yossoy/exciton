@@ -21,7 +21,7 @@ type fakeReadCloser struct {
 }
 
 func (frc *fakeReadCloser) Read(p []byte) (n int, err error) {
-	return frc.Read(p)
+	return frc.tempData.Read(p)
 }
 
 func (frc *fakeReadCloser) Close() error {

@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/yossoy/exciton/event"
 )
 
 type LogLevel int
@@ -54,9 +56,10 @@ func NativeRequestJSMethod() string {
 }
 
 type StartupInfo struct {
-	PortNo     int
-	Router     Router
-	AppURLBase string
+	PortNo       int
+	Router       Router
+	AppURLBase   string
+	AppEventRoot event.Group
 }
 
 type StartupFunc func() error

@@ -10,7 +10,8 @@ import (
 
 type InternalInitFunc func(app *app.App, info *app.StartupInfo) error
 
-func Init(rootGroup event.Group, info *app.StartupInfo, initFunc InternalInitFunc) error {
+func Init(info *app.StartupInfo, initFunc InternalInitFunc) error {
+	rootGroup := info.AppEventRoot
 	if info.OnAppQuit != nil {
 		rootGroup.AddHandler("/app/finalize", func(e *event.Event) {
 			info.OnAppQuit()
@@ -28,7 +29,7 @@ func Init(rootGroup event.Group, info *app.StartupInfo, initFunc InternalInitFun
 	}); err != nil {
 		return err
 	}
-	if err := window.InitWindows(rootGroup, &info.StartupInfo); err != nil {
+	if err := window.InitWindows(&info.StartupInfo); err != nil {
 		return err
 	}
 	if err := menu.InitMenus(rootGroup); err != nil {

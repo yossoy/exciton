@@ -6,13 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/yossoy/exciton/markup"
-
-	"github.com/gorilla/mux"
-
 	"github.com/yossoy/exciton/assets"
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/log"
+	"github.com/yossoy/exciton/markup"
 )
 
 type htmlContext struct {
@@ -49,7 +46,7 @@ func toTemplateURL(ss []string) []template.URL {
 
 func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
 	log.PrintDebug("rootHTMLHandler: %q", r.RequestURI)
-	vars := mux.Vars(r)
+	vars := driver.RequestVars(r)
 	id, ok := vars["id"]
 	if !ok {
 		http.Error(w, http.ErrNoLocation.Error(), http.StatusNotFound)
@@ -66,11 +63,24 @@ func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		rfs, err := driver.ResourcesFileSystem()
+		var css []string
+		if err == nil {
+			if f, err := rfs.Open("/css/"); err == nil {
+				if fis, err := f.Readdir(-1); err == nil {
+					for _, fi := range fis {
+						css = append(css, fi.Name())
+					}
+				}
+				f.Close()
+			}
+		}
 		ctx := htmlContext{
-			ID:                    id,
-			Title:                 win.title,
-			Lang:                  win.lang,
-			DriverType:            driver.Type(),
+			ID:         id,
+			Title:      win.title,
+			Lang:       win.lang,
+			DriverType: driver.Type(),
+			CSS:        css,
 			NativeRequestJSMethod: template.JS(driver.NativeRequestJSMethod()),
 			IsReleaseBuild:        driver.ReleaseBuild,
 			ComponentCSSFiles:     toTemplateURL(markup.GetComponentCSSURLs()),

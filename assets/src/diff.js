@@ -135,11 +135,13 @@ function mountUnmountComponent(nsobj, n, itemv, mounted) {
   const classId = itemv.classId;
   const id = itemv.id;
   const localJSKey = itemv.localJSKey;
+  const urlBase = itemv.urlBase;
   var instanceData = {
     classId: classId,
     id: id,
     localJSKey: localJSKey,
-    callNativeEvent: (method, arg) => {
+    urlBase: urlBase,
+    callNativeEvent: (method, ...arg) => {
       nsobj.callnative({
         path: '/components/' + nsobj.ID + '/' + id + method,
         arg: JSON.stringify(arg)
