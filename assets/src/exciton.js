@@ -51,9 +51,7 @@ nsobj.onClickRedirectTo = function(e, route) {
   return false;
 };
 
-nsobj.requestBrowerEventSync = function(method, jsonArg) {
-  const arg = JSON.parse(jsonArg);
-  console.log('requestBrowerEventSync', arg);
+nsobj.doBrowserEvent = function(arg) {
   switch (arg.cmd) {
     case 'getProp':
       const elem =
@@ -61,7 +59,7 @@ nsobj.requestBrowerEventSync = function(method, jsonArg) {
       if (elem == null) {
         throw new Error('invalid target: ' + arg.target);
       }
-      return JSON.stringify(elem[arg.argument]);
+      return elem[arg.argument];
     case 'callClientFunction':
       const funcName = arg.argument.funcName;
       const args = arg.argument.arguments;
@@ -84,11 +82,17 @@ nsobj.requestBrowerEventSync = function(method, jsonArg) {
       if (!f) {
         throw new Error('function not found: ' + funcName);
       }
-      const r = f(...args);
-      return JSON.stringify(r);
+      return f(...args);
     default:
       throw new Error('invalid command: ' + arg.cmd);
   }
+}
+
+nsobj.requestBrowerEventSync = function(method, jsonArg) {
+  const arg = JSON.parse(jsonArg);
+  console.log('requestBrowerEventSync', arg);
+  const r = nsobj.doBrowserEvent(arg);
+  return JSON.stringify(r);
 };
 
 exciton.on('requestAnimationFrame', function(e) {
@@ -106,6 +110,10 @@ exciton.on('updateDiffSetHandler', (e) => {
 exciton.on('redirectTo', (e) => {
   nsobj.redirectTo(e.detail);
 });
+
+exciton.on('browserAsync', (e) => {
+  nsobj.doBrowserEvent(e.detail);
+})
 
 class Module {
   constructor(id, w) {
@@ -157,4 +165,18 @@ const loadComponentsScripts = function() {
   nsobj.callNativeMethod('ready', null);
 };
 
+import translateEvent from './events';
+
+const onWindowKeydown = function(e) {
+  const ee = translateEvent(e);
+  nsobj.callNativeMethod('keydown', ee);
+
+};
+const onWindowKeyup = function(e) {
+  const ee = translateEvent(e);
+  nsobj.callNativeMethod('keyup', ee);
+};
+
 window.addEventListener('load', loadComponentsScripts, false);
+document.addEventListener('keydown', onWindowKeydown, false);
+document.addEventListener('keyup', onWindowKeyup, false);

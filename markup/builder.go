@@ -20,6 +20,8 @@ type Builder interface {
 
 	UserData() interface{}
 	SetUserData(interface{})
+
+	RootComponent() Component
 }
 
 type builder struct {
@@ -266,6 +268,8 @@ func (b *builder) unmountComponent(c Component) {
 		um.Unmount()
 	}
 
+	disconnectSlotAll(c)
+
 	b.diffSet.addUnmountComponent(c)
 	b.components.Delete(ctx.id)
 
@@ -342,4 +346,8 @@ func (b *builder) UserData() interface{} {
 
 func (b *builder) SetUserData(data interface{}) {
 	b.userData = data
+}
+
+func (b *builder) RootComponent() Component {
+	return b.rootComponent
 }

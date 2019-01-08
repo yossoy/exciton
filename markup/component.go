@@ -116,7 +116,7 @@ func (c *Core) ClientJSEvent(name string, funcName string, arguments ...interfac
 	}
 }
 
-func (c *Core) CallClientFunction(funcName string, arguments ...interface{}) (json.RawMessage, error) {
+func (c *Core) CallClientFunctionSync(funcName string, arguments ...interface{}) (json.RawMessage, error) {
 	arg := struct {
 		FuncName  string        `json:"funcName"`
 		Arguments []interface{} `json:"arguments"`
@@ -135,6 +135,22 @@ func (c *Core) CallClientFunction(funcName string, arguments ...interface{}) (js
 		return nil, err
 	}
 	return result.Value().Encode()
+}
+
+func (c *Core) CallClientFunction(funcName string, arguments ...interface{}) error {
+	arg := struct {
+		FuncName  string        `json:"funcName"`
+		Arguments []interface{} `json:"arguments"`
+	}{
+		FuncName:  funcName,
+		Arguments: arguments,
+	}
+	bc := &browserCommand{
+		Command:  "callClientFunction",
+		Target:   c,
+		Argument: &arg,
+	}
+	return ievent.Emit(c.Builder().(*builder).hostPath+"/browserAsync", event.NewValue(bc))
 }
 
 func (c *Core) MarshalJSON() ([]byte, error) {
@@ -262,7 +278,7 @@ type InitInfo struct {
 	si     *driver.StartupInfo
 }
 
-type EventHandler func(c Component, e *event.Event)
+type EventHandler func(c Component, args []event.Value)
 
 var eventGroup event.Group
 
@@ -311,7 +327,17 @@ func (ii *InitInfo) AddHandler(name string, handler EventHandler) error {
 			log.PrintError("event is not handled: %v", err)
 			return
 		}
-		handler(c, e)
+		var args []string
+		err = e.Argument.Decode(&args)
+		if err != nil {
+			log.PrintError("component handler argument decode error")
+			return
+		}
+		argValues := make([]event.Value, len(args))
+		for i, s := range args {
+			argValues[i] = event.NewJSONEncodedValueByEncodedBytes([]byte(s))
+		}
+		handler(c, argValues)
 	})
 }
 

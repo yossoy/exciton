@@ -46,6 +46,15 @@
                Window *w = driver.elements[idstr];
                [w browserSyncRequest:argument responceNo:responceNo];
              }];
+  [d addEventHandler:@"/window/:id/browserAsync"
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               NSString *idstr = parameter[@"id"];
+               Driver *driver = [Driver current];
+               Window *w = driver.elements[idstr];
+               [w browserAsyncRequest:argument responceNo:responceNo];
+             }];
   [d addEventHandler:@"/window/:id/redirectTo"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
@@ -220,17 +229,20 @@
     decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
                     decisionHandler:
                         (void (^)(WKNavigationActionPolicy))decisionHandler {
-  LOG_DEBUG(@"decidePolicyForNavigationAction:%@", navigationAction.request.URL);
+  LOG_DEBUG(@"decidePolicyForNavigationAction:%@",
+            navigationAction.request.URL);
   if (navigationAction.navigationType == WKNavigationTypeReload ||
       navigationAction.navigationType == WKNavigationTypeOther) {
-    LOG_DEBUG(@"decidePolicyForNavigationAction: %ld", (long )navigationAction.navigationType);
+    LOG_DEBUG(@"decidePolicyForNavigationAction: %ld",
+              (long)navigationAction.navigationType);
 
     decisionHandler(WKNavigationActionPolicyAllow);
     return;
   }
 
   NSURL *url = navigationAction.request.URL;
-  LOG_DEBUG(@"decidePolicyForNavigationAction:%@, %d", url, navigationAction.sourceFrame.mainFrame);
+  LOG_DEBUG(@"decidePolicyForNavigationAction:%@, %d", url,
+            navigationAction.sourceFrame.mainFrame);
   if (!navigationAction.sourceFrame.mainFrame) {
     decisionHandler(WKNavigationActionPolicyAllow);
   }
@@ -307,7 +319,7 @@
                                     withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowerEventSync('"
-                                 @"browserSync', '%@');",
+                                 @"doBrowserEvent', '%@');",
                                  jsonStr2];
   defer([self.webview
             evaluateJavaScript:cmdstr
@@ -317,6 +329,21 @@
                Driver *d = [Driver current];
                [d responceEventResult:responceNo jsonEncodedArgument:object];
              }];);
+}
+
+- (void)browserAsyncRequest:(id)argument responceNo:(int)responceNo {
+  NSData *jsonData = [JSONEncoder encodeFromObject:argument];
+  NSString *jsonStr =
+      [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+  NSString *jsonStr2 =
+      [[jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
+          stringByReplacingOccurrencesOfString:@"\'"
+                                    withString:@"\\\'"];
+  NSString *cmdstr =
+      [NSString stringWithFormat:@"window.exciton.requestBrowserEvent('"
+                                 @"browserAsync', '%@');",
+                                 jsonStr2];
+  defer([self.webview evaluateJavaScript:cmdstr completionHandler:nil];);
 }
 
 - (void)redirectTo:(id)args {

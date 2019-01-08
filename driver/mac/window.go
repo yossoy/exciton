@@ -27,6 +27,9 @@ func initializeWindow() error {
 	g.AddHandlerWithResult("/browserSync", func(e *event.Event, callback event.ResponceCallback) {
 		platform.relayEventWithResultToNative(e, callback)
 	})
+	g.AddHandler("/browserAsync", func(e *event.Event) {
+		platform.relayEventToNative(e)
+	})
 	g.AddHandler("/redirectTo", func(e *event.Event) {
 		platform.relayEventToNative(e)
 	})

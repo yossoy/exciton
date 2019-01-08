@@ -44,7 +44,6 @@ function resolvePathNode(root, items) {
   return ret;
 }
 import translateEvent from './events';
-import {METHODS} from 'http';
 
 function addEventCallback(nsobj, n, name, itemv) {
   const id = itemv.id;
@@ -142,9 +141,10 @@ function mountUnmountComponent(nsobj, n, itemv, mounted) {
     localJSKey: localJSKey,
     urlBase: urlBase,
     callNativeEvent: (method, ...arg) => {
+      let args = arg.map(a => JSON.stringify(a));
       nsobj.callnative({
         path: '/components/' + nsobj.ID + '/' + id + method,
-        arg: JSON.stringify(arg)
+        arg: JSON.stringify(args)
       });
     }
   };

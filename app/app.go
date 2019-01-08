@@ -8,11 +8,14 @@ import (
 	idialog "github.com/yossoy/exciton/internal/dialog"
 	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/markup"
+	"github.com/yossoy/exciton/window"
 )
 
 type App struct {
 	ID         string
 	DriverData interface{}
+	MainWindow *window.Window
+	UserData   interface{}
 }
 
 func (app *App) eventRoot() string {

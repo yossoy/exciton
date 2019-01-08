@@ -17,6 +17,21 @@ func Init(info *app.StartupInfo, initFunc InternalInitFunc) error {
 			info.OnAppQuit()
 		})
 	}
+	if err := rootGroup.AddHandler("/app/finalizedWindow", func(e *event.Event) {
+		app, err := app.GetAppFromEvent(e)
+		if err != nil {
+			panic(err) //TODO: error handling
+		}
+		var win *window.Window
+		if err := e.Argument.Decode(&win); err != nil {
+			panic(err)
+		}
+		if win == app.MainWindow {
+			app.MainWindow = nil
+		}
+	}); err != nil {
+		return err
+	}
 	if err := rootGroup.AddHandler("/app/init", func(e *event.Event) {
 		app, err := app.GetAppFromEvent(e)
 		if err != nil {

@@ -29,6 +29,10 @@ func initializeWindow(gg event.Group) error {
 		driverLogDebug("window/browserSync")
 		//TODO:
 	})
+	g.AddHandler("/browserAsync", func(e *event.Event) {
+		platform.relayEventToNative(e)
+		driverLogDebug("window/browserAsync")
+	})
 	g.AddHandler("/redirectTo", func(e *event.Event) {
 		platform.relayEventToNative(e)
 		driverLogDebug("window/redirectTo")

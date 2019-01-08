@@ -23,7 +23,7 @@ type sampleComponent struct {
 }
 
 func (s *sampleComponent) GetClickCount() (int64, error) {
-	r, err := s.CallClientFunction("clientFunc1", 0)
+	r, err := s.CallClientFunctionSync("clientFunc1", 0)
 	if err != nil {
 		return 0, err
 	}
@@ -73,20 +73,13 @@ func (s *sampleComponent) Render() markup.RenderResult {
 	)
 }
 
-func onClientMount(c markup.Component, e *event.Event) {
+func onClientMount(c markup.Component, args []event.Value) {
 	sc, ok := c.(*sampleComponent)
 	if !ok {
 		log.PrintDebug("invalid argument: %v", c)
 		return
 	}
-	log.PrintDebug("argument = %v", e.Argument)
-	var arg []string
-	err := e.Argument.Decode(&arg)
-	if err != nil {
-		log.PrintDebug("argument decode failed: %v", err)
-		return
-	}
-	log.PrintInfo("SampleComponent on-mount called: %q", arg)
+	log.PrintInfo("SampleComponent on-mount called: %v", args)
 	sc.Mounted = true
 	c.Builder().Rerender(c)
 }

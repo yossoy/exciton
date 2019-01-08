@@ -13,3 +13,11 @@ func If(cond bool, children ...MarkupOrChild) MarkupOrChild {
 	}
 	return nil
 }
+
+// IfElse return the trueChild if cond is true, otherwise it returns the trueChild.
+func IfElse(cond bool, trueChild MarkupOrChild, falseChild MarkupOrChild) MarkupOrChild {
+	if cond {
+		return trueChild
+	}
+	return falseChild
+}

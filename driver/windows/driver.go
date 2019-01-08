@@ -267,6 +267,7 @@ func internalInitFunc(a *app.App, info *app.StartupInfo) error {
 	if err != nil {
 		return err
 	}
+	a.MainWindow = w
 	return w.Mount(rr)
 }
 

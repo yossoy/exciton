@@ -11,6 +11,7 @@ import (
 type Node interface {
 	NodeName() string
 	GetProperty(string) (interface{}, error)
+	Parent() Node
 }
 
 type Element interface {
@@ -27,6 +28,9 @@ func (e *elemBody) NodeName() string {
 
 func (e *elemBody) GetProperty(name string) (interface{}, error) {
 	return e.n.GetProperty(name)
+}
+func (e *elemBody) Parent() Node {
+	return e.n.parent.Node()
 }
 
 type TextNode interface {
@@ -45,6 +49,10 @@ func (e *textNodeBody) GetProperty(name string) (interface{}, error) {
 	return e.n.GetProperty(name)
 }
 
+func (e *textNodeBody) Parent() Node {
+	return e.n.parent.Node()
+}
+
 type node struct {
 	tag, ns, text, innerHTML string
 	parent                   *node
@@ -61,6 +69,9 @@ type node struct {
 }
 
 func (n *node) Node() Node {
+	if n == nil {
+		return nil
+	}
 	if n.tag == "" {
 		return &textNodeBody{
 			n: n,
@@ -76,6 +87,10 @@ func (n *node) NodeName() string {
 		return "#text"
 	}
 	return n.tag
+}
+
+func (n *node) Parent() Node {
+	return n.parent.Node()
 }
 
 type browserCommand struct {

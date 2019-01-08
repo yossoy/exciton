@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/yossoy/exciton/html"
+
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/geom"
@@ -25,6 +27,8 @@ type Window struct {
 	isReady           bool
 	OnClosed          func(e *event.Event)
 	OnResize          func(width, height float64)
+	OnKeyDown         func(w *Window, e *html.KeyboardEvent)
+	OnKeyUp           func(w *Window, e *html.KeyboardEvent)
 	mountRenderResult markup.RenderResult
 	title             string
 	lang              string
@@ -87,18 +91,19 @@ func (w *Window) Mount(c markup.RenderResult) error {
 
 // WindowConfig is a struct that describes a window.
 type WindowConfig struct {
-	ID              string      `json:"id"`
-	Title           string      `json:"title,omitempty"`
-	Position        *geom.Point `json:"position,omitempty"`
-	Size            *geom.Size  `json:"size,omitempty"`
-	MinSize         *geom.Size  `json:"minSize,omitempty"`
-	MaxSize         *geom.Size  `json:"maxSize,omitempty"`
-	BackgroundColor string      `json:"backgroundColor,omitempty"`
-	FixedSize       bool        `json:"fixedSize"`
-	NoClosable      bool        `json:"noClosable"`
-	NoMinimizable   bool        `json:"noMinimizable"`
-	Lang            string      `json:"lang"`
-	URL             string      `json:"url"`
+	ID              string              `json:"id"`
+	Title           string              `json:"title,omitempty"`
+	Position        *geom.Point         `json:"position,omitempty"`
+	Size            *geom.Size          `json:"size,omitempty"`
+	MinSize         *geom.Size          `json:"minSize,omitempty"`
+	MaxSize         *geom.Size          `json:"maxSize,omitempty"`
+	BackgroundColor string              `json:"backgroundColor,omitempty"`
+	FixedSize       bool                `json:"fixedSize"`
+	NoClosable      bool                `json:"noClosable"`
+	NoMinimizable   bool                `json:"noMinimizable"`
+	Lang            string              `json:"lang"`
+	URL             string              `json:"url"`
+	OnCreate        func(*Window) error `json:"-"`
 }
 
 const (
@@ -143,6 +148,40 @@ func onWindowResized(e *event.Event) {
 	}
 }
 
+func onWindowKeyDown(e *event.Event) {
+	w := getWindowByID(e.Params["id"])
+	if w == nil {
+		return
+	}
+	var ke html.KeyboardEvent
+	err := e.Argument.Decode(&ke)
+	if err != nil {
+		log.PrintError("/window/:id/keydown: parameter decode failed: %#v", e.Argument)
+		return
+	}
+	log.PrintDebug("Window: keydown (%#v)", ke)
+	if w.OnKeyDown != nil {
+		w.OnKeyDown(w, &ke)
+	}
+}
+
+func onWindowKeyUp(e *event.Event) {
+	w := getWindowByID(e.Params["id"])
+	if w == nil {
+		return
+	}
+	var ke html.KeyboardEvent
+	err := e.Argument.Decode(&ke)
+	if err != nil {
+		log.PrintError("/window/:id/keyup: parameter decode failed: %#v", e.Argument)
+		return
+	}
+	log.PrintDebug("Window: keyup (%#v)", ke)
+	if w.OnKeyUp != nil {
+		w.OnKeyUp(w, &ke)
+	}
+}
+
 func onWindowFocus(e *event.Event) {
 	w := getWindowByID(e.Params["id"])
 	if w == nil {
@@ -183,11 +222,13 @@ func InitWindows(si *driver.StartupInfo) error {
 	if err := appg.AddHandler("/window/:id/finalize", func(e *event.Event) {
 		id := e.Params["id"]
 		log.PrintInfo("finalized: %q", id)
-		_, empty, err := object.Windows.Delete(object.ObjectKey(id))
+		wobj, empty, err := object.Windows.Delete(object.ObjectKey(id))
 		if err != nil {
 			log.PrintInfo("finalize: %q", err)
 			return
 		}
+		win := wobj.(*Window)
+		ievent.Emit("/app/finalizedWindow", event.NewValue(win))
 		if empty {
 			ievent.Emit("/app/window-all-closed", nil)
 		}
@@ -201,6 +242,12 @@ func InitWindows(si *driver.StartupInfo) error {
 		return err
 	}
 	if err := appg.AddHandler("/window/:id/resize", onWindowResized); err != nil {
+		return err
+	}
+	if err := appg.AddHandler("/window/:id/keydown", onWindowKeyDown); err != nil {
+		return err
+	}
+	if err := appg.AddHandler("/window/:id/keyup", onWindowKeyUp); err != nil {
 		return err
 	}
 	if err := appg.AddHandler("/window/:id/focus", onWindowFocus); err != nil {
@@ -265,6 +312,9 @@ func NewWindow(appid string, cfg *WindowConfig) (*Window, error) {
 		return nil, r.Error()
 	}
 	w.builder = markup.NewAsyncBuilder(hostPath, w.requestAnimationFrame, w.updateDiffSetHandler)
+	if cfg.OnCreate != nil {
+		cfg.OnCreate(w)
+	}
 
 	return w, nil
 }
