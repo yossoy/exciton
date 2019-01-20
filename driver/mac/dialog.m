@@ -198,7 +198,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
   if (!parent) {
     NSInteger chosen = [dialog runModal];
     NSMutableArray<NSString *> *files = [[NSMutableArray alloc] init];
-    if (chosen != NSFileHandlingPanelCancelButton) {
+    if (chosen != NSModalResponseCancel) {
       for (NSURL *url in dialog.URLs) {
         [files addObject:[url path]];
       }
@@ -211,7 +211,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
              completionHandler:^(NSInteger chosen) {
                NSMutableArray<NSString *> *files =
                    [[NSMutableArray alloc] init];
-               if (chosen != NSFileHandlingPanelCancelButton) {
+               if (chosen != NSModalResponseCancel) {
                  for (NSURL *url in dialog.URLs) {
                    [files addObject:[url path]];
                  }
@@ -231,7 +231,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
   if (!parent) {
     NSInteger chosen = [dialog runModal];
     NSString *strReturn;
-    if (chosen != NSFileHandlingPanelCancelButton) {
+    if (chosen != NSModalResponseCancel) {
       strReturn = [[dialog URL] path];
     } else {
       strReturn = @"";
@@ -242,7 +242,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
   [dialog beginSheetModalForWindow:parent
                  completionHandler:^(NSInteger chosen) {
                    NSString *strReturn;
-                   if (chosen != NSFileHandlingPanelCancelButton) {
+                   if (chosen != NSModalResponseCancel) {
                      strReturn = [[dialog URL] path];
                    } else {
                      strReturn = @"";
