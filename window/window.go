@@ -23,6 +23,7 @@ type Owner interface {
 	PreferredLanguages() []string
 	EventPath(fragments ...string) string
 	EventPath2(fragments1 []string, fragments2 []string) string
+	AppEventPath(fragments ...string) string
 	URLBase() string
 }
 
@@ -68,6 +69,10 @@ func (w *Window) EventPath2(fragments1 []string, fragments2 []string) string {
 	f[1] = w.ID
 	f = append(f, fragments1...)
 	return w.owner.EventPath2(f, fragments2)
+}
+
+func (w *Window) AppEventPath(fragments ...string) string {
+	return w.owner.AppEventPath(fragments...)
 }
 
 func (w *Window) RequestAnimationFrame() {

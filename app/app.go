@@ -67,6 +67,10 @@ func (app *App) EventPath2(fragments1 []string, fragments2 []string) string {
 	return sb.String()
 }
 
+func (app *App) AppEventPath(fragments ...string) string {
+	return app.EventPath(fragments...)
+}
+
 func (app *App) URLBase() string {
 	if app.id == object.SingletonName {
 		return ""
@@ -130,25 +134,25 @@ func GetAppFromEvent(e *event.Event) (*App, error) {
 }
 
 func (app *App) ShowMessageBoxAsync(message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {
-	return idialog.ShowMessageBoxAsync(app.EventPath(), "", message, title, messageBoxType, cfg, handler)
+	return idialog.ShowMessageBoxAsync(app, "", message, title, messageBoxType, cfg, handler)
 }
 
 func (app *App) ShowMessageBox(message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig) (int, error) {
-	return idialog.ShowMessageBox(app.EventPath(), "", message, title, messageBoxType, cfg)
+	return idialog.ShowMessageBox(app, "", message, title, messageBoxType, cfg)
 }
 
 func (app *App) ShowOpenDialogAsync(cfg *dialog.FileDialogConfig, handler func(*dialog.OpenFileResult, error)) error {
-	return idialog.ShowOpenDialogAsync(app.EventPath(), "", cfg, handler)
+	return idialog.ShowOpenDialogAsync(app, "", cfg, handler)
 }
 
 func (app *App) ShowOpenDialog(cfg *dialog.FileDialogConfig) (*dialog.OpenFileResult, error) {
-	return idialog.ShowOpenDialog(app.EventPath(), "", cfg)
+	return idialog.ShowOpenDialog(app, "", cfg)
 }
 
 func (app *App) ShowSaveDialogAsync(cfg *dialog.FileDialogConfig, handler func(string, error)) error {
-	return idialog.ShowSaveDialogAsync(app.EventPath(), "", cfg, handler)
+	return idialog.ShowSaveDialogAsync(app, "", cfg, handler)
 }
 
 func (app *App) ShowSaveDialog(cfg *dialog.FileDialogConfig) (string, error) {
-	return idialog.ShowSaveDialog(app.EventPath(), "", cfg)
+	return idialog.ShowSaveDialog(app, "", cfg)
 }

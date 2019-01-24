@@ -33,9 +33,13 @@ func makeMsgBoxOpt(parent string, message string, title string, messageBoxType d
 	return tmpl
 }
 
-func ShowMessageBoxAsync(eventRoot string, windowID string, message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {
+type Owner interface {
+	AppEventPath(name ...string) string
+}
+
+func ShowMessageBoxAsync(owner Owner, windowID string, message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {
 	opt := makeMsgBoxOpt(windowID, message, title, messageBoxType, cfg)
-	err := ievent.EmitWithCallback(eventRoot+"/dialog/-/showMessageBox", event.NewValue(opt), func(result event.Result) {
+	err := ievent.EmitWithCallback(owner.AppEventPath("dialog", "-", "showMessageBox"), event.NewValue(opt), func(result event.Result) {
 		if result.Error() != nil {
 			handler(-1, result.Error())
 			return
@@ -51,9 +55,9 @@ func ShowMessageBoxAsync(eventRoot string, windowID string, message string, titl
 	return err
 }
 
-func ShowMessageBox(eventRoot string, windowID string, message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig) (int, error) {
+func ShowMessageBox(owner Owner, windowID string, message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig) (int, error) {
 	ch := make(chan interface{})
-	err := ShowMessageBoxAsync(eventRoot, windowID, message, title, messageBoxType, cfg, func(result int, err error) {
+	err := ShowMessageBoxAsync(owner, windowID, message, title, messageBoxType, cfg, func(result int, err error) {
 		if err != nil {
 			ch <- err
 		}
@@ -74,7 +78,7 @@ type openDialogOpt struct {
 	dialog.FileDialogConfig
 }
 
-func ShowOpenDialogAsync(eventRoot string, windowID string, cfg *dialog.FileDialogConfig, handler func(*dialog.OpenFileResult, error)) error {
+func ShowOpenDialogAsync(owner Owner, windowID string, cfg *dialog.FileDialogConfig, handler func(*dialog.OpenFileResult, error)) error {
 	opt := &openDialogOpt{}
 	if windowID != "" {
 		opt.WindowID = windowID
@@ -88,7 +92,7 @@ func ShowOpenDialogAsync(eventRoot string, windowID string, cfg *dialog.FileDial
 	if opt.Properties == 0 {
 		opt.Properties = dialog.OpenDialogForOpenFile
 	}
-	err := ievent.EmitWithCallback(eventRoot+"/dialog/-/showOpenDialog", event.NewValue(opt), func(e event.Result) {
+	err := ievent.EmitWithCallback(owner.AppEventPath("dialog", "-", "showOpenDialog"), event.NewValue(opt), func(e event.Result) {
 		if e.Error() != nil {
 			handler(nil, e.Error())
 			return
@@ -103,9 +107,9 @@ func ShowOpenDialogAsync(eventRoot string, windowID string, cfg *dialog.FileDial
 	return err
 }
 
-func ShowOpenDialog(eventRoot string, windowID string, cfg *dialog.FileDialogConfig) (*dialog.OpenFileResult, error) {
+func ShowOpenDialog(owner Owner, windowID string, cfg *dialog.FileDialogConfig) (*dialog.OpenFileResult, error) {
 	ch := make(chan interface{})
-	err := ShowOpenDialogAsync(eventRoot, windowID, cfg, func(result *dialog.OpenFileResult, err error) {
+	err := ShowOpenDialogAsync(owner, windowID, cfg, func(result *dialog.OpenFileResult, err error) {
 		if err != nil {
 			ch <- err
 		}
@@ -121,7 +125,7 @@ func ShowOpenDialog(eventRoot string, windowID string, cfg *dialog.FileDialogCon
 	return r.(*dialog.OpenFileResult), nil
 }
 
-func ShowSaveDialogAsync(eventRoot string, windowID string, cfg *dialog.FileDialogConfig, handler func(string, error)) error {
+func ShowSaveDialogAsync(owner Owner, windowID string, cfg *dialog.FileDialogConfig, handler func(string, error)) error {
 	opt := &openDialogOpt{}
 	if windowID != "" {
 		opt.WindowID = windowID
@@ -132,7 +136,7 @@ func ShowSaveDialogAsync(eventRoot string, windowID string, cfg *dialog.FileDial
 	if opt.Title == "" {
 		opt.Title = "Save"
 	}
-	err := ievent.EmitWithCallback(eventRoot+"/dialog/-/showSaveDialog", event.NewValue(opt), func(e event.Result) {
+	err := ievent.EmitWithCallback(owner.AppEventPath("dialog", "-", "showSaveDialog"), event.NewValue(opt), func(e event.Result) {
 		if e.Error() != nil {
 			handler("", e.Error())
 			return
@@ -146,9 +150,9 @@ func ShowSaveDialogAsync(eventRoot string, windowID string, cfg *dialog.FileDial
 	return err
 }
 
-func ShowSaveDialog(eventRoot string, windowID string, cfg *dialog.FileDialogConfig) (string, error) {
+func ShowSaveDialog(owner Owner, windowID string, cfg *dialog.FileDialogConfig) (string, error) {
 	ch := make(chan interface{})
-	err := ShowSaveDialogAsync(eventRoot, windowID, cfg, func(result string, err error) {
+	err := ShowSaveDialogAsync(owner, windowID, cfg, func(result string, err error) {
 		if err != nil {
 			ch <- err
 		}
