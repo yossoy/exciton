@@ -5,14 +5,14 @@ import (
 	ievent "github.com/yossoy/exciton/internal/event"
 )
 
-func SetApplicationMenu(eventRoot string, menu AppMenuTemplate) error {
+func SetApplicationMenu(owner Owner, menu AppMenuTemplate) error {
 	r, err := toAppMenu(menu)
 	if err != nil {
 		return err
 	}
-	mi, err := newInstance(eventRoot, r)
+	mi, err := newInstance(owner, r)
 	if err != nil {
 		return err
 	}
-	return ievent.Emit(eventRoot+"/menu/"+mi.uuid+"/setApplicationMenu", event.NewValue(nil))
+	return ievent.Emit(mi.EventPath("setApplicationMenu"), event.NewValue(nil))
 }

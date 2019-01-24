@@ -36,7 +36,7 @@ func testRouterSub(t *testing.T, b *builder, root *html.Node, path string, expec
 func TestRouterBasic(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = func() object.ObjectKey { return "-" } // always -
 	const unmatchedResult = `<div><noscript _uuid="-"></noscript></div>`
@@ -68,7 +68,7 @@ func TestRouterBasic(t *testing.T) {
 func TestRouterWithVar(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = func() object.ObjectKey { return "-" } // always -
 	const unmatchedResult = `<div>fallbacked</div>`

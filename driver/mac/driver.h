@@ -32,10 +32,4 @@ void Driver_Run();
 void Driver_Terminate();
 BOOL Driver_EmitEvent(void *bytes, NSUInteger length);
 char *Driver_GetBundleResourcesPath();
-#if 0
-void Driver_SetMenuBar(const void *menuPtr);
-void Driver_SetDockMenu(const void *dockPtr);
-void Driver_SetDockIcon(const char *path);
-void Driver_SetDockBadge(const char *str);
-void Driver_ShowContextMenu(const void *menuPtr);
-#endif
+const char* Driver_GetPreferrdLanguage();

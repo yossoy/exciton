@@ -1,6 +1,7 @@
 package mac
 
 import (
+	"strings"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -218,6 +219,28 @@ func resourcesPath() (string, error) {
 	return resourcesName, nil
 }
 
+func preferredLanguages() []string {
+	clangs := C.Driver_GetPreferrdLanguage();
+	langs := C.GoString(clangs);
+	C.free(unsafe.Pointer(clangs));
+	langAndLocales := strings.Split(langs, ";")
+	languages := make([]string, 0, len(langAndLocales))
+	for _, langAndLocale := range langAndLocales {
+		ss  := strings.Split(langAndLocale, "-");
+		found := false
+		for _, s := range languages {
+			if s == ss[0] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			languages = append(languages, ss[0])
+		}
+	}
+	return languages
+}
+
 func (d *mac) NativeRequestJSMethod() string {
 	return "webkit.messageHandlers.golangRequest.postMessage"
 }
@@ -233,7 +256,6 @@ func (d *mac) Log(lvl driver.LogLevel, msg string, args ...interface{}) {
 	case driver.LogLevelError:
 		driverLogError(msg, args...)
 	}
-
 }
 
 func newDriver() *mac {
@@ -316,7 +338,7 @@ func emptyPage() markup.RenderResult {
 }
 
 func internalInitFunc(a *app.App, info *app.StartupInfo) error {
-	menu.SetApplicationMenu("", info.AppMenu)
+	menu.SetApplicationMenu(a, info.AppMenu)
 	if info.OnAppStart != nil {
 		err := info.OnAppStart(a, info)
 		if err != nil {
@@ -335,12 +357,20 @@ func internalInitFunc(a *app.App, info *app.StartupInfo) error {
 	} else {
 		rr = emptyPage()
 	}
-	w, err := window.NewWindow("", winCfg)
+	w, err := window.NewWindow(a, winCfg)
 	if err != nil {
 		return err
 	}
 	a.MainWindow = w
 	return w.Mount(rr)
+}
+
+type appOwner struct {
+	preferredLanguages []string
+}
+
+func (ao *appOwner) PreferredLanguages() []string {
+	return ao.preferredLanguages
 }
 
 func Startup(startup app.StartupFunc) error {
@@ -359,7 +389,10 @@ func Startup(startup app.StartupFunc) error {
 		if err := startup(si); err != nil {
 			return err
 		}
-		app.NewSingletonApp(nil)
+		appOwner := &appOwner {
+			preferredLanguages: preferredLanguages(),
+		}
+		app.NewSingletonApp(appOwner)
 		if err := exciton.Init(si, internalInitFunc); err != nil {
 			return err
 		}

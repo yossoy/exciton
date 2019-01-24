@@ -18,9 +18,18 @@ import (
 // UserData is window binded data
 type UserData interface{}
 
+type Owner interface {
+	ID() string
+	PreferredLanguages() []string
+	EventPath(fragments ...string) string
+	EventPath2(fragments1 []string, fragments2 []string) string
+	URLBase() string
+}
+
 // Window is browser window
 type Window struct {
-	AppID             string
+	markup.Buildable
+	owner             Owner
 	ID                string
 	UserData          UserData
 	builder           markup.Builder
@@ -33,7 +42,6 @@ type Window struct {
 	title             string
 	lang              string
 	cachedHTML        []byte
-	eventRoot         string
 }
 
 var activeWindow *Window
@@ -42,21 +50,32 @@ func ActiveWindow() *Window {
 	return activeWindow
 }
 
+func (w *Window) Owner() Owner {
+	return w.owner
+}
+
 func (w *Window) Builder() markup.Builder {
 	return w.builder
 }
 
-func (w *Window) EventRoot() string {
-	return w.eventRoot
+func (w *Window) EventPath(fragments ...string) string {
+	return w.owner.EventPath2([]string{"window", w.ID}, fragments)
 }
 
-func (w *Window) requestAnimationFrame() {
-	ievent.Emit(w.eventRoot+"/window/"+w.ID+"/requestAnimationFrame", nil)
+func (w *Window) EventPath2(fragments1 []string, fragments2 []string) string {
+	f := make([]string, 2, 2+len(fragments1))
+	f[0] = "window"
+	f[1] = w.ID
+	f = append(f, fragments1...)
+	return w.owner.EventPath2(f, fragments2)
 }
 
-func (w *Window) updateDiffSetHandler(ds *markup.DiffSet) {
-	//log.PrintDebug("updateDiffSetHandler: %v", ds)
-	ievent.Emit(w.eventRoot+"/window/"+w.ID+"/updateDiffSetHandler", event.NewValue(ds))
+func (w *Window) RequestAnimationFrame() {
+	ievent.Emit(w.EventPath("requestAnimationFrame"), nil)
+}
+
+func (w *Window) UpdateDiffSetHandler(ds *markup.DiffSet) {
+	ievent.Emit(w.EventPath("updateDiffSetHandler"), event.NewValue(ds))
 }
 
 func (w *Window) onReady() {
@@ -274,44 +293,35 @@ func InitWindows(si *driver.StartupInfo) error {
 	}); err != nil {
 		return err
 	}
-	log.PrintInfo("initWindow ok\n")
+	log.PrintInfo("initß ok\n")
 	return nil
 }
 
 // NewWindow create new browser window
-func NewWindow(appid string, cfg *WindowConfig) (*Window, error) {
+func NewWindow(owner Owner, cfg *WindowConfig) (*Window, error) {
 	if cfg.Size == nil {
 		cfg.Size = &geom.Size{Width: stdWinWidth, Height: stdWinHeight}
 	}
 	id := object.Windows.NewKey()
 	cfg.ID = id
 	if cfg.URL == "" {
-		appURLBase := ""
-		if appid != "" {
-			appURLBase = "/exciton/" + appid
-		}
+		appURLBase := owner.URLBase()
 		cfg.URL = fmt.Sprintf("%s"+appURLBase+"/window/%s/", driver.BaseURL, id)
-	}
-	eventRoot := ""
-	if appid != "" {
-		eventRoot = "/exciton/" + appid
 	}
 
 	w := &Window{
-		AppID:     appid,
-		ID:        id,
-		title:     cfg.Title,
-		lang:      cfg.Lang,
-		eventRoot: eventRoot,
+		owner: owner,
+		ID:    id,
+		title: cfg.Title,
+		lang:  cfg.Lang,
 	}
-	hostPath := eventRoot + "/window/" + string(id)
 	object.Windows.Put(id, w)
-	r := ievent.EmitWithResult(hostPath+"/new", event.NewValue(cfg))
+	r := ievent.EmitWithResult(w.EventPath("new"), event.NewValue(cfg))
 	if r.Error() != nil {
 		object.Windows.Delete(id)
 		return nil, r.Error()
 	}
-	w.builder = markup.NewAsyncBuilder(hostPath, w.requestAnimationFrame, w.updateDiffSetHandler)
+	w.builder = markup.NewAsyncBuilder(w)
 	if cfg.OnCreate != nil {
 		cfg.OnCreate(w)
 	}

@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/event"
@@ -11,34 +12,82 @@ import (
 	"github.com/yossoy/exciton/window"
 )
 
+type Owner interface {
+	PreferredLanguages() []string
+}
+
 type App struct {
-	ID         string
-	DriverData interface{}
+	owner      Owner
+	id         string
 	MainWindow *window.Window
 	UserData   interface{}
 }
 
-func (app *App) eventRoot() string {
-	if app.ID == object.SingletonName {
-		return ""
-	}
-	return "/exciton/" + app.ID
+func (app *App) ID() string {
+	return app.id
 }
 
-func NewApp(driverData interface{}) *App {
+func (app *App) PreferredLanguages() []string {
+	return app.owner.PreferredLanguages()
+}
+
+func (app *App) Owner() Owner {
+	return app.owner
+}
+
+func (app *App) EventPath(fragments ...string) string {
+	var sb strings.Builder
+	sb.Grow(100)
+	if app.id != object.SingletonName {
+		sb.WriteString("/exciton/")
+		sb.WriteString(app.id)
+	}
+	for _, f := range fragments {
+		sb.WriteString("/")
+		sb.WriteString(f)
+	}
+	return sb.String()
+}
+
+func (app *App) EventPath2(fragments1 []string, fragments2 []string) string {
+	var sb strings.Builder
+	sb.Grow(100)
+	if app.id != object.SingletonName {
+		sb.WriteString("/exciton/")
+		sb.WriteString(app.id)
+	}
+	for _, f := range fragments1 {
+		sb.WriteString("/")
+		sb.WriteString(f)
+	}
+	for _, f := range fragments2 {
+		sb.WriteString("/")
+		sb.WriteString(f)
+	}
+	return sb.String()
+}
+
+func (app *App) URLBase() string {
+	if app.id == object.SingletonName {
+		return ""
+	}
+	return "/exciton/" + app.id
+}
+
+func NewApp(owner Owner) *App {
 	id := object.Apps.NewKey()
 	a := &App{
-		ID:         id,
-		DriverData: driverData,
+		id:    id,
+		owner: owner,
 	}
 	object.Apps.Put(id, a)
 	return a
 }
 
-func NewSingletonApp(driverData interface{}) *App {
+func NewSingletonApp(owner Owner) *App {
 	a := &App{
-		ID:         object.SingletonName,
-		DriverData: driverData,
+		id:    object.SingletonName,
+		owner: owner,
 	}
 	object.Apps.Put(object.SingletonName, a)
 	return a
@@ -81,25 +130,25 @@ func GetAppFromEvent(e *event.Event) (*App, error) {
 }
 
 func (app *App) ShowMessageBoxAsync(message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {
-	return idialog.ShowMessageBoxAsync(app.eventRoot(), "", message, title, messageBoxType, cfg, handler)
+	return idialog.ShowMessageBoxAsync(app.EventPath(), "", message, title, messageBoxType, cfg, handler)
 }
 
 func (app *App) ShowMessageBox(message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig) (int, error) {
-	return idialog.ShowMessageBox(app.eventRoot(), "", message, title, messageBoxType, cfg)
+	return idialog.ShowMessageBox(app.EventPath(), "", message, title, messageBoxType, cfg)
 }
 
 func (app *App) ShowOpenDialogAsync(cfg *dialog.FileDialogConfig, handler func(*dialog.OpenFileResult, error)) error {
-	return idialog.ShowOpenDialogAsync(app.eventRoot(), "", cfg, handler)
+	return idialog.ShowOpenDialogAsync(app.EventPath(), "", cfg, handler)
 }
 
 func (app *App) ShowOpenDialog(cfg *dialog.FileDialogConfig) (*dialog.OpenFileResult, error) {
-	return idialog.ShowOpenDialog(app.eventRoot(), "", cfg)
+	return idialog.ShowOpenDialog(app.EventPath(), "", cfg)
 }
 
 func (app *App) ShowSaveDialogAsync(cfg *dialog.FileDialogConfig, handler func(string, error)) error {
-	return idialog.ShowSaveDialogAsync(app.eventRoot(), "", cfg, handler)
+	return idialog.ShowSaveDialogAsync(app.EventPath(), "", cfg, handler)
 }
 
 func (app *App) ShowSaveDialog(cfg *dialog.FileDialogConfig) (string, error) {
-	return idialog.ShowSaveDialog(app.eventRoot(), "", cfg)
+	return idialog.ShowSaveDialog(app.EventPath(), "", cfg)
 }

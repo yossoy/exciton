@@ -46,6 +46,7 @@ func toTemplateURL(ss []string) []template.URL {
 
 func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
 	log.PrintDebug("rootHTMLHandler: %q", r.RequestURI)
+	log.PrintDebug("accept-Languate: %s", r.Header.Get("Accept-Language"))
 	vars := driver.RequestVars(r)
 	id, ok := vars["id"]
 	if !ok {
@@ -76,11 +77,11 @@ func rootHTMLHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		ctx := htmlContext{
-			ID:         id,
-			Title:      win.title,
-			Lang:       win.lang,
-			DriverType: driver.Type(),
-			CSS:        css,
+			ID:                    id,
+			Title:                 win.title,
+			Lang:                  win.lang,
+			DriverType:            driver.Type(),
+			CSS:                   css,
 			NativeRequestJSMethod: template.JS(driver.NativeRequestJSMethod()),
 			IsReleaseBuild:        driver.ReleaseBuild,
 			ComponentCSSFiles:     toTemplateURL(markup.GetComponentCSSURLs()),

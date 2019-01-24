@@ -11,30 +11,34 @@ import (
 	"github.com/yossoy/exciton/markup"
 )
 
+type Owner interface {
+	EventPath(fragments ...string) string
+	EventPath2(fragments1 []string, fragments2 []string) string
+}
+
 type MenuInstance struct {
-	builder   markup.Builder
-	mounted   markup.RenderResult
-	uuid      string
-	eventRoot string
+	markup.Buildable
+	builder markup.Builder
+	mounted markup.RenderResult
+	uuid    string
+	owner   Owner
 }
 
 func (m *MenuInstance) Builder() markup.Builder {
 	return m.builder
 }
 
-func (m *MenuInstance) EventRoot() string {
-	return m.eventRoot
+func (m *MenuInstance) EventPath(fragments ...string) string {
+	return m.owner.EventPath2([]string{"menu", m.uuid}, fragments)
 }
 
-func (m *MenuInstance) requestAnimationFrame() {
-	//	go func() {
+func (m *MenuInstance) RequestAnimationFrame() {
 	m.builder.ProcRequestAnimationFrame()
-	//}()
 	log.PrintInfo("called requestAnimationFrame")
 }
 
-func (m *MenuInstance) updateDiffSetHandler(ds *markup.DiffSet) {
-	result := ievent.EmitWithResult(m.eventRoot+"/menu/"+m.uuid+"/updateDiffSetHandler", event.NewValue(ds))
+func (m *MenuInstance) UpdateDiffSetHandler(ds *markup.DiffSet) {
+	result := ievent.EmitWithResult(m.EventPath("updateDiffSetHandler"), event.NewValue(ds))
 	if result.Error() != nil {
 		panic(result.Error())
 	}
@@ -43,35 +47,36 @@ func (m *MenuInstance) updateDiffSetHandler(ds *markup.DiffSet) {
 		panic(e)
 	}
 	if !ret {
-		panic("invalid /menu/" + m.uuid + "/updateDiffSetHandler" + " results")
+		panic(fmt.Sprintf("invalid %q results", m.EventPath("updateDiffSetHandler")))
 	}
 }
 
-func newMenu(eventRoot string) (*MenuInstance, error) {
+func newMenu(owner Owner) (*MenuInstance, error) {
 	uid := object.Menus.NewKey()
 
-	result := ievent.EmitWithResult(eventRoot+"/menu/"+uid+"/new", event.NewValue(nil))
+	m := &MenuInstance{
+		uuid:  uid,
+		owner: owner,
+	}
+
+	result := ievent.EmitWithResult(m.EventPath("new"), event.NewValue(nil))
 	if result.Error() != nil {
 		return nil, result.Error()
 	}
 
-	m := &MenuInstance{
-		uuid:      uid,
-		eventRoot: eventRoot,
-	}
 	object.Menus.Put(uid, m)
 
 	return m, nil
 }
 
-func newInstance(eventRoot string, component markup.RenderResult) (*MenuInstance, error) {
-	m, err := newMenu(eventRoot)
+func newInstance(owner Owner, component markup.RenderResult) (*MenuInstance, error) {
+	m, err := newMenu(owner)
 	if err != nil {
 		return nil, err
 	}
 
 	m.mounted = component
-	m.builder = markup.NewAsyncBuilder(eventRoot+"/menu/"+m.uuid, m.requestAnimationFrame, m.updateDiffSetHandler)
+	m.builder = markup.NewAsyncBuilder(m)
 	m.builder.RenderBody(component)
 
 	return m, nil

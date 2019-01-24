@@ -6,8 +6,19 @@ import (
 	"github.com/yossoy/exciton/internal/object"
 )
 
-type RequestAnimationFrameHandler func()
-type UpdateDiffSetHandler func(ds *DiffSet)
+// type RequestAnimationFrameHandler func()
+// type UpdateDiffSetHandler func(ds *DiffSet)
+
+type Buildable interface {
+	Builder() Builder
+	EventPath(name ...string) string
+}
+
+type AsyncBuildable interface {
+	Buildable
+	RequestAnimationFrame()
+	UpdateDiffSetHandler(ds *DiffSet)
+}
 
 type Builder interface {
 	RenderBody(RenderResult)
@@ -25,7 +36,9 @@ type Builder interface {
 }
 
 type builder struct {
-	hostPath         string
+	// hostPath         string
+	owner            Buildable
+	asyncOwner       AsyncBuildable
 	diffSet          *DiffSet
 	renderingDiffSet *DiffSet
 	nestLevel        int
@@ -36,8 +49,8 @@ type builder struct {
 	delayUpdater     []Component
 	elements         *object.ObjectMap
 	components       *object.ObjectMap
-	rafHandler       RequestAnimationFrameHandler
-	updateHandler    UpdateDiffSetHandler
+	// rafHandler       RequestAnimationFrameHandler
+	// updateHandler    UpdateDiffSetHandler
 	scheduled        bool //TODO: need atomic proc?
 	rootRenderResult RenderResult
 	rootRenderNode   *node
@@ -47,15 +60,10 @@ type builder struct {
 	route            string
 }
 
-type Buildable interface {
-	Builder() Builder
-	EventRoot() string
-}
-
-func NewBuilder(hostPath string) Builder {
+func NewBuilder(owner Buildable) Builder {
 	rn := &node{}
 	b := &builder{
-		hostPath:         hostPath,
+		owner:            owner,
 		diffSet:          &DiffSet{rootNode: rn},
 		renderingDiffSet: &DiffSet{rootNode: rn},
 		rootNode:         rn,
@@ -67,18 +75,17 @@ func NewBuilder(hostPath string) Builder {
 	return b
 }
 
-func NewAsyncBuilder(hostPath string, raf RequestAnimationFrameHandler, udh UpdateDiffSetHandler) Builder {
+func NewAsyncBuilder(asyncOwner AsyncBuildable) Builder {
 	rn := &node{}
 	b := &builder{
-		hostPath:         hostPath,
+		owner:            asyncOwner,
+		asyncOwner:       asyncOwner,
 		diffSet:          &DiffSet{rootNode: rn},
 		renderingDiffSet: &DiffSet{rootNode: rn},
 		rootNode:         rn,
 		elements:         object.NewObjectMap(),
 		components:       object.NewObjectMap(),
 		delayUpdater:     make([]Component, 0, 16),
-		rafHandler:       raf,
-		updateHandler:    udh,
 	}
 	rn.builder = b
 	return b
@@ -93,21 +100,21 @@ func (b *builder) RenderBody(rr RenderResult) {
 		b.rootComponent = b.rootRenderNode.component
 	}
 	b.rerender()
-	if b.rafHandler != nil && !b.scheduled {
+	if b.asyncOwner != nil && !b.scheduled {
 		b.scheduled = true
-		b.rafHandler()
+		b.asyncOwner.RequestAnimationFrame()
 	}
 }
 
 func (b *builder) ProcRequestAnimationFrame() {
-	if b.rafHandler == nil || b.updateHandler == nil {
+	if b.asyncOwner == nil {
 		return
 	}
 	b.scheduled = false
 	b.rerender()
 	if b.diffSet.hasDiff() {
 		b.diffSet, b.renderingDiffSet = b.renderingDiffSet, b.diffSet
-		b.updateHandler(b.renderingDiffSet)
+		b.asyncOwner.UpdateDiffSetHandler(b.renderingDiffSet)
 		b.diffSet.reset()
 	}
 }
@@ -121,10 +128,10 @@ func (b *builder) Rerender(c ...Component) {
 			b.enqueueRender(cc)
 		}
 	}
-	if b.rafHandler != nil {
+	if b.asyncOwner != nil {
 		if !b.scheduled {
 			b.scheduled = true
-			b.rafHandler()
+			b.asyncOwner.RequestAnimationFrame()
 		}
 		return
 	}
@@ -337,7 +344,7 @@ func (b *builder) OnRedirect(route string) {
 }
 
 func (b *builder) Redirect(route string) {
-	ievent.Emit(b.hostPath+"/redirectTo", event.NewValue(route))
+	ievent.Emit(b.owner.EventPath("/redirectTo"), event.NewValue(route))
 }
 
 func (b *builder) UserData() interface{} {

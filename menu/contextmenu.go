@@ -4,6 +4,7 @@ import (
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/geom"
 	ievent "github.com/yossoy/exciton/internal/event"
+	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
 	"github.com/yossoy/exciton/window"
 )
@@ -22,7 +23,8 @@ func (m *MenuInstance) Popup(mousePt geom.Point, parent *window.Window) error {
 		Position: mousePt,
 		WindowID: parent.ID,
 	}
-	return ievent.Emit(parent.EventRoot()+"/menu/"+m.uuid+"/popupContextMenu", event.NewValue(&arg))
+	log.PrintInfo("Path ==> %q", parent.Owner().EventPath("menu", m.uuid, "popupContextMenu"))
+	return ievent.Emit(parent.Owner().EventPath("menu", m.uuid, "popupContextMenu"), event.NewValue(&arg))
 }
 
 func PopupMenu(menu MenuTemplate, mousePt geom.Point, w *window.Window) error {
@@ -30,7 +32,7 @@ func PopupMenu(menu MenuTemplate, mousePt geom.Point, w *window.Window) error {
 	if err != nil {
 		return err
 	}
-	mi, err := newInstance(w.EventRoot(), contextMenu(m...))
+	mi, err := newInstance(w.Owner(), contextMenu(m...))
 	if err != nil {
 		return err
 	}

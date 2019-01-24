@@ -1,6 +1,7 @@
 #include <windows.h>
 
 #include <shlwapi.h>
+#include <winnls.h>
 
 #include <set>
 #include <sstream>
@@ -311,4 +312,28 @@ struct ResFileItem Driver_GetResFile(int resNo)
   ret.ptr = LockResource(rh);
   ret.size = SizeofResource(NULL, rsc);
   return ret;
+}
+
+const char* Driver_GetPreferrdLanguage()
+{
+  ULONG ulNumLanguages = 0UL;
+  ULONG cchLanguagesBuffer = 0UL;
+  if (!GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &ulNumLanguages, NULL, &cchLanguagesBuffer)) {
+    return NULL;
+  }
+  if (0 == cchLanguagesBuffer) {
+    return NULL;
+  }
+  std::unique_ptr<WCHAR[]> pwszLanguagesBuffer(new WCHAR[cchLanguagesBuffer]);
+  if (!GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &ulNumLanguages, pwszLanguagesBuffer.get(), &cchLanguagesBuffer)) {
+    return NULL;
+  }
+  for (ULONG i = 0; i < (cchLanguagesBuffer - 1); i++) {
+    WCHAR* p = pwszLanguagesBuffer.get() + i;
+    if (*p == 0) {
+      *p = TEXT(';');
+    }
+  }
+  auto utf8Languages = exciton::util::ToUTF8String(pwszLanguagesBuffer.get());
+  return strdup(utf8Languages.c_str());
 }

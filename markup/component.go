@@ -129,7 +129,7 @@ func (c *Core) CallClientFunctionSync(funcName string, arguments ...interface{})
 		Target:   c,
 		Argument: &arg,
 	}
-	result := ievent.EmitWithResult(c.Builder().(*builder).hostPath+"/browserSync", event.NewValue(bc))
+	result := ievent.EmitWithResult(c.Builder().(*builder).owner.EventPath("browserSync"), event.NewValue(bc))
 	log.PrintDebug("call result: %v", result)
 	if err := result.Error(); err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func (c *Core) CallClientFunction(funcName string, arguments ...interface{}) err
 		Target:   c,
 		Argument: &arg,
 	}
-	return ievent.Emit(c.Builder().(*builder).hostPath+"/browserAsync", event.NewValue(bc))
+	return ievent.Emit(c.Builder().(*builder).owner.EventPath("browserAsync"), event.NewValue(bc))
 }
 
 func (c *Core) MarshalJSON() ([]byte, error) {

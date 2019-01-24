@@ -24,18 +24,18 @@ func (et *EventTarget) Builder() Builder {
 	return buildable.Builder()
 }
 
-func (et *EventTarget) eventRoot() string {
-	var buildable Buildable
-	switch {
-	case et.WindowID != "":
-		buildable = object.Windows.Get(et.WindowID).(Buildable)
-	case et.MenuID != "":
-		buildable = object.Menus.Get(et.MenuID).(Buildable)
-	default:
-		return ""
-	}
-	return buildable.EventRoot()
-}
+// func (et *EventTarget) eventRoot() string {
+// 	var buildable Buildable
+// 	switch {
+// 	case et.WindowID != "":
+// 		buildable = object.Windows.Get(et.WindowID).(Buildable)
+// 	case et.MenuID != "":
+// 		buildable = object.Menus.Get(et.MenuID).(Buildable)
+// 	default:
+// 		return ""
+// 	}
+// 	return buildable.EventRoot()
+// }
 
 func (et *EventTarget) Node() Node {
 	if et == nil {

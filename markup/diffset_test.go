@@ -322,7 +322,7 @@ func loadHTML(ds *DiffSet, h string) *node {
 }
 
 func TestDiffHTML(t *testing.T) {
-	rootNode := &node{rootNode: true}
+	rootNode := &node{}
 	ds := DiffSet{rootNode: rootNode}
 	h := `<div id="id1">aaa</div>`
 	rn := loadHTML(&ds, h)
@@ -376,7 +376,7 @@ func TestDiffHTML(t *testing.T) {
 }
 
 func TestDiffItem1(t *testing.T) {
-	rootNode := &node{rootNode: true}
+	rootNode := &node{}
 	ds := DiffSet{rootNode: rootNode}
 	n1 := &node{tag: "A"}
 	ds.createNode(n1)

@@ -9,6 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -38,9 +41,25 @@ type web struct {
 	lastCallbackPos int
 }
 
-type webAppDriverData struct {
-	ws       *websocket.Conn
-	sendChan chan *sendMessageItem
+type appOwner struct {
+	preferredLanguages []string
+	ws                 *websocket.Conn
+	sendChan           chan *sendMessageItem
+}
+
+func (ao *appOwner) PreferredLanguages() []string {
+	return ao.preferredLanguages
+}
+
+func (ao *appOwner) sendMessages() {
+	for {
+		d, ok := <-ao.sendChan
+		if !ok {
+			break
+		}
+		driverLogDebug("sendMessages: %v", d)
+		ao.ws.WriteJSON(d)
+	}
 }
 
 var (
@@ -100,7 +119,7 @@ func (d *web) relayEventToNative(e *event.Event) {
 	if a == nil {
 		panic(fmt.Errorf("app [%s] not found", appid))
 	}
-	dd := a.DriverData.(*webAppDriverData)
+	ao := a.Owner().(*appOwner)
 	var arg []byte
 	var err error
 	if e.Argument != nil {
@@ -117,7 +136,7 @@ func (d *web) relayEventToNative(e *event.Event) {
 			Parameter: e.Params,
 		},
 	}
-	dd.sendChan <- item
+	ao.sendChan <- item
 }
 
 func (d *web) relayEventWithResultToNative(e *event.Event, respCallback event.ResponceCallback) {
@@ -129,7 +148,7 @@ func (d *web) relayEventWithResultToNative(e *event.Event, respCallback event.Re
 	if a == nil {
 		panic(fmt.Errorf("app [%s] not found", appid))
 	}
-	dd := a.DriverData.(*webAppDriverData)
+	ao := a.Owner().(*appOwner)
 	arg, err := e.Argument.Encode()
 	if err != nil {
 		panic(err)
@@ -146,7 +165,7 @@ func (d *web) relayEventWithResultToNative(e *event.Event, respCallback event.Re
 			}),
 		},
 	}
-	dd.sendChan <- item
+	ao.sendChan <- item
 }
 
 func (d *web) Init() error {
@@ -245,7 +264,7 @@ func newDriver() *web {
 }
 
 func internalInitFunc(app *app.App, info *app.StartupInfo) error {
-	menu.SetApplicationMenu("/exciton/"+app.ID, info.AppMenu)
+	menu.SetApplicationMenu(app, info.AppMenu)
 	if info.OnAppStart != nil {
 		err := info.OnAppStart(app, info)
 		if err != nil {
@@ -263,7 +282,7 @@ func internalInitFunc(app *app.App, info *app.StartupInfo) error {
 	} else {
 		rr = emptyPage()
 	}
-	win, err := window.NewWindow(app.ID, cfg)
+	win, err := window.NewWindow(app, cfg)
 	if err != nil {
 		return err
 	}
@@ -305,13 +324,45 @@ func webRoot(id string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func parseAcceptLanguages(acceptLanguages string) []string {
+	als := strings.Split(acceptLanguages, ",")
+	q := make(map[float64][]string)
+	for _, al := range als {
+		all := strings.Split(al, ";")
+		ls := strings.Split(strings.TrimSpace(al), "-")
+		var qv float64
+		if len(all) == 1 {
+			qv = 1.0
+		} else {
+			qv, _ = strconv.ParseFloat(strings.TrimSpace(all[1]), 64)
+		}
+		q[qv] = append(q[qv], ls[0])
+	}
+	keys := make([]float64, 0, len(q))
+	for k := range q {
+		keys = append(keys, k)
+	}
+	sort.Float64s(keys)
+	ret := make([]string, 0, len(keys))
+	for _, qk := range keys {
+		all := q[qk]
+		for _, al := range all {
+			ret = append(ret, al)
+		}
+	}
+	return ret
+}
+
 func rootHTMLHandler(si *app.StartupInfo) http.HandlerFunc {
 	// redirect or iframe?
 	return func(w http.ResponseWriter, r *http.Request) {
 		driverLogDebug("rootHTMLHandler: %q", r.RequestURI)
-		dd := &webAppDriverData{}
-		a := app.NewApp(dd)
-		pb, err := webRoot(a.ID)
+		ao := &appOwner{}
+		if al := r.Header.Get("Accept-Language"); al != "" {
+			ao.preferredLanguages = parseAcceptLanguages(al)
+		}
+		a := app.NewApp(ao)
+		pb, err := webRoot(a.ID())
 		if err != nil {
 			driverLogDebug("webRoot faild: %v", err)
 			http.Error(w, err.Error(), http.StatusProcessing)
@@ -321,17 +372,6 @@ func rootHTMLHandler(si *app.StartupInfo) http.HandlerFunc {
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
 		w.Write(pb)
-	}
-}
-
-func (dd *webAppDriverData) sendMessages() {
-	for {
-		d, ok := <-dd.sendChan
-		if !ok {
-			break
-		}
-		driverLogDebug("sendMessages: %v", d)
-		dd.ws.WriteJSON(d)
 	}
 }
 
@@ -357,11 +397,11 @@ func driverWebSockHandler(si *app.StartupInfo) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusProcessing)
 			return
 		}
-		dd := a.DriverData.(*webAppDriverData)
-		dd.ws = c
-		dd.sendChan = make(chan *sendMessageItem)
+		ao := a.Owner().(*appOwner)
+		ao.ws = c
+		ao.sendChan = make(chan *sendMessageItem)
 		defer c.Close()
-		go dd.sendMessages()
+		go ao.sendMessages()
 		for {
 			var devt driver.DriverEvent
 			if err := c.ReadJSON(&devt); err != nil {

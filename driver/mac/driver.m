@@ -182,41 +182,11 @@ char *Driver_GetBundleResourcesPath() {
   return strdup(mainBundle.resourcePath.UTF8String);
 }
 
-#if 0
-void Driver_SetMenuBar(const void *menuPtr) {
-  Menu *menu = (__bridge Menu *)menuPtr;
-
-  defer(NSApp.mainMenu = menu.Root; [NSApp activateIgnoringOtherApps:YES];);
+const char* Driver_GetPreferrdLanguage()
+{
+  @autoreleasepool {
+    NSArray<NSString*>* langs = [NSLocale preferredLanguages];
+    NSString* langStrs = [langs componentsJoinedByString:@";"];
+    return strdup(langStrs.UTF8String);
+  }
 }
-
-void Driver_SetDockMenu(const void *dockPtr) {
-  Menu *menu = (__bridge Menu *)dockPtr;
-
-  defer(DriverDelegate *delegate = NSApp.delegate; delegate.dock = menu.Root;);
-}
-
-void Driver_SetDockIcon(const char *path) {
-  NSString *p = [NSString stringWithUTF8String:path];
-
-  defer(if (p.length != 0) {
-    NSApp.applicationIconImage = [[NSImage alloc] initByReferencingFile:p];
-    return;
-  } NSApp.applicationIconImage = nil;);
-}
-
-void Driver_SetDockBadge(const char *str) {
-  NSString *badge = [NSString stringWithUTF8String:str];
-  defer([NSApp.dockTile setBadgeLabel:badge];);
-}
-
-void Driver_ShowContextMenu(const void *menuPtr) {
-  Menu *menu = (__bridge Menu *)menuPtr;
-
-  defer(if (NSApp.keyWindow == nil) { return; }
-
-        NSPoint p = [NSApp.keyWindow mouseLocationOutsideOfEventStream];
-        [menu.Root popUpMenuPositioningItem:menu.Root.itemArray[0]
-                                 atLocation:p
-                                     inView:NSApp.keyWindow.contentView];);
-}
-#endif

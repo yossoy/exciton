@@ -94,6 +94,7 @@ extern int Driver_EmitEvent(void *bytes, int length);
 extern char *Driver_GetProductName(void);
 extern char *Driver_GetProductVersion(void);
 extern struct ResFileItem Driver_GetResFile(int resNo);
+extern const char* Driver_GetPreferrdLanguage();
 
 #ifdef __cplusplus
 };

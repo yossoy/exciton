@@ -47,7 +47,7 @@ func (tec1 testErrorCompoent1) Render() RenderResult                        { re
 func (tec1 testErrorCompoent1) Key() interface{}                            { return nil }
 func (tec1 testErrorCompoent1) Builder() Builder                            { return nil }
 func (tec1 testErrorCompoent1) Classes(classes ...string) MarkupOrChild     { return nil }
-func (tec1 testErrorCompoent1) ID() string                                  { return "" }
+func (tec1 testErrorCompoent1) ID(string) MarkupOrChild                     { return nil }
 func (tec1 testErrorCompoent1) GetProperty(name string) (interface{}, bool) { return nil, false }
 func (tec1 testErrorCompoent1) MarshalJSON() ([]byte, error)                { return nil, nil }
 
@@ -58,7 +58,7 @@ func (tec2 *testErrorCompoent2) Render() RenderResult                        { r
 func (tec2 *testErrorCompoent2) Key() interface{}                            { return nil }
 func (tec2 *testErrorCompoent2) Builder() Builder                            { return nil }
 func (tec2 *testErrorCompoent2) Classes(classes ...string) MarkupOrChild     { return nil }
-func (tec2 *testErrorCompoent2) ID() string                                  { return "" }
+func (tec2 *testErrorCompoent2) ID(string) MarkupOrChild                     { return nil }
 func (tec2 *testErrorCompoent2) GetProperty(name string) (interface{}, bool) { return nil, false }
 func (tec2 *testErrorCompoent2) MarshalJSON() ([]byte, error)                { return nil, nil }
 
@@ -136,11 +136,19 @@ func (tcp1 *testComponentProps1) Unmount() {
 	td.parentMountCount++
 }
 
+type testBuildOwner struct {
+	eventRoot string
+}
+
+func (tbo *testBuildOwner) EventRoot() string {
+	return tbo.eventRoot
+}
+
 func TestComponentProps(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
 	ci := MustRegisterComponent((*testComponentProps1)(nil))
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -248,7 +256,7 @@ var NestComponentParent1 = MustRegisterComponent((*nestComponentParent1)(nil))
 func TestComponentNest1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -296,19 +304,37 @@ func TestComponentNest1(t *testing.T) {
 	assert.Equal(t, `<div><div _uuid="id0" class="aa" data-test-data="foo"><span _uuid="id3">0</span></div></div>`, html)
 }
 
+type testAysncOwner struct {
+	eventRoot string
+	raf       func()
+	udsf      func(ds *DiffSet)
+}
+
+func (tao *testAysncOwner) EventRoot() string {
+	return tao.eventRoot
+}
+func (tao *testAysncOwner) RequestAnimationFrame() {
+	tao.raf()
+}
+func (tao *testAysncOwner) UpdateDiffSetHandler(ds *DiffSet) {
+	tao.udsf(ds)
+}
 func TestComponentNestAsync1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
 	var bp *Builder
 	ch := make(chan string, 1)
+
 	bb := NewAsyncBuilder(
-		"",
-		func() {
-			(*bp).ProcRequestAnimationFrame()
-		}, func(ds *DiffSet) {
-			t.Log(diffSetToString(ds))
-			html := applyHTML(ds, root)
-			ch <- html
+		&testAysncOwner{
+			raf: func() {
+				(*bp).ProcRequestAnimationFrame()
+			},
+			udsf: func(ds *DiffSet) {
+				t.Log(diffSetToString(ds))
+				html := applyHTML(ds, root)
+				ch <- html
+			},
 		},
 	)
 	bp = &bb
@@ -373,7 +399,7 @@ var NestComponentParent2 = MustRegisterComponent((*nestComponentParent2)(nil))
 func TestComponentNest2(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -454,7 +480,7 @@ var NestComponentParent3 = MustRegisterComponent((*nestComponentParent3)(nil))
 func TestComponentNest3(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -535,7 +561,7 @@ var NestComponentParent4 = MustRegisterComponent((*nestComponentParent4)(nil))
 func TestComponentNest4(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -603,7 +629,7 @@ var ChildParentComponent1 = MustRegisterComponent((*childParentComponent1)(nil))
 func TestComponentChild1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -652,7 +678,7 @@ var EventComponent1 = MustRegisterComponent((*testEventComponent1)(nil))
 func TestComponentEvent1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -696,7 +722,7 @@ var EventComponent2 = MustRegisterComponent((*testEventComponent2)(nil))
 func TestComponentEvent2(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -783,7 +809,7 @@ var NonKeyTestParentComponent1 = MustRegisterComponent((*nonKeyTestParentCompone
 func TestComponentNonKey1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -818,7 +844,7 @@ func TestComponentNonKey1(t *testing.T) {
 func TestComponentKey1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -872,7 +898,7 @@ var InnerHTMLTestComponent1 = MustRegisterComponent((*innerHTMLTestComponent1)(n
 func TestComponentInnerHTML1(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 
@@ -931,7 +957,7 @@ var lastComponentEraseParent = MustRegisterComponent((*testLastComponentErasePar
 func TestLastComponentErase(t *testing.T) {
 	root := makeHTMLRoot()
 	td := &testData{}
-	b := NewBuilder("").(*builder)
+	b := NewBuilder(&testBuildOwner{}).(*builder)
 	b.SetUserData(td)
 	b.keyGenerator = td.newKey
 

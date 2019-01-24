@@ -119,7 +119,7 @@ func (n *node) GetProperty(name string) (interface{}, error) {
 	if b == nil {
 		return nil, fmt.Errorf("Unmounted node")
 	}
-	result := ievent.EmitWithResult(b.hostPath+"/browserSync", event.NewValue(arg))
+	result := ievent.EmitWithResult(b.owner.EventPath("browserSync"), event.NewValue(arg))
 	if result.Error() != nil {
 		return nil, result.Error()
 	}
