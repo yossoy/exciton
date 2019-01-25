@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/yossoy/exciton/lang"
+
 	"github.com/yossoy/exciton/html"
 
 	"github.com/yossoy/exciton/driver"
@@ -20,7 +22,7 @@ type UserData interface{}
 
 type Owner interface {
 	ID() string
-	PreferredLanguages() []string
+	PreferredLanguages() lang.PreferredLanguages
 	EventPath(fragments ...string) string
 	EventPath2(fragments1 []string, fragments2 []string) string
 	AppEventPath(fragments ...string) string

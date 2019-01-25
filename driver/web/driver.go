@@ -9,10 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
-	"strconv"
-	"strings"
 	"sync"
+
+	"github.com/yossoy/exciton/lang"
 
 	"github.com/gorilla/websocket"
 
@@ -42,12 +41,12 @@ type web struct {
 }
 
 type appOwner struct {
-	preferredLanguages []string
+	preferredLanguages lang.PreferredLanguages
 	ws                 *websocket.Conn
 	sendChan           chan *sendMessageItem
 }
 
-func (ao *appOwner) PreferredLanguages() []string {
+func (ao *appOwner) PreferredLanguages() lang.PreferredLanguages {
 	return ao.preferredLanguages
 }
 
@@ -324,42 +323,19 @@ func webRoot(id string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func parseAcceptLanguages(acceptLanguages string) []string {
-	als := strings.Split(acceptLanguages, ",")
-	q := make(map[float64][]string)
-	for _, al := range als {
-		all := strings.Split(al, ";")
-		ls := strings.Split(strings.TrimSpace(al), "-")
-		var qv float64
-		if len(all) == 1 {
-			qv = 1.0
-		} else {
-			qv, _ = strconv.ParseFloat(strings.TrimSpace(all[1]), 64)
-		}
-		q[qv] = append(q[qv], ls[0])
-	}
-	keys := make([]float64, 0, len(q))
-	for k := range q {
-		keys = append(keys, k)
-	}
-	sort.Float64s(keys)
-	ret := make([]string, 0, len(keys))
-	for _, qk := range keys {
-		all := q[qk]
-		for _, al := range all {
-			ret = append(ret, al)
-		}
-	}
-	return ret
-}
-
 func rootHTMLHandler(si *app.StartupInfo) http.HandlerFunc {
 	// redirect or iframe?
 	return func(w http.ResponseWriter, r *http.Request) {
 		driverLogDebug("rootHTMLHandler: %q", r.RequestURI)
 		ao := &appOwner{}
 		if al := r.Header.Get("Accept-Language"); al != "" {
-			ao.preferredLanguages = parseAcceptLanguages(al)
+			pl, err := lang.NewPreferredLanguagesFromAcceptLanguages(al)
+			if err != nil {
+				driverLogDebug("webRoot faild: %v", err)
+				http.Error(w, err.Error(), http.StatusProcessing)
+				return
+			}
+			ao.preferredLanguages = pl
 		}
 		a := app.NewApp(ao)
 		pb, err := webRoot(a.ID())

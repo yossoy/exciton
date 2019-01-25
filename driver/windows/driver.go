@@ -1,6 +1,7 @@
 package windows
 
 import (
+	"github.com/yossoy/exciton/lang"
 	"strings"
 	"encoding/json"
 	"os"
@@ -164,26 +165,12 @@ func (d *windows) DriverType() string {
 	return "ie"
 }
 
-func preferredLanguages() []string {
+func preferredLanguages() lang.PreferredLanguages {
 	clangs := C.Driver_GetPreferrdLanguage();
 	langs := C.GoString(clangs);
 	C.free(unsafe.Pointer(clangs));
 	langAndLocales := strings.Split(langs, ";")
-	languages := make([]string, 0, len(langAndLocales))
-	for _, langAndLocale := range langAndLocales {
-		ss  := strings.Split(langAndLocale, "-");
-		found := false
-		for _, s := range languages {
-			if s == ss[0] {
-				found = true
-				break
-			}
-		}
-		if !found {
-			languages = append(languages, ss[0])
-		}
-	}
-	return languages
+	return lang.NewPreferredLanguages(langAndLocales...)
 }
 
 func (d *windows) NativeRequestJSMethod() string {
@@ -295,10 +282,10 @@ func internalInitFunc(a *app.App, info *app.StartupInfo) error {
 }
 
 type appOwner struct {
-	preferredLanguages []string
+	preferredLanguages lang.PreferredLanguages
 }
 
-func (ao *appOwner) PreferredLanguages() []string {
+func (ao *appOwner) PreferredLanguages() lang.PreferredLanguages {
 	return ao.preferredLanguages
 }
 

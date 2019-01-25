@@ -8,12 +8,13 @@ import (
 	"github.com/yossoy/exciton/event"
 	idialog "github.com/yossoy/exciton/internal/dialog"
 	"github.com/yossoy/exciton/internal/object"
+	"github.com/yossoy/exciton/lang"
 	"github.com/yossoy/exciton/markup"
 	"github.com/yossoy/exciton/window"
 )
 
 type Owner interface {
-	PreferredLanguages() []string
+	PreferredLanguages() lang.PreferredLanguages
 }
 
 type App struct {
@@ -27,7 +28,7 @@ func (app *App) ID() string {
 	return app.id
 }
 
-func (app *App) PreferredLanguages() []string {
+func (app *App) PreferredLanguages() lang.PreferredLanguages {
 	return app.owner.PreferredLanguages()
 }
 
