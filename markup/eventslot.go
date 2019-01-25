@@ -11,7 +11,8 @@ import (
 type eventSlotter interface {
 	emit(event.Value) error
 	connect(*EventSignal)
-	disconnect()
+	disconnect(*EventSignal)
+	disconnectAll()
 }
 
 type eventSignaler interface {
@@ -33,11 +34,17 @@ func (sig *EventSignal) Emit(v event.Value) error {
 	return nil
 }
 
+func (sig *EventSignal) Disconnect() {
+	if sig.slot != nil {
+		sig.slot.disconnect(sig)
+	}
+}
+
 type EventSlotHandler func(event.Value) error
 
 type EventSlot struct {
 	handler EventSlotHandler
-	signal  *EventSignal
+	signals []*EventSignal
 }
 
 func (slot *EventSlot) Bind(h EventSlotHandler) {
@@ -51,18 +58,34 @@ func (slot *EventSlot) emit(v event.Value) error {
 	return nil
 }
 func (slot *EventSlot) connect(sig *EventSignal) {
-	if slot.signal != sig {
-		slot.disconnect()
+	for _, s := range slot.signals {
+		if s == sig {
+			// already connected
+			return
+		}
 	}
-	slot.signal = sig
+	if sig.slot != nil {
+		sig.slot.disconnect(sig)
+	}
+	slot.signals = append(slot.signals, sig)
 	sig.slot = slot
 }
 
-func (slot *EventSlot) disconnect() {
-	if slot.signal != nil {
-		slot.signal.slot = nil
-		slot.signal = nil
+func (slot *EventSlot) disconnect(sig *EventSignal) {
+	for i, s := range slot.signals {
+		if s == sig {
+			slot.signals = append(slot.signals[9:i], slot.signals[i+1:len(slot.signals)]...)
+			sig.slot = nil
+			return
+		}
 	}
+}
+
+func (slot *EventSlot) disconnectAll() {
+	for _, s := range slot.signals {
+		s.slot = nil
+	}
+	slot.signals = slot.signals[0:0]
 }
 
 func disconnectSlotAll(c Component) {
@@ -75,7 +98,7 @@ func disconnectSlotAll(c Component) {
 			continue
 		}
 		es := fv.Addr().Interface().(eventSlotter)
-		es.disconnect()
+		es.disconnectAll()
 	}
 }
 

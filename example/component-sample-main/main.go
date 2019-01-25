@@ -1,11 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/yossoy/exciton/event"
 
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/dialog"
-	"github.com/yossoy/exciton/example/component-sample"
+	sample "github.com/yossoy/exciton/example/component-sample"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
@@ -14,8 +17,15 @@ import (
 
 type rootComponent struct {
 	markup.Core
-	components   []string
-	createdCount int
+	components    []string
+	createdCount  int
+	killMeClicked markup.EventSlot
+	clicked1      markup.EventSlot
+}
+
+func (rc *rootComponent) Initialize() {
+	rc.killMeClicked.Bind(rc.onKillmeClicked)
+	rc.clicked1.Bind(rc.onClick1)
 }
 
 func (rc *rootComponent) newComponentKey() string {
@@ -24,25 +34,23 @@ func (rc *rootComponent) newComponentKey() string {
 	return key
 }
 
-func (rc *rootComponent) onClickButton1(e *html.MouseEvent) {
-	win, err := window.GetWindowFromEventTarget(e.Target)
+func (rc *rootComponent) onClick1(v event.Value) error {
+	var arg sample.Click1Arg
+	if err := v.Decode(&arg); err != nil {
+		log.PrintDebug("arg parse error : ===> %v", err)
+		return err
+	}
+	log.PrintDebug("arg ===> %v", arg)
+	if arg.Err != nil {
+		return arg.Err
+	}
+	win, err := window.GetWindowFromBuilder(rc.Builder())
 	if err != nil {
-		panic(err)
+		return err
 	}
-	c := e.Target.HostComponent()
-	if c == nil {
-		panic("component not found")
-	}
-	sc, ok := c.(sample.SampleCompoentIF)
-	if !ok {
-		panic(fmt.Sprintf("invalid component: %v", c))
-	}
-	cc, err := sc.GetClickCount()
-	if err != nil {
-		panic(err)
-	}
-	msg := fmt.Sprintf("Component button1 clicked!: %d", cc)
+	msg := fmt.Sprintf("Component button1 clicked!: %d", arg.Value)
 	win.ShowMessageBox(msg, "sample", dialog.MessageBoxTypeInfo, nil)
+	return nil
 }
 
 func (rc *rootComponent) onClickAddComponent(e *html.MouseEvent) {
@@ -58,22 +66,27 @@ func (rc *rootComponent) onClickRemoveComponent(e *html.MouseEvent) {
 	rc.Builder().Rerender()
 }
 
-func (rc *rootComponent) onKillmeClicked(e *html.MouseEvent) {
-	c := e.Target.HostComponent()
+func (rc *rootComponent) onKillmeClicked(v event.Value) error {
+	var arg sample.KillMeArg
+	err := v.Decode(&arg)
+	if err != nil {
+		return err
+	}
+	c := arg.Target
 	if c == nil {
-		panic("component not found!")
+		return errors.New("component not found!")
 	}
 	k, ok := c.GetProperty("objectKey")
-	if !ok {
-		panic("invalid component")
-	}
-	for i, ck := range rc.components {
-		if ck == k {
-			rc.components = append(rc.components[:i], rc.components[i+1:]...)
-			rc.Builder().Rerender()
-			return
+	if ok {
+		for i, ck := range rc.components {
+			if ck == k {
+				rc.components = append(rc.components[:i], rc.components[i+1:]...)
+				rc.Builder().Rerender()
+				return nil
+			}
 		}
 	}
+	return errors.New("invalid component")
 }
 
 func (rc *rootComponent) Render() markup.RenderResult {
@@ -86,8 +99,8 @@ func (rc *rootComponent) Render() markup.RenderResult {
 				k,
 				sample.SampleComponent(
 					markup.Property("objectKey", k),
-					markup.Property("onClick1", rc.onClickButton1),
-					markup.Property("onKillMe", rc.onKillmeClicked),
+					markup.ConnectToSignal(sample.SlotClick1, &rc.clicked1),
+					markup.ConnectToSignal(sample.SlotKillMe, &rc.killMeClicked),
 				),
 			),
 		)

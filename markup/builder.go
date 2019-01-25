@@ -33,6 +33,7 @@ type Builder interface {
 	SetUserData(interface{})
 
 	RootComponent() Component
+	Buildable() Buildable
 }
 
 type builder struct {
@@ -357,4 +358,8 @@ func (b *builder) SetUserData(data interface{}) {
 
 func (b *builder) RootComponent() Component {
 	return b.rootComponent
+}
+
+func (b *builder) Buildable() Buildable {
+	return b.owner
 }

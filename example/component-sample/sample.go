@@ -10,19 +10,21 @@ import (
 	"github.com/yossoy/exciton/markup"
 )
 
-type SampleCompoentIF interface {
-	GetClickCount() (int64, error)
-}
-
 type sampleComponent struct {
 	markup.Core
-	ObjectKey      string                   `exciton:"objectKey"`
-	Mounted        bool                     `exciton:"mounted"`
-	KillMeClicked  func(e *html.MouseEvent) `exciton:"onKillMe"`
-	Button1Clicked func(e *html.MouseEvent) `exciton:"onClick1"`
+	ObjectKey        string             `exciton:"objectKey"`
+	Mounted          bool               `exciton:"mounted"`
+	OnKillMeClicked  markup.EventSignal `exciton:"onKillMe"`
+	OnButton1Clicked markup.EventSignal `exciton:"onClick1"`
 }
 
-func (s *sampleComponent) GetClickCount() (int64, error) {
+// Slot Names
+const (
+	SlotKillMe = "onKillMe"
+	SlotClick1 = "onClick1"
+)
+
+func (s *sampleComponent) getClickCount() (int64, error) {
 	r, err := s.CallClientFunctionSync("clientFunc1", 0)
 	if err != nil {
 		return 0, err
@@ -33,6 +35,32 @@ func (s *sampleComponent) GetClickCount() (int64, error) {
 		return 0, err
 	}
 	return ret.Int64()
+}
+
+type KillMeArg struct {
+	Target markup.Component
+}
+
+func (s *sampleComponent) onKillMeClicked(e *html.MouseEvent) {
+	arg := KillMeArg{
+		Target: e.Target.HostComponent(),
+	}
+	s.OnKillMeClicked.Emit(event.NewValue(arg))
+}
+
+type Click1Arg struct {
+	Err   error
+	Value int64
+}
+
+func (s *sampleComponent) onButton1Clicked(e *html.MouseEvent) {
+	v, err := s.getClickCount()
+	log.PrintDebug("**************** onButton1Clicked: %v, %v", v, err)
+	arg := Click1Arg{
+		Err:   err,
+		Value: v,
+	}
+	s.OnButton1Clicked.Emit(event.NewValue(arg))
 }
 
 func (s *sampleComponent) Render() markup.RenderResult {
@@ -51,18 +79,12 @@ func (s *sampleComponent) Render() markup.RenderResult {
 			html.Button(
 				s.Classes("Button"),
 				markup.Text("Kill ME!"),
-				markup.If(
-					s.KillMeClicked != nil,
-					html.OnClick(s.KillMeClicked),
-				),
+				html.OnClick(s.onKillMeClicked),
 			),
 			html.Button(
 				s.Classes("Button"),
 				markup.Text("Call Button1Clicked handler"),
-				markup.If(
-					s.Button1Clicked != nil,
-					html.OnClick(s.Button1Clicked),
-				),
+				html.OnClick(s.onButton1Clicked),
 			),
 			html.Button(
 				s.Classes("Button"),

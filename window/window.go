@@ -346,3 +346,11 @@ func GetWindowFromEventTarget(e *markup.EventTarget) (*Window, error) {
 	}
 	return w, nil
 }
+
+func GetWindowFromBuilder(b markup.Builder) (*Window, error) {
+	buildable := b.Buildable()
+	if w, ok := buildable.(*Window); ok {
+		return w, nil
+	}
+	return nil, fmt.Errorf("invalid argument: %v", buildable)
+}
