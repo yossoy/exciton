@@ -95,7 +95,7 @@ func main() {
 
 	fmt.Fprint(file, `//go:generate go run gen_elem.go
 
-// Package elem defines markup to create DOM elements.
+// Package html defines markup to create DOM elements.
 //
 // Generated from "HTML element reference" by Mozilla Contributors,
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element, licensed under

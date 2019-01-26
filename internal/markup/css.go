@@ -487,7 +487,7 @@ func StyleStringToMarkup(style string) (List, error) {
 			switch state {
 			case parseStyleStateColon:
 				value = t.Value
-				l = append(l, Style(ident, value))
+				l = append(l, StyleApplyer{Name: ident, Value: value})
 				state = parseStyleStateValue
 			case parseStyleStateStart:
 				ident = t.Value
@@ -515,7 +515,7 @@ func StyleStringToMarkup(style string) (List, error) {
 			if t.Type == scanner.TokenString {
 				value = strings.Trim(value, "'")
 			}
-			l = append(l, Style(ident, value))
+			l = append(l, StyleApplyer{Name: ident, Value: value})
 			state = parseStyleStateValue
 		}
 	}

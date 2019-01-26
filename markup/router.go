@@ -2,6 +2,8 @@ package markup
 
 import (
 	"strings"
+
+	"github.com/yossoy/exciton/internal/markup"
 )
 
 type routeItem struct {
@@ -92,18 +94,18 @@ func (r *routing) procSub(src string) RenderResult {
 				newSrc := strings.Join(rpaths, "/")
 				return r.procSub(newSrc)
 			}
-			if rc, ok := ri.child.(*componentRenderResult); ok {
+			if rc, ok := ri.child.(*markup.ComponentRenderResult); ok {
 				// clear old redirect vars
-				markups := make([]Markup, 0, len(rc.markups)+len(vars))
-				for _, m := range rc.markups {
-					if pa, ok := m.(propApplyer); !ok || !pa.isRedirect {
+				markups := make([]Markup, 0, len(rc.Markups)+len(vars))
+				for _, m := range rc.Markups {
+					if pa, ok := m.(markup.PropApplyer); !ok || !pa.IsRedirect {
 						markups = append(markups, m)
 					}
 				}
 				for k, v := range vars {
-					markups = append(markups, propApplyer{name: k, value: v, isRedirect: true})
+					markups = append(markups, markup.PropApplyer{Name: k, Value: v, IsRedirect: true})
 				}
-				rc.markups = markups
+				rc.Markups = markups
 			}
 			return ri.child
 		}
@@ -114,16 +116,12 @@ func (r *routing) procSub(src string) RenderResult {
 	return nil
 }
 
-func (r *routing) proc(b *builder) RenderResult {
+func (r *routing) proc(b markup.Builder) RenderResult {
 	src := r.path
 	if src == "" {
-		src = b.route // BrowserRouter
+		src = b.Route() // BrowserRouter
 	}
 	return r.procSub(src)
-}
-
-func (r *routing) compare(n *node, hydrating bool) bool {
-	return false
 }
 
 func BrowserRouter(routes ...*routeItem) RenderResult {
@@ -131,12 +129,7 @@ func BrowserRouter(routes ...*routeItem) RenderResult {
 	r := &routing{
 		items: routes,
 	}
-	drr := &delayRenderResult{
-		data:    r,
-		proc:    r.proc,
-		compare: r.compare,
-	}
-	return drr
+	return markup.FuncToRenderResult(r.proc)
 }
 
 func Router(path string, routes ...*routeItem) RenderResult {
@@ -146,12 +139,7 @@ func Router(path string, routes ...*routeItem) RenderResult {
 		items: routes,
 		path:  path,
 	}
-	drr := &delayRenderResult{
-		data:    r,
-		proc:    r.proc,
-		compare: r.compare,
-	}
-	return drr
+	return markup.FuncToRenderResult(r.proc)
 }
 
 func Route(path string, child RenderResult) *routeItem {
@@ -196,26 +184,21 @@ func splitPath(path string) []string {
 	return paths
 }
 
-func OnClickRedirectTo(path string) *EventListener {
-	el := &EventListener{
-		Name:               "click",
-		clientScriptPrefix: "*exciton*",
-		scriptHandlerName:  "onClickRedirectTo",
-		scriptArguments:    []interface{}{path},
-	}
-	return el
+func OnClickRedirectTo(path string) EventListener {
+	return markup.NewClientEventListener("click", "*exciton*", "onClickRedirectTo", []interface{}{path})
 }
 
 func Link(path string, markups ...MarkupOrChild) RenderResult {
 	newMarkups := make([]MarkupOrChild, 0, len(markups)+2)
 	for _, m := range markups {
 		switch vt := m.(type) {
-		case *EventListener:
-			if vt.Name == "click" {
-				panic(`Link cannot has "click" event`)
-			}
-		case attrApplyer:
-			if vt.name == "href" {
+		case EventListener:
+			// TODO: atode
+			// if vt.Name == "click" {
+			// 	panic(`Link cannot has "click" event`)
+			// }
+		case markup.AttrApplyer:
+			if vt.Name == "href" {
 				panic(`Link cannot has "href" attribute`)
 			}
 		}
@@ -223,8 +206,8 @@ func Link(path string, markups ...MarkupOrChild) RenderResult {
 	}
 	el := OnClickRedirectTo(path)
 	newMarkups = append(newMarkups, el)
-	newMarkups = append(newMarkups, attrApplyer{name: "href", value: "#"})
-	r, err := tag("a", newMarkups)
+	newMarkups = append(newMarkups, markup.AttrApplyer{Name: "href", Value: "#"})
+	r, err := markup.Tag("a", newMarkups)
 	if err != nil {
 		panic(err)
 	}

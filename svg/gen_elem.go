@@ -40,7 +40,7 @@ func main() {
 // CC-BY-SA 2.5.
 package svg
 
-import mkup "github.com/yossoy/exciton/markup"
+import "github.com/yossoy/exciton/markup"
 `)
 
 	doc.Find(".quick-links a").Each(func(i int, s *goquery.Selection) {
@@ -91,8 +91,8 @@ func writeElem(w io.Writer, name, desc, link string) {
 	fmt.Fprintf(w, `%s
 //
 // https://developer.mozilla.org%s
-func %s(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("%s", mkup.SVGNamespace, markup...)
+func %s(children ...markup.MarkupOrChild) markup.RenderResult {
+	return markup.TagWithNS("%s", SVGNamespace, children...)
 }
 `, descToComments(desc), link, funName, name)
 }

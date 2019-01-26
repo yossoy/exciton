@@ -12,9 +12,9 @@ import (
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/geom"
 	ievent "github.com/yossoy/exciton/internal/event"
+	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/log"
-	"github.com/yossoy/exciton/markup"
 )
 
 // UserData is window binded data

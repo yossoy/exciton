@@ -23,7 +23,7 @@ window.exciton.registerModule(id, wrapper);
 })();`
 )
 
-func (k *Klass) ResourcePathBase() string {
+func (k *klass) ResourcePathBase() string {
 	return fmt.Sprintf("/components/%s", k.pathInfo.id)
 }
 

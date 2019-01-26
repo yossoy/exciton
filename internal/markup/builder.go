@@ -28,6 +28,7 @@ type Builder interface {
 
 	Redirect(route string)
 	OnRedirect(route string)
+	Route() string
 
 	UserData() interface{}
 	SetUserData(interface{})
@@ -212,10 +213,10 @@ func (b *builder) deleteElement(n *node) {
 
 func (b *builder) createNode(v *tagRenderResult) *node {
 	n := &node{
-		tag: v.name,
+		tag: v.Name,
 	}
-	if v.data != "" {
-		n.ns = v.data
+	if v.Data != "" {
+		n.ns = v.Data
 		b.diffSet.createNodeWithNS(n)
 	} else {
 		b.diffSet.createNode(n)
@@ -345,7 +346,7 @@ func (b *builder) OnRedirect(route string) {
 }
 
 func (b *builder) Redirect(route string) {
-	ievent.Emit(b.owner.EventPath("/redirectTo"), event.NewValue(route))
+	ievent.Emit(b.owner.EventPath("redirectTo"), event.NewValue(route))
 }
 
 func (b *builder) UserData() interface{} {
@@ -362,4 +363,8 @@ func (b *builder) RootComponent() Component {
 
 func (b *builder) Buildable() Buildable {
 	return b.owner
+}
+
+func (b *builder) Route() string {
+	return b.route
 }

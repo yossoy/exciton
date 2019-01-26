@@ -5,7 +5,7 @@ import (
 
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/geom"
-	"github.com/yossoy/exciton/markup"
+	"github.com/yossoy/exciton/internal/markup"
 )
 
 // Event represents any event which takes place in the DOM;

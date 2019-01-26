@@ -4,4 +4,4 @@ import (
 	"github.com/yossoy/exciton/internal/markup"
 )
 
-type Klass = markup.Klass
+type EventListener = markup.EventListener

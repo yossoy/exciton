@@ -6,9 +6,9 @@ import (
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
 	ievent "github.com/yossoy/exciton/internal/event"
+	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/log"
-	"github.com/yossoy/exciton/markup"
 )
 
 type Owner interface {
@@ -95,13 +95,13 @@ func toPopupMenuSub(menu MenuTemplate) ([]markup.MarkupOrChild, error) {
 			}
 			var mitems []markup.MarkupOrChild
 			if m.Label != "" {
-				mitems = append(mitems, markup.Attribute("label", m.Label))
+				mitems = append(mitems, markup.AttrApplyer{Name: "label", Value: m.Label})
 			}
 			if m.Role != "" {
-				mitems = append(mitems, markup.Data("menuRole", string(m.Role)))
+				mitems = append(mitems, markup.DataApplyer{Name: "menuRole", Value: string(m.Role)})
 			}
 			if m.Acclerator != "" {
-				mitems = append(mitems, markup.Data("menuAcclerator", m.Acclerator))
+				mitems = append(mitems, markup.DataApplyer{Name: "menuAcclerator", Value: m.Acclerator})
 			}
 			if m.Handler != nil {
 				//TODO: modify event type
@@ -121,9 +121,9 @@ func toPopupMenuSub(menu MenuTemplate) ([]markup.MarkupOrChild, error) {
 				}
 			}
 			if len(m.SubMenu) > 0 || roleIsMenuedRole(m.Role) {
-				items = append(items, markup.Tag("menu", mitems...))
+				items = append(items, markup.MustTag("menu", mitems))
 			} else {
-				items = append(items, markup.Tag("menuitem", mitems...))
+				items = append(items, markup.MustTag("menuitem", mitems))
 			}
 		}
 	}
@@ -140,9 +140,9 @@ func toAppMenu(menu AppMenuTemplate) (markup.RenderResult, error) {
 		if m.Label == "" {
 			return nil, fmt.Errorf("Application Menu need Label")
 		}
-		mitems = append(mitems, markup.Attribute("label", m.Label))
+		mitems = append(mitems, markup.AttrApplyer{Name: "label", Value: m.Label})
 		if m.Role != "" {
-			mitems = append(mitems, markup.Data("menuRole", string(m.Role)))
+			mitems = append(mitems, markup.DataApplyer{Name: "menuRole", Value: string(m.Role)})
 		}
 		if m.SubMenu != nil {
 			smitems, err := toPopupMenuSub(m.SubMenu)
@@ -152,12 +152,12 @@ func toAppMenu(menu AppMenuTemplate) (markup.RenderResult, error) {
 			mitems = append(mitems, smitems...)
 		}
 		if m.SubMenu != nil || roleIsMenuedRole(m.Role) {
-			items = append(items, markup.Tag("menu", mitems...))
+			items = append(items, markup.MustTag("menu", mitems))
 		} else {
-			items = append(items, markup.Tag("menuitem", mitems...))
+			items = append(items, markup.MustTag("menuitem", mitems))
 		}
 	}
-	return markup.Tag("menu", items...), nil
+	return markup.Tag("menu", items)
 }
 
 func InitMenus(gg event.Group) error {

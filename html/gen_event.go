@@ -222,6 +222,7 @@ func main() {
 package html
 
 import "github.com/yossoy/exciton/markup"
+import mkup "github.com/yossoy/exciton/internal/markup"
 import "github.com/yossoy/exciton/event"
 `)
 
@@ -232,10 +233,10 @@ import "github.com/yossoy/exciton/event"
 // Category: %s
 //
 // https://developer.mozilla.org%s
-func %s(listener func(e *%s)) *markup.EventListener {
-	return &markup.EventListener{Name: "%s", Listener: func(le *event.Event) {
+func %s(listener func(e *%s)) markup.EventListener {
+	return mkup.NewEventListener("%s", func(le *event.Event) {
 		dispatchEventHelper%s(le, listener)
-	}}
+	})
 }
 `, descToComments(e.Desc), e.Category, e.Link[6:], name, e.EventType, e.Name, e.EventType)
 	}

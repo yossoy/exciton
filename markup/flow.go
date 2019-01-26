@@ -1,5 +1,9 @@
 package markup
 
+import (
+	"github.com/yossoy/exciton/internal/markup"
+)
+
 // If returns nil if cond is false, otherwise it returns the given children.
 func If(cond bool, children ...MarkupOrChild) MarkupOrChild {
 	if len(children) == 0 {
@@ -9,7 +13,7 @@ func If(cond bool, children ...MarkupOrChild) MarkupOrChild {
 		if len(children) == 1 {
 			return children[0]
 		}
-		return List(children)
+		return markup.List(children)
 	}
 	return nil
 }

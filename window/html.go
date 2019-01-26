@@ -8,8 +8,8 @@ import (
 
 	"github.com/yossoy/exciton/assets"
 	"github.com/yossoy/exciton/driver"
+	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/log"
-	"github.com/yossoy/exciton/markup"
 )
 
 type htmlContext struct {

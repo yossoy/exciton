@@ -12,7 +12,7 @@ import mkup "github.com/yossoy/exciton/markup"
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/a
 func Anchor(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("a", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("a", SVGNamespace, markup...)
 }
 
 // AltGlyph allows sophisticated selection of the glyphs used to render its
@@ -20,14 +20,14 @@ func Anchor(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/altGlyph
 func AltGlyph(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("altGlyph", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("altGlyph", SVGNamespace, markup...)
 }
 
 // AltGlyphDef defines a substitution representation for glyphs.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/altGlyphDef
 func AltGlyphDef(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("altGlyphDef", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("altGlyphDef", SVGNamespace, markup...)
 }
 
 // The <altGlyphItem> element provides a set of candidates for glyph
@@ -35,21 +35,21 @@ func AltGlyphDef(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/altGlyphItem
 func AltGlyphItem(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("altGlyphItem", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("altGlyphItem", SVGNamespace, markup...)
 }
 
 // This element implements the SVGAnimateElement interface.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/animate
 func Animate(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("animate", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("animate", SVGNamespace, markup...)
 }
 
 // AnimateColor specifies a color transformation over time.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/animateColor
 func AnimateColor(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("animateColor", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("animateColor", SVGNamespace, markup...)
 }
 
 // The <animateMotion> element causes a referenced element to move along a
@@ -57,7 +57,7 @@ func AnimateColor(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/animateMotion
 func AnimateMotion(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("animateMotion", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("animateMotion", SVGNamespace, markup...)
 }
 
 // The animateTransform element animates a transformation attribute on a target
@@ -66,7 +66,7 @@ func AnimateMotion(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/animateTransform
 func AnimateTransform(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("animateTransform", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("animateTransform", SVGNamespace, markup...)
 }
 
 // Circle is an SVG basic shape, used to create circles based on a center point
@@ -74,7 +74,7 @@ func AnimateTransform(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/circle
 func Circle(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("circle", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("circle", SVGNamespace, markup...)
 }
 
 // ClipPath defines a clipping path. A clipping path is used/referenced using
@@ -82,7 +82,7 @@ func Circle(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/clipPath
 func ClipPath(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("clipPath", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("clipPath", SVGNamespace, markup...)
 }
 
 // The <color-profile> element allows describing the color profile used for the
@@ -90,7 +90,7 @@ func ClipPath(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/color-profile
 func ColorProfile(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("color-profile", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("color-profile", SVGNamespace, markup...)
 }
 
 // Cursor can be used to define a platform-independent custom cursor. A
@@ -101,18 +101,17 @@ func ColorProfile(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/cursor
 func Cursor(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("cursor", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("cursor", SVGNamespace, markup...)
 }
 
-// SVG allows graphical objects to be defined for later reuse. It is
-// recommended that, wherever possible, referenced elements be defined inside
-// of a <defs> element. Objects created inside a <defs> element are not
-// rendered immediately; instead, think of them as templates or macros created
-// for future use.
+// The <defs> element is used to store graphical objects that will be used at a
+// later time. Objects created inside a <defs> element are not rendered
+// directly. To display them you have to reference them (with a <use> element
+// for example).
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs
 func Defs(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("defs", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("defs", SVGNamespace, markup...)
 }
 
 // Each container element or graphics element in an SVG drawing can supply a
@@ -121,7 +120,7 @@ func Defs(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/desc
 func Desc(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("desc", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("desc", SVGNamespace, markup...)
 }
 
 // The <ellipse> element is an SVG basic shape, used to create ellipses based
@@ -129,7 +128,7 @@ func Desc(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
 func Ellipse(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("ellipse", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("ellipse", SVGNamespace, markup...)
 }
 
 // The <feBlend> SVG filter primitive composes two objects together ruled by a
@@ -139,16 +138,16 @@ func Ellipse(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feBlend
 func FeBlend(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feBlend", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feBlend", SVGNamespace, markup...)
 }
 
 // The <feColorMatrix> SVG filter element changes colors based on a
 // transformation matrix. Every pixel's color value (represented by an
-// [R,G,B,A] vector) is matrix multiplied to create a new color.
+// [R,G,B,A] vector) is matrix multiplied to create a new color:
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feColorMatrix
 func FeColorMatrix(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feColorMatrix", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feColorMatrix", SVGNamespace, markup...)
 }
 
 // Th <feComponentTransfer> SVG filter primitive performs color-component-wise
@@ -157,7 +156,7 @@ func FeColorMatrix(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feComponentTransfer
 func FeComponentTransfer(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feComponentTransfer", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feComponentTransfer", SVGNamespace, markup...)
 }
 
 // The <feComposite> SVG filter primitive performs the combination of two input
@@ -168,7 +167,7 @@ func FeComponentTransfer(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feComposite
 func FeComposite(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feComposite", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feComposite", SVGNamespace, markup...)
 }
 
 // The <feConvolveMatrix> SVG filter primitive applies a matrix convolution
@@ -179,7 +178,7 @@ func FeComposite(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feConvolveMatrix
 func FeConvolveMatrix(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feConvolveMatrix", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feConvolveMatrix", SVGNamespace, markup...)
 }
 
 // The <feDiffuseLighting> SVG filter primitive lights an image using the alpha
@@ -189,7 +188,7 @@ func FeConvolveMatrix(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feDiffuseLighting
 func FeDiffuseLighting(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feDiffuseLighting", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feDiffuseLighting", SVGNamespace, markup...)
 }
 
 // The <feDisplacementMap> SVG filter primitive uses the pixel values from the
@@ -197,7 +196,7 @@ func FeDiffuseLighting(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feDisplacementMap
 func FeDisplacementMap(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feDisplacementMap", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feDisplacementMap", SVGNamespace, markup...)
 }
 
 // The <feDistantLight> filter primitive defines a distant light source that
@@ -206,7 +205,7 @@ func FeDisplacementMap(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feDistantLight
 func FeDistantLight(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feDistantLight", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feDistantLight", SVGNamespace, markup...)
 }
 
 // The <feFlood> SVG filter primitive fills the filter subregion with the color
@@ -214,7 +213,7 @@ func FeDistantLight(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFlood
 func FeFlood(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feFlood", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feFlood", SVGNamespace, markup...)
 }
 
 // The <feFuncA> SVG filter primitive defines the transfer function for the
@@ -223,7 +222,7 @@ func FeFlood(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFuncA
 func FeFuncA(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feFuncA", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feFuncA", SVGNamespace, markup...)
 }
 
 // The <feFuncB> SVG filter primitive defines the transfer function for the
@@ -232,7 +231,7 @@ func FeFuncA(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFuncB
 func FeFuncB(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feFuncB", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feFuncB", SVGNamespace, markup...)
 }
 
 // The <feFuncG> SVG filter primitive defines the transfer function for the
@@ -241,7 +240,7 @@ func FeFuncB(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFuncG
 func FeFuncG(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feFuncG", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feFuncG", SVGNamespace, markup...)
 }
 
 // The <feFuncR> SVG filter primitive defines the transfer function for the red
@@ -249,7 +248,7 @@ func FeFuncG(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFuncR
 func FeFuncR(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feFuncR", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feFuncR", SVGNamespace, markup...)
 }
 
 // The <feGaussianBlur> SVG filter primitive blurs the input image by the
@@ -257,7 +256,7 @@ func FeFuncR(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feGaussianBlur
 func FeGaussianBlur(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feGaussianBlur", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feGaussianBlur", SVGNamespace, markup...)
 }
 
 // The <feImage> SVG filter primitive fetches image data from an external
@@ -266,7 +265,7 @@ func FeGaussianBlur(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feImage
 func FeImage(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feImage", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feImage", SVGNamespace, markup...)
 }
 
 // FeMerge allows filter effects to be applied concurrently instead of
@@ -275,7 +274,7 @@ func FeImage(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feMerge
 func FeMerge(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feMerge", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feMerge", SVGNamespace, markup...)
 }
 
 // The feMergeNode takes the result of another filter to be processed by its
@@ -283,7 +282,7 @@ func FeMerge(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feMergeNode
 func FeMergeNode(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feMergeNode", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feMergeNode", SVGNamespace, markup...)
 }
 
 // The <feMorphology> SVG filter primitive is used to erode or dilate the input
@@ -291,7 +290,7 @@ func FeMergeNode(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feMorphology
 func FeMorphology(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feMorphology", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feMorphology", SVGNamespace, markup...)
 }
 
 // The <feOffset> SVG filter primitive allows to offset the input image. The
@@ -300,14 +299,16 @@ func FeMorphology(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feOffset
 func FeOffset(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feOffset", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feOffset", SVGNamespace, markup...)
 }
 
-// The SVG filter primitive allows to create a point light effect.
+// The <fePointLight> filter primitive defines a light source which allows to
+// create a point light effect. It that can be used within a lighting filter
+// primitive: <feDiffuseLighting> or <feSpecularLighting>.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/fePointLight
 func FePointLight(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("fePointLight", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("fePointLight", SVGNamespace, markup...)
 }
 
 // The <feSpecularLighting> SVG filter primitive lights a source graphic using
@@ -320,14 +321,16 @@ func FePointLight(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feSpecularLighting
 func FeSpecularLighting(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feSpecularLighting", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feSpecularLighting", SVGNamespace, markup...)
 }
 
-// The <feSpotLight> SVG filter primitive allows to create a spotlight effect.
+// The <feSpotLight> SVG filter primitive defines a light source which allows
+// to create a spotlight effect. It that can be used within a lighting filter
+// primitive: <feDiffuseLighting> or <feSpecularLighting>.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feSpotLight
 func FeSpotLight(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feSpotLight", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feSpotLight", SVGNamespace, markup...)
 }
 
 // The <feTile> SVG filter primitive allows to fill a target rectangle with a
@@ -336,7 +339,7 @@ func FeSpotLight(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feTile
 func FeTile(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feTile", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feTile", SVGNamespace, markup...)
 }
 
 // The <feTurbulence> SVG filter primitive creates an image using the Perlin
@@ -346,7 +349,7 @@ func FeTile(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feTurbulence
 func FeTurbulence(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("feTurbulence", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("feTurbulence", SVGNamespace, markup...)
 }
 
 // Filter serves as container for atomic filter operations. It is never
@@ -355,14 +358,14 @@ func FeTurbulence(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/filter
 func Filter(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("filter", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("filter", SVGNamespace, markup...)
 }
 
 // Font defines a font to be used for text layout.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/font
 func Font(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("font", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("font", SVGNamespace, markup...)
 }
 
 // FontFace corresponds to the CSS @font-face rule. It defines a font's outer
@@ -370,7 +373,7 @@ func Font(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/font-face
 func FontFace(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("font-face", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("font-face", SVGNamespace, markup...)
 }
 
 // FontFaceFormat describes the type of font referenced by its parent
@@ -378,7 +381,7 @@ func FontFace(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/font-face-format
 func FontFaceFormat(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("font-face-format", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("font-face-format", SVGNamespace, markup...)
 }
 
 // The <font-face-name> element points to a locally installed copy of this
@@ -386,7 +389,7 @@ func FontFaceFormat(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/font-face-name
 func FontFaceName(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("font-face-name", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("font-face-name", SVGNamespace, markup...)
 }
 
 // FontFaceSrc corresponds to the src descriptor in CSS @font-face rules. It
@@ -395,37 +398,36 @@ func FontFaceName(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/font-face-src
 func FontFaceSrc(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("font-face-src", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("font-face-src", SVGNamespace, markup...)
 }
 
 // FontFaceUri points to a remote definition of the current font.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/font-face-uri
 func FontFaceUri(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("font-face-uri", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("font-face-uri", SVGNamespace, markup...)
 }
 
-// ForeignObject allows for inclusion of a foreign XML namespace which has its
-// graphical content drawn by a different user agent. The included foreign
-// graphical content is subject to SVG transformations and compositing.
+// ForeignObject allows for inclusion of a different XML namespace. In the
+// context of a browser it is most likely XHTML/HTML.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/foreignObject
 func ForeignObject(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("foreignObject", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("foreignObject", SVGNamespace, markup...)
 }
 
 // G is a container used to group other SVG elements.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/g
 func G(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("g", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("g", SVGNamespace, markup...)
 }
 
 // A <glyph> defines a single glyph in an SVG font.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/glyph
 func Glyph(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("glyph", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("glyph", SVGNamespace, markup...)
 }
 
 // The glyphRef element provides a single possible glyph to the referencing
@@ -433,7 +435,7 @@ func Glyph(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/glyphRef
 func GlyphRef(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("glyphRef", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("glyphRef", SVGNamespace, markup...)
 }
 
 // Hkern allows to fine-tweak the horizontal distance between two glyphs. This
@@ -441,7 +443,7 @@ func GlyphRef(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/hkern
 func Hkern(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("hkern", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("hkern", SVGNamespace, markup...)
 }
 
 // Image includes images inside SVG documents. It can display raster image
@@ -449,7 +451,7 @@ func Hkern(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/image
 func Image(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("image", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("image", SVGNamespace, markup...)
 }
 
 // The <line> element is an SVG basic shape used to create a line connecting
@@ -457,7 +459,7 @@ func Image(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/line
 func Line(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("line", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("line", SVGNamespace, markup...)
 }
 
 // LinearGradient lets authors define linear gradients to fill or stroke
@@ -465,16 +467,16 @@ func Line(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/linearGradient
 func LinearGradient(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("linearGradient", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("linearGradient", SVGNamespace, markup...)
 }
 
-// The <marker> element defines the graphics that is to be used for drawing
+// The <marker> element defines the graphic that is to be used for drawing
 // arrowheads or polymarkers on a given <path>, <line>, <polyline> or <polygon>
 // element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker
 func Marker(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("marker", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("marker", SVGNamespace, markup...)
 }
 
 // The <mask> element defines an alpha mask for compositing the current object
@@ -482,7 +484,7 @@ func Marker(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/mask
 func Mask(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("mask", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("mask", SVGNamespace, markup...)
 }
 
 // Metadata allows to add metadata to SVG content. Metadata is structured
@@ -491,7 +493,7 @@ func Mask(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/metadata
 func Metadata(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("metadata", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("metadata", SVGNamespace, markup...)
 }
 
 // MissingGlyph's content is rendered, if for a given character the font
@@ -499,7 +501,7 @@ func Metadata(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/missing-glyph
 func MissingGlyph(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("missing-glyph", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("missing-glyph", SVGNamespace, markup...)
 }
 
 // The <mpath> sub-element for the <animateMotion> element provides the ability
@@ -507,7 +509,7 @@ func MissingGlyph(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/mpath
 func Mpath(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("mpath", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("mpath", SVGNamespace, markup...)
 }
 
 // Path is the generic element to define a shape. All the basic shapes can be
@@ -515,7 +517,7 @@ func Mpath(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/path
 func Path(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("path", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("path", SVGNamespace, markup...)
 }
 
 // The <pattern> element defines a graphics object which can be redrawn at
@@ -523,7 +525,7 @@ func Path(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/pattern
 func Pattern(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("pattern", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("pattern", SVGNamespace, markup...)
 }
 
 // The <polygon> element defines a closed shape consisting of a set of
@@ -532,7 +534,7 @@ func Pattern(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polygon
 func Polygon(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("polygon", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("polygon", SVGNamespace, markup...)
 }
 
 // Polyline is an SVG basic shape that creates straight lines connecting
@@ -542,7 +544,7 @@ func Polygon(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
 func Polyline(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("polyline", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("polyline", SVGNamespace, markup...)
 }
 
 // RadialGradient lets authors define radial gradients to fill or stroke
@@ -550,7 +552,7 @@ func Polyline(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/radialGradient
 func RadialGradient(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("radialGradient", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("radialGradient", SVGNamespace, markup...)
 }
 
 // The <rect> element is a basic SVG shape that creates rectangles, defined by
@@ -559,7 +561,7 @@ func RadialGradient(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
 func Rect(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("rect", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("rect", SVGNamespace, markup...)
 }
 
 // A SVG script element is equivalent to the script element in HTML and thus is
@@ -567,7 +569,7 @@ func Rect(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/script
 func Script(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("script", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("script", SVGNamespace, markup...)
 }
 
 // The <set> element provides a simple means of just setting the value of an
@@ -578,7 +580,7 @@ func Script(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/set
 func Set(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("set", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("set", SVGNamespace, markup...)
 }
 
 // Stop defines the ramp of colors to use on a gradient, which is a child
@@ -586,7 +588,7 @@ func Set(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/stop
 func Stop(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("stop", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("stop", SVGNamespace, markup...)
 }
 
 // Style allows style sheets to be embedded directly within SVG content. SVG's
@@ -595,7 +597,7 @@ func Stop(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/style
 func Style(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("style", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("style", SVGNamespace, markup...)
 }
 
 // The svg element is a container that defines a new coordinate system and
@@ -604,7 +606,7 @@ func Style(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/svg
 func Svg(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("svg", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("svg", SVGNamespace, markup...)
 }
 
 // Switch evaluates the requiredFeatures, requiredExtensions and systemLanguage
@@ -616,20 +618,15 @@ func Svg(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/switch
 func Switch(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("switch", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("switch", SVGNamespace, markup...)
 }
 
 // The <symbol> element is used to define graphical template objects which can
-// be instantiated by a <use> element. The use of symbol elements for graphics
-// that are used multiple times in the same document adds structure and
-// semantics. Documents that are rich in structure may be rendered graphically,
-// as speech, or as Braille, and thus promote accessibility. Note that a symbol
-// element itself is not rendered. Only instances of a symbol element (i.e., a
-// reference to a symbol by a <use> element) are rendered.
+// be instantiated by a <use> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/symbol
 func Symbol(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("symbol", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("symbol", SVGNamespace, markup...)
 }
 
 // The SVG <text> element defines a graphics element consisting of text. It's
@@ -638,7 +635,7 @@ func Symbol(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
 func Text(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("text", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("text", SVGNamespace, markup...)
 }
 
 // In addition to text drawn in a straight line, SVG also includes the ability
@@ -649,7 +646,7 @@ func Text(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/textPath
 func TextPath(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("textPath", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("textPath", SVGNamespace, markup...)
 }
 
 // Each container element or graphics element in an SVG drawing can supply a
@@ -664,7 +661,7 @@ func TextPath(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/title
 func Title(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("title", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("title", SVGNamespace, markup...)
 }
 
 // The textual content for a <text> SVG element can be either character data
@@ -674,7 +671,7 @@ func Title(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/tref
 func Tref(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("tref", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("tref", SVGNamespace, markup...)
 }
 
 // Within a <text> element, text and font properties and the current text
@@ -683,7 +680,7 @@ func Tref(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/tspan
 func Tspan(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("tspan", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("tspan", SVGNamespace, markup...)
 }
 
 // The <use> element takes nodes from within the SVG document, and duplicates
@@ -691,7 +688,7 @@ func Tspan(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use
 func Use(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("use", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("use", SVGNamespace, markup...)
 }
 
 // A view is a defined way to view the image, like a zoom level or a detail
@@ -699,7 +696,7 @@ func Use(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/view
 func View(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("view", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("view", SVGNamespace, markup...)
 }
 
 // Vkern allows to fine-tweak the vertical distance between two glyphs in
@@ -707,5 +704,5 @@ func View(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 //
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/vkern
 func Vkern(markup ...mkup.MarkupOrChild) mkup.RenderResult {
-	return mkup.TagWithNS("vkern", mkup.SVGNamespace, markup...)
+	return mkup.TagWithNS("vkern", SVGNamespace, markup...)
 }

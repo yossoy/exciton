@@ -6,8 +6,14 @@ import (
 	"github.com/yossoy/exciton/log"
 )
 
-// EventListener hold event name, handler, and properties
-type EventListener struct {
+type EventListener interface {
+	Markup
+	PreventDefault() EventListener
+	StopPropagation() EventListener
+}
+
+type eventListener struct {
+	EventListener
 	Name                string
 	Listener            event.Handler
 	clientScriptPrefix  string
@@ -18,13 +24,29 @@ type EventListener struct {
 	//TODO: binding position
 }
 
-func (l *EventListener) isMarkup()        {}
-func (l *EventListener) isMarkupOrChild() {}
+func NewEventListener(name string, listener event.Handler) *eventListener {
+	return &eventListener{
+		Name:     name,
+		Listener: listener,
+	}
+}
+
+func NewClientEventListener(name string, scriptPrefix string, handlerName string, arguments []interface{}) *eventListener {
+	return &eventListener{
+		Name:               name,
+		clientScriptPrefix: scriptPrefix,
+		scriptHandlerName:  handlerName,
+		scriptArguments:    arguments,
+	}
+}
+
+func (l *eventListener) isMarkup()        {}
+func (l *eventListener) isMarkupOrChild() {}
 
 // PreventDefault prevents the default behavior of the event from occurring.
 //
 // See https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault.
-func (l *EventListener) PreventDefault() *EventListener {
+func (l *eventListener) PreventDefault() EventListener {
 	//TODO: if eventListener is client script, PreventDefault does not affect.
 	l.callPreventDefault = true
 	return l
@@ -34,14 +56,14 @@ func (l *EventListener) PreventDefault() *EventListener {
 // capturing and bubbling phases.
 //
 // See https://developer.mozilla.org/en-US/docs/Web/API/Event/stopPropagation.
-func (l *EventListener) StopPropagation() *EventListener {
+func (l *eventListener) StopPropagation() EventListener {
 	//TODO: if eventListener is client script, StopPropagation does not affect.
 	l.callStopPropagation = true
 	return l
 }
 
 // Apply implements the Applyer interface.
-func (l *EventListener) applyToNode(b Builder, n Node, on Node) {
+func (l *eventListener) applyToNode(b Builder, n Node, on Node) {
 	bb := b.(*builder)
 	nn := n.(*node)
 	onn := on.(*node)
@@ -63,7 +85,7 @@ func (l *EventListener) applyToNode(b Builder, n Node, on Node) {
 		}
 	}
 	if nn.eventListeners == nil {
-		nn.eventListeners = make(map[string]*EventListener)
+		nn.eventListeners = make(map[string]*eventListener)
 	}
 	nn.eventListeners[l.Name] = l
 	if !match {

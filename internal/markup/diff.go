@@ -36,7 +36,7 @@ func diff(b *builder, dom *node, vnode RenderResult, parent *node, componentRoot
 
 func idiffTag(b *builder, dom *node, vnode *tagRenderResult, componentRoot bool) *node {
 	out := dom
-	if dom == nil || dom.tag != vnode.name {
+	if dom == nil || dom.tag != vnode.Name {
 		out = b.createNode(vnode)
 		if dom != nil {
 			// move children into the replacement node
@@ -53,7 +53,7 @@ func idiffTag(b *builder, dom *node, vnode *tagRenderResult, componentRoot bool)
 		}
 	}
 
-	vchildren := vnode.children
+	vchildren := vnode.Children
 	fc := out.firstChild()
 	if !b.hydrating && len(vchildren) == 1 && vchildren[0].isTextNode() && fc != nil && fc.isTextNode() && fc.nextSibling() == nil {
 		// Optimization: fast-path for elements containing a single TextNode:
@@ -71,7 +71,7 @@ func idiffTag(b *builder, dom *node, vnode *tagRenderResult, componentRoot bool)
 	}
 
 	// Apply attributes/props from VNode to the DOM Element:
-	diffMarkups(b, out, vnode.markups)
+	diffMarkups(b, out, vnode.Markups)
 
 	return out
 }
@@ -88,7 +88,7 @@ func idiff(b *builder, dom *node, vnode RenderResult, componentRoot bool) *node 
 	}
 
 	if vnode == nil {
-		vnode = Tag("noscript")
+		vnode, _ = Tag("noscript", nil)
 	}
 
 	switch vt := vnode.(type) {
@@ -107,7 +107,7 @@ func idiff(b *builder, dom *node, vnode RenderResult, componentRoot bool) *node 
 				b.recollectNodeTree(dom, true)
 			}
 		}
-	case *componentRenderResult:
+	case *ComponentRenderResult:
 		// If the VNode represents a Component, perform a component diff:
 		out = buildComponentFromVNode(b, dom, vt)
 	case *tagRenderResult:
@@ -141,7 +141,7 @@ func innerDiffNode(b *builder, dom *node, vchildren []RenderResult, isHydrating 
 	for i, vchild := range vchildren {
 		var child *node
 		var key interface{}
-		if vk, ok := vchild.(keyedRenderResult); ok {
+		if vk, ok := vchild.(KeyedRenderResult); ok {
 			key = vk.Key()
 		}
 		// attempt to find a node based on key matching
@@ -210,14 +210,14 @@ func isSameNodeType(n *node, vnode RenderResult, hydrating bool) bool {
 	case *textRenderResult:
 		return n.isTextNode()
 	case *tagRenderResult:
-		return n.component == nil && n.tag == vt.name && n.ns == vt.data
+		return n.component == nil && n.tag == vt.Name && n.ns == vt.Data
 	case *delayRenderResult:
-		return vt.compare(n, hydrating)
-	case *componentRenderResult:
+		return false // vt.compare(n, hydrating)
+	case *ComponentRenderResult:
 		if hydrating {
 			return true
 		}
-		return n.component != nil && n.component.Context().klass == vt.klass
+		return n.component != nil && n.component.Context().klass == vt.Klass
 	default:
 		panic(fmt.Errorf("unknown type: %v", vnode))
 	}

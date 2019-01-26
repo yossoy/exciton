@@ -15,7 +15,7 @@ import (
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
 	ievent "github.com/yossoy/exciton/internal/event"
-	"github.com/yossoy/exciton/markup"
+	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
 )

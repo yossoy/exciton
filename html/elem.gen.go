@@ -1,6 +1,6 @@
 //go:generate go run gen_elem.go
 
-// Package elem defines markup to create DOM elements.
+// Package html defines markup to create DOM elements.
 //
 // Generated from "HTML element reference" by Mozilla Contributors,
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element, licensed under
@@ -87,8 +87,8 @@ func Base(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("base", markup...)
 }
 
-// The HTML BiDirectional Isolation element (<bdi>) is used to indicate spans
-// of text which might need to be rendered in the opposite direction than the
+// The HTML Bidirectional Isolate element (<bdi>) tells the browser's
+// bidirectional algorithm to treat the text it contains in isolation from its
 // surrounding text.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/bdi
@@ -132,8 +132,8 @@ func Break(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("br", markup...)
 }
 
-// Button represents a clickable button, which can be used in forms, or
-// anywhere in a document that needs simple, standard button functionality.
+// Button represents a clickable button, which can be used in forms or anywhere
+// in a document that needs simple, standard button functionality.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button
 func Button(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -157,8 +157,8 @@ func Caption(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 }
 
 // The HTML Citation element (<cite>) is used to describe a reference to a
-// cited creative work, and must include either the title or the URL of that
-// work.
+// cited creative work, and must include either the title or author or the URL
+// of that work.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
 func Citation(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -296,9 +296,8 @@ func FieldSet(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("fieldset", markup...)
 }
 
-// FigureCaption represents a caption or a legend associated with a figure or
-// an illustration described by the rest of the data of the <figure> element
-// which is its immediate ancestor.
+// FigureCaption represents a caption or legend for the rest of the contents
+// its parent <figure> element, if any.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/figcaption
 func FigureCaption(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -339,8 +338,8 @@ func Heading1(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 }
 
 // Header represents introductory content, typically a group of introductory or
-// navigational aids. It may contain some heading elements but also other
-// elements like a logo, a search form, an author name, and so on.
+// navigational aids. It may contain some heading elements but also a logo, a
+// search form, an author name, and other elements.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/header
 func Header(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -355,10 +354,9 @@ func HeadingsGroup(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("hgroup", markup...)
 }
 
-// HorizontalRule represents a thematic break between paragraph-level elements
-// (for example, a change of scene in a story, or a shift of topic with a
-// section); historically, this has been presented as a horizontal rule or
-// line.
+// HorizontalRule represents a thematic break between paragraph-level elements:
+// for example, a change of scene in a story, or a shift of topic within a
+// section.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hr
 func HorizontalRule(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -376,14 +374,14 @@ func Italic(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 }
 
 // The HTML Inline Frame element (<iframe>) represents a nested browsing
-// context, effectively embedding another HTML page into the current page.
+// context, embedding another HTML page into the current one.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
 func InlineFrame(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("iframe", markup...)
 }
 
-// Image embeds an image into the document.
+// Image embeds an image into the document. It is a replaced element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img
 func Image(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -391,7 +389,8 @@ func Image(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 }
 
 // Input is used to create interactive controls for web-based forms in order to
-// accept data from the user.
+// accept data from the user; a wide variety of types of input data and control
+// widgets are available, depending on the device and user agent.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
 func Input(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -439,18 +438,21 @@ func ListItem(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("li", markup...)
 }
 
-// Link specifies relationships between the current document and an external
-// resource. This element is most commonly used to link to stylesheets.
+// The HTML External Resource Link element (<link>) specifies relationships
+// between the current document and an external resource. This element is most
+// commonly used to link to stylesheets, but is also used to establish site
+// icons (both "favicon" style icons and mobile home screen/app icons) among
+// other things.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
 func Link(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("link", markup...)
 }
 
-// Main represents the dominant content of the <body> of a document, portion of
-// a document or application. The main content area consists of content that is
-// directly related to or expands upon the central topic of a document, or the
-// central functionality of an application.
+// Main represents the dominant content of the <body> of a document. The main
+// content area consists of content that is directly related to or expands upon
+// the central topic of a document, or the central functionality of an
+// application.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/main
 func Main(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -559,7 +561,7 @@ func Output(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("output", markup...)
 }
 
-// Paragraph represents a paragraph of text.
+// Paragraph represents a paragraph.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/p
 func Paragraph(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -573,9 +575,8 @@ func Parameter(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("param", markup...)
 }
 
-// Picture serves as a container for zero or more <source> elements and one
-// <img> element to provide versions of an image for different display device
-// scenarios.
+// Picture contains zero or more <source> elements and one <img> element to
+// provide versions of an image for different display/device scenarios.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/picture
 func Picture(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -686,7 +687,7 @@ func Section(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("section", markup...)
 }
 
-// Select represents a control that provides a menu of options:
+// Select represents a control that provides a menu of options
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
 func Select(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -714,9 +715,7 @@ func Small(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 }
 
 // Source specifies multiple media resources for the <picture>, the <audio>
-// element, or the <video> element. It is an empty element. It is commonly used
-// to serve the same media content in multiple formats supported by different
-// browsers.
+// element, or the <video> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/source
 func Source(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -783,7 +782,7 @@ func Table(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 }
 
 // The HTML Table Body element (<tbody>) encapsulates a set of table row (<tr>
-// elements, indicating that they comprise the body of the table (<table>).
+// elements), indicating that they comprise the body of the table (<table>).
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tbody
 func TableBody(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -839,9 +838,7 @@ func TableHead(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("thead", markup...)
 }
 
-// Time represents a specific period in time. It may include the datetime
-// attribute to translate dates into machine-readable format, allowing for
-// better search engine results or custom features such as reminders.
+// Time represents a specific period in time.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/time
 func Time(markup ...mkup.MarkupOrChild) mkup.RenderResult {
@@ -877,7 +874,7 @@ func Track(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("track", markup...)
 }
 
-// The HTML Unarticulated Annotation element (<u>) represents a span of inline
+// The HTML Unarticulated Annotation Element (<u>) represents a span of inline
 // text which should be rendered in a way that indicates that it has a
 // non-textual annotation.
 //

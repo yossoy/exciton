@@ -3,6 +3,8 @@ package main
 import (
 	"runtime"
 
+	"github.com/yossoy/exciton/log"
+
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/markup"
@@ -55,6 +57,7 @@ func (rc *rootComponent) onChangeSelect(e *html.Event) {
 	if err != nil {
 		panic(err)
 	}
+	log.PrintDebug("redirect ==> %v", v)
 	rc.Builder().Redirect(v.(string))
 }
 

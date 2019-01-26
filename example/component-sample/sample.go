@@ -106,7 +106,7 @@ func onClientMount(c markup.Component, args []event.Value) {
 	c.Builder().Rerender(c)
 }
 
-func componentInit(k *markup.Klass, ii *markup.InitInfo) error {
+func componentInit(k markup.Klass, ii markup.InitInfo) error {
 	if err := ii.AddHandler("/on-mount", onClientMount); err != nil {
 		return err
 	}

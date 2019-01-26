@@ -3,7 +3,7 @@ package exciton
 import (
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/event"
-	"github.com/yossoy/exciton/markup"
+	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
 )

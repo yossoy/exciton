@@ -62,7 +62,7 @@ type node struct {
 	classes                  map[string]struct{}
 	styles, dataset          map[string]string
 	properties, attributes   map[string]interface{}
-	eventListeners           map[string]*EventListener
+	eventListeners           map[string]*eventListener
 	index                    int
 	uuid                     object.ObjectKey
 	builder                  *builder
