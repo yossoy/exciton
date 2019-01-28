@@ -4,10 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/yossoy/exciton/event"
-
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/dialog"
+	"github.com/yossoy/exciton/event"
 	sample "github.com/yossoy/exciton/example/component-sample"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/log"
@@ -19,8 +18,8 @@ type rootComponent struct {
 	markup.Core
 	components    []string
 	createdCount  int
-	killMeClicked markup.EventSlot
-	clicked1      markup.EventSlot
+	killMeClicked event.Slot
+	clicked1      event.Slot
 }
 
 func (rc *rootComponent) Initialize() {

@@ -12,10 +12,10 @@ import (
 
 type sampleComponent struct {
 	markup.Core
-	ObjectKey        string             `exciton:"objectKey"`
-	Mounted          bool               `exciton:"mounted"`
-	OnKillMeClicked  markup.EventSignal `exciton:"onKillMe"`
-	OnButton1Clicked markup.EventSignal `exciton:"onClick1"`
+	ObjectKey        string       `exciton:"objectKey"`
+	Mounted          bool         `exciton:"mounted"`
+	OnKillMeClicked  event.Signal `exciton:"onKillMe"`
+	OnButton1Clicked event.Signal `exciton:"onClick1"`
 }
 
 // Slot Names

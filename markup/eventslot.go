@@ -1,27 +1,20 @@
 package markup
 
 import (
+	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/internal/markup"
 )
 
-type EventSlot struct {
-	markup.EventSlot
-}
-
-type EventSignal struct {
-	markup.EventSignal
-}
-
-func ConnectToSlot(name string, sig *EventSignal) MarkupOrChild {
+func ConnectToSlot(name string, sig *event.Signal) MarkupOrChild {
 	return markup.SigConnecter{
 		Name: name,
-		Sig:  &sig.EventSignal,
+		Sig:  sig,
 	}
 }
 
-func ConnectToSignal(name string, slot *EventSlot) MarkupOrChild {
+func ConnectToSignal(name string, slot *event.Slot) MarkupOrChild {
 	return markup.SlotConnecter{
 		Name: name,
-		Slot: &slot.EventSlot,
+		Slot: slot,
 	}
 }
