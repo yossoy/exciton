@@ -219,8 +219,8 @@ func (d *web) ResourcesFileSystem() (http.FileSystem, error) {
 	return http.Dir(resources), nil
 }
 
-func (d *web) initEvent() {
-	app.InitEvents(false)
+func (d *web) initEvent(si *app.StartupInfo) {
+	app.InitEvents(false, si)
 
 	d.serializer = event.NewSerializer(d.relayEventToNative, d.relayEventWithResultToNative)
 }
@@ -427,7 +427,7 @@ func Startup(startup app.StartupFunc) error {
 	si.StartupInfo.PortNo = 8080
 	si.StartupInfo.AppURLBase = "/exciton/{appid}"
 	d := newDriver()
-	d.initEvent()
+	d.initEvent(si)
 	defer d.serializer.Stop()
 
 	if err := d.Init(); err != nil {

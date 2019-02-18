@@ -107,7 +107,7 @@ func onClientMount(c markup.Component, args []event.Value) {
 }
 
 func componentInit(k markup.Klass, ii markup.InitInfo) error {
-	if err := ii.AddHandler("/on-mount", onClientMount); err != nil {
+	if err := ii.AddHandler("on-mount", onClientMount); err != nil {
 		return err
 	}
 	return nil

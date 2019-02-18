@@ -10,7 +10,9 @@ type InternalInitFunc func(app *app.App, info *app.StartupInfo) error
 
 func Init(info *app.StartupInfo, initFunc InternalInitFunc) error {
 	app.AppClass.AddHandler("finalize", func(e *event.Event) {
-		info.OnAppQuit()
+		if info.OnAppQuit != nil {
+			info.OnAppQuit()
+		}
 	})
 	app.AppClass.AddHandler("finalizedWindow", func(e *event.Event) {
 		a := app.GetAppFromEvent(e)

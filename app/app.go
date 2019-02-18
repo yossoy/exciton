@@ -44,7 +44,7 @@ type Owner interface {
 	PreferredLanguages() lang.PreferredLanguages
 }
 
-func InitEvents(isSingleton bool) {
+func InitEvents(isSingleton bool, si *StartupInfo) {
 	if isSingleton {
 		event.InitSingletonRoot(&AppClass, "app")
 	} else {
@@ -52,6 +52,8 @@ func InitEvents(isSingleton bool) {
 	}
 	window.InitEvents(&AppClass)
 	menu.InitEvents(&AppClass)
+	si.StartupInfo.AppEventHost = &AppClass
+	si.StartupInfo.WinEventHost = &window.WindowClass
 }
 
 type App struct {

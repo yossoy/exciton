@@ -301,8 +301,8 @@ func (ao *appOwner) PreferredLanguages() lang.PreferredLanguages {
 	return ao.preferredLanguages
 }
 
-func (d *windows) initEvent() {
-	app.InitEvents(true)
+func (d *windows) initEvent(si *app.StartupInfo) {
+	app.InitEvents(true, si)
 
 	d.serializer = event.NewSerializer(d.relayEventToNative, d.relayEventWithResultToNative)
 }
@@ -314,7 +314,7 @@ func Startup(startup app.StartupFunc) error {
 		AppMenu: windowsDefaultMenu,
 	}
 	d := newDriver()
-	d.initEvent()
+	d.initEvent(si)
 	defer d.serializer.Stop()
 	if err := d.Init(); err != nil {
 		return err
