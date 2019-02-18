@@ -1,7 +1,6 @@
 package mac
 
 import (
-	"github.com/yossoy/exciton/lang"
 	"strings"
 	"encoding/json"
 	"net/http"
@@ -16,10 +15,10 @@ import (
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
-	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
+	"github.com/yossoy/exciton/lang"
 )
 
 /*
@@ -39,6 +38,7 @@ type mac struct {
 	lock            *sync.Mutex
 	respCallbacks   []event.ResponceCallback
 	lastCallbackPos int
+	serializer *event.EventSerializer
 }
 
 var (
@@ -68,7 +68,7 @@ func (d *mac) responceCallback(jsonstr []byte, responceNo int) {
 	d.respCallbacks[responceNo] = nil
 	defer d.lock.Unlock()
 	driverLogDebug("responceEventResult: %d => %v", responceNo, string(jsonstr))
-	callback(event.NewValueResult(event.NewJSONEncodedValueByEncodedBytes(jsonstr)))
+	go callback(event.NewValueResult(event.NewJSONEncodedValueByEncodedBytes(jsonstr)))
 }
 
 func (d *mac) relayEventToNative(e *event.Event) {
@@ -80,15 +80,18 @@ func (d *mac) relayEventToNative(e *event.Event) {
 			panic(err)
 		}
 	}
+	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	driverLogDebug("relayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
 	drvEvt := driver.DriverEvent{
-		Name:      e.Name,
+		Name:      drvEvtPath,
 		Argument:  arg,
-		Parameter: e.Params,
+		Parameter: params,
 	}
 	jb, err := json.Marshal(&drvEvt)
 	if err != nil {
 		panic(err)
 	}
+	driverLogDebug("emitToNative: %s", string(jb))
 	if C.Driver_EmitEvent(C.CBytes(jb), C.NSUInteger(len(jb))) == 0 {
 		driverLogError("Error: Driver_EmitEvent")
 		//TODO: error responce!
@@ -100,10 +103,13 @@ func (d *mac) relayEventWithResultToNative(e *event.Event, respCallback event.Re
 	if err != nil {
 		panic(err)
 	}
+	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	driverLogDebug("replayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
+
 	drvEvt := driver.DriverEvent{
-		Name:      e.Name,
+		Name:      drvEvtPath,
 		Argument:  arg,
-		Parameter: e.Params,
+		Parameter: params,
 		ResponceCallbackNo: d.addRespCallbackCallback(func(result event.Result) {
 			driverLogDebug("responce...........%v\n", result)
 			respCallback(result)
@@ -123,7 +129,12 @@ func (d *mac) requestEventEmit(devt *driver.DriverEvent) error {
 	driverLogInfo("requestEventEmit: %v", devt)
 	if devt.ResponceCallbackNo < 0 {
 		v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
-		return ievent.Emit(devt.Name, v)
+		t, name, err := event.StringToEventTarget(devt.Name)
+		if err != nil {
+			return err
+		}
+		go event.Emit(t, name, v)
+		return nil
 	}
 	panic("not implement yet.")
 }
@@ -133,25 +144,24 @@ func (d *mac) Init() error {
 
 	driverLogInfo("driverMac.Init called")
 
-	err := ievent.AddHandler("/app/quit", func(e *event.Event) {
+	app.AppClass.AddHandler("quit", func(e *event.Event) {
 		driverLogInfo("driver::terminate!!")
 		C.Driver_Terminate()
 	})
 
-	err = initializeWindow()
+	var err error
+
+	err = initializeWindow(d.serializer)
 	if err != nil {
 		return err
 	}
 
-	err = initializeMenu()
+	err = initializeMenu(d.serializer)
 	if err != nil {
 		return err
 	}
 
-	err = initializeDialog()
-	if err != nil {
-		return err
-	}
+	initializeDialog(d.serializer)
 	return nil
 }
 
@@ -325,6 +335,7 @@ func emptyPage() markup.RenderResult {
 }
 
 func internalInitFunc(a *app.App, info *app.StartupInfo) error {
+	driverLogDebug("internalInitFunc1: %v", a)
 	menu.SetApplicationMenu(a, info.AppMenu)
 	if info.OnAppStart != nil {
 		err := info.OnAppStart(a, info)
@@ -332,6 +343,7 @@ func internalInitFunc(a *app.App, info *app.StartupInfo) error {
 			return err
 		}
 	}
+	driverLogDebug("internalInitFunc2: %v", a)
 
 	winCfg := &window.WindowConfig{}
 	var rr markup.RenderResult
@@ -344,6 +356,7 @@ func internalInitFunc(a *app.App, info *app.StartupInfo) error {
 	} else {
 		rr = emptyPage()
 	}
+	driverLogDebug("internalInitFunc3: %v", a)
 	w, err := window.NewWindow(a, winCfg)
 	if err != nil {
 		return err
@@ -360,15 +373,20 @@ func (ao *appOwner) PreferredLanguages() lang.PreferredLanguages {
 	return ao.preferredLanguages
 }
 
+func (d *mac) initEvent() {
+	app.InitEvents(true)
+
+	d.serializer = event.NewSerializer(d.relayEventToNative, d.relayEventWithResultToNative)
+}
+
 func Startup(startup app.StartupFunc) error {
 	runtime.LockOSThread()
-	ievent.StartEventMgr()
-	defer ievent.StopEventMgr()
 	si := &app.StartupInfo{
 		AppMenu: macDefaultAppmenu,
 	}
-	si.StartupInfo.AppEventRoot = ievent.RootGroup()
 	d := newDriver()
+	d.initEvent()
+	defer d.serializer.Stop()
 	if err := d.Init(); err != nil {
 		return err
 	}

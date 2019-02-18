@@ -145,21 +145,23 @@ enum {
 + (void)initEventHandlers {
   Driver *d = [Driver current];
 
-  [d addEventHandler:@"/menu/:id/new"
+  [d addEventHandler:@"/menu/:menu/new"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-               NSString *idstr = parameter[@"id"];
+               NSString *idstr = parameter[@"menu"];
                Menu *menu = [[Menu alloc] initWithID:idstr];
                Driver *d = [Driver current];
                d.elements[idstr] = menu;
                [d responceEventResult:responceNo boolean:TRUE];
+               LOG_DEBUG(@"menu::new callback end");
              }];
-  [d addEventHandler:@"/menu/:id/updateDiffSetHandler"
+  [d addEventHandler:@"/menu/:menu/updateDiffSetHandler"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-               defer(NSString *idstr = parameter[@"id"];
+              LOG_DEBUG(@"menu::updateDiffSetHandler is called, call defer");
+               defer(NSString *idstr = parameter[@"menu"];
                      NSDictionary *diff = argument;
                      Driver *driver = [Driver current];
                      Menu *m = driver.elements[idstr];
@@ -167,21 +169,21 @@ enum {
                      [m populateWithDiffset:diff];
                      [driver responceEventResult:responceNo boolean:TRUE];);
              }];
-  [d addEventHandler:@"/menu/:id/setApplicationMenu"
+  [d addEventHandler:@"/menu/:menu/setApplicationMenu"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-               defer(NSString *idstr = parameter[@"id"];
+               defer(NSString *idstr = parameter[@"menu"];
                      Driver *d = [Driver current]; Menu *m = d.elements[idstr];
                      LOG_INFO(@"setApplicationMenu: %@", idstr);
                      [NSApp setMainMenu:m.pMenu];);
              }];
-  [d addEventHandler:@"/menu/:id/popupContextMenu"
+  [d addEventHandler:@"/menu/:menu/popupContextMenu"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
                defer(
-                   NSString *idstr = parameter[@"id"];
+                   NSString *idstr = parameter[@"menu"];
                    Driver *d = [Driver current]; Menu *m = d.elements[idstr];
                    float posX = [argument[@"position"][@"x"] floatValue];
                    float posY = [argument[@"position"][@"y"] floatValue];

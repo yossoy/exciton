@@ -11,6 +11,7 @@ import (
 
 	"github.com/yossoy/exciton/log"
 
+	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
@@ -66,16 +67,13 @@ func (ofi *openFileItem) Cleanup() {
 	}
 }
 
-func initializeDialog(gg event.Group) error {
-	g, err := gg.AddGroup("/dialog/:id")
-	if err != nil {
-		return err
-	}
-	g.AddHandlerWithResult("/showMessageBox", func(e *event.Event, callback event.ResponceCallback) {
-		platform.relayEventWithResultToNative(e, callback)
+func initializeDialog(serializer driver.DriverEventSerializer) error {
+	app.AppClass.AddHandlerWithResult("showMessageBox", func(e *event.Event, callback event.ResponceCallback) {
+		// TODO: 非NativeなWebの場合、シリアライザを通す意味はない?
+		serializer.RelayEventWithResult(e, callback)
 	})
-	g.AddHandlerWithResult("/showOpenDialog", func(e *event.Event, callback event.ResponceCallback) {
-		platform.relayEventWithResultToNative(e, func(ee event.Result) {
+	app.AppClass.AddHandlerWithResult("showOpenDialog", func(e *event.Event, callback event.ResponceCallback) {
+		serializer.RelayEventWithResult(e, func(ee event.Result) {
 			if ee.Error() != nil {
 				callback(event.NewErrorResult(ee.Error()))
 				return
@@ -87,8 +85,8 @@ func initializeDialog(gg event.Group) error {
 			callback(event.NewValueResult(event.NewValue(result)))
 		})
 	})
-	g.AddHandlerWithResult("/showSaveDialog", func(e *event.Event, callback event.ResponceCallback) {
-		platform.relayEventWithResultToNative(e, callback)
+	app.AppClass.AddHandlerWithResult("showSaveDialog", func(e *event.Event, callback event.ResponceCallback) {
+		serializer.RelayEventWithResult(e, callback)
 	})
 	driver.AddInitProc(driver.InitProcTimingPostStartup, addOpenDialogUploadForm)
 

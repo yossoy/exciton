@@ -10,8 +10,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/yossoy/exciton/app"
+	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/dialog"
-	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/event"
 )
 
@@ -48,16 +49,12 @@ func (ofi *openFileItem) IsTemporary() bool {
 	return false
 }
 
-func initializeDialog() error {
-	g, err := ievent.AddGroup("/dialog/:id")
-	if err != nil {
-		return err
-	}
-	g.AddHandlerWithResult("/showMessageBox", func(e *event.Event, callback event.ResponceCallback) {
-		platform.relayEventWithResultToNative(e, callback)
+func initializeDialog(serializer driver.DriverEventSerializer) {
+	app.AppClass.AddHandlerWithResult("showMessageBox", func(e *event.Event, callback event.ResponceCallback) {
+		serializer.RelayEventWithResult(e, callback)
 	})
-	g.AddHandlerWithResult("/showOpenDialog", func(e *event.Event, callback event.ResponceCallback) {
-		platform.relayEventWithResultToNative(e, func(ee event.Result) {
+	app.AppClass.AddHandlerWithResult("showOpenDialog", func(e *event.Event, callback event.ResponceCallback) {
+		serializer.RelayEventWithResult(e, func(ee event.Result) {
 			if ee.Error() != nil {
 				callback(event.NewErrorResult(ee.Error()))
 				return
@@ -75,10 +72,9 @@ func initializeDialog() error {
 			callback(event.NewValueResult(event.NewValue(ofr)))
 		})
 	})
-	g.AddHandlerWithResult("/showSaveDialog", func(e *event.Event, callback event.ResponceCallback) {
-		platform.relayEventWithResultToNative(e, callback)
+	app.AppClass.AddHandlerWithResult("showSaveDialog", func(e *event.Event, callback event.ResponceCallback) {
+		serializer.RelayEventWithResult(e, callback)
 	})
-
+	
 	C.Dialog_Init()
-	return nil
 }

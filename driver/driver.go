@@ -35,6 +35,11 @@ type Driver interface {
 	Log(lvl LogLevel, msg string, args ...interface{})
 }
 
+type DriverEventSerializer interface {
+	RelayEventWithResult(e *event.Event, callback event.ResponceCallback)
+	RelayEvent(e *event.Event)
+}
+
 var (
 	platform Driver
 )
@@ -59,7 +64,8 @@ type StartupInfo struct {
 	PortNo       int
 	Router       Router
 	AppURLBase   string
-	AppEventRoot event.Group
+	AppEventHost event.EventHost
+	WinEventHost event.EventHost
 }
 
 type StartupFunc func() error

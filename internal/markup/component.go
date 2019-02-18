@@ -11,8 +11,9 @@ import (
 
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
-	ievent "github.com/yossoy/exciton/internal/event"
-	"github.com/yossoy/exciton/internal/object"
+
+	//	ievent "github.com/yossoy/exciton/internal/event"
+
 	"github.com/yossoy/exciton/log"
 )
 
@@ -40,8 +41,32 @@ const (
 	renderOptAsync
 )
 
+type componentClass struct {
+	event.EventHostCore
+}
+
+func (cc *componentClass) GetTarget(id string, parent event.EventTarget) event.EventTarget {
+	w, ok := parent.(Buildable)
+	if !ok {
+		return nil
+	}
+	b := w.Builder().(*builder)
+	ci := b.components.Get(id)
+	if ci == nil {
+		return nil
+	}
+	c, ok := ci.(Component)
+	if !ok {
+		panic("registerd object is not component!")
+	}
+	return c
+}
+
+var ComponentClass componentClass
+
 type Component interface {
 	json.Marshaler
+	event.EventTarget
 	Context() *Core
 	Builder() Builder
 	Key() interface{}
@@ -57,6 +82,21 @@ func (c *Core) Builder() Builder         { return c.builder }
 func (c *Core) Children() []RenderResult { return c.children }
 func (c *Core) ResourcesFilePath(fn string) string {
 	return path.Join(c.klass.ResourcePathBase(), "resources", fn)
+}
+func (c *Core) GetEventSlot(name string) *event.Slot {
+	// TODO: not implement yet
+	return nil
+}
+func (c *Core) Host() event.EventHost {
+	return &ComponentClass
+}
+
+func (c *Core) ParentTarget() event.EventTarget {
+	return c.builder.Buildable()
+}
+
+func (c *Core) TargetID() string {
+	return c.id
 }
 
 type componentIDApplyer struct {
@@ -128,7 +168,7 @@ func (c *Core) CallClientFunctionSync(funcName string, arguments ...interface{})
 		Target:   c,
 		Argument: &arg,
 	}
-	result := ievent.EmitWithResult(c.Builder().(*builder).owner.EventPath("browserSync"), event.NewValue(bc))
+	result := event.EmitWithResult(c.Builder().(*builder).owner, "browserSync", event.NewValue(bc))
 	log.PrintDebug("call result: %v", result)
 	if err := result.Error(); err != nil {
 		return nil, err
@@ -149,7 +189,7 @@ func (c *Core) CallClientFunction(funcName string, arguments ...interface{}) err
 		Target:   c,
 		Argument: &arg,
 	}
-	return ievent.Emit(c.Builder().(*builder).owner.EventPath("browserAsync"), event.NewValue(bc))
+	return event.Emit(c.Builder().(*builder).owner, "browserAsync", event.NewValue(bc))
 }
 
 func (c *Core) MarshalJSON() ([]byte, error) {
@@ -289,47 +329,39 @@ type initInfo struct {
 
 type EventHandler func(c Component, args []event.Value)
 
-var eventGroup event.Group
-
-func addEventHandlerSub(eventRoot event.Group, timing driver.InitProcTiming) (event.Group, error) {
+func addEventHandlerSub(eventRoot event.EventHost, timing driver.InitProcTiming) (event.EventHost, error) {
 	if timing == driver.InitProcTimingPreStartup {
 		return nil, fmt.Errorf("cannot initialize event in InitProcTimingPreStartup: %d", timing)
 	}
-	if eventGroup == nil {
-		var err error
-		eventGroup, err = eventRoot.AddGroup("/components/:windowId/:instanceId")
-		if err != nil {
-			return nil, err
-		}
+	if ComponentClass.Owner() == nil {
+		event.InitHost(&ComponentClass, "components", eventRoot)
 	}
-	return eventGroup, nil
+	return &ComponentClass, nil
 }
 
 func eventToComponent(e *event.Event) (Component, error) {
-	wid := e.Params["windowId"]
-	id := e.Params["instanceId"]
-	wi := object.Windows.Get(wid)
-	if wi == nil {
-		return nil, fmt.Errorf("window not found: %s", wid)
+	t := e.Target
+	var c Component
+	for t != nil {
+		var ok bool
+		c, ok = t.(Component)
+		if ok {
+			break
+		}
+		t = t.ParentTarget()
 	}
-	b := wi.(Buildable).Builder().(*builder)
-	ci := b.components.Get(id)
-	if ci == nil {
-		return nil, fmt.Errorf("component not found: %s", id)
-	}
-	c, ok := ci.(Component)
-	if !ok {
-		panic("registerd object is not component!")
+	if c == nil {
+		return nil, fmt.Errorf("Target is not component(%v)", e.Target)
 	}
 	return c, nil
 }
 
 func (ii *initInfo) AddHandler(name string, handler EventHandler) error {
-	group, err := addEventHandlerSub(ii.si.AppEventRoot, ii.timing)
+	group, err := addEventHandlerSub(ii.si.WinEventHost, ii.timing)
 	if err != nil {
 		return err
 	}
-	return group.AddHandler(name, func(e *event.Event) {
+	group.AddHandler(name, func(e *event.Event) {
 		log.PrintDebug("InitInfo: handler called: %q, %v", name, e)
 		c, err := eventToComponent(e)
 		if err != nil {
@@ -348,6 +380,7 @@ func (ii *initInfo) AddHandler(name string, handler EventHandler) error {
 		}
 		handler(c, argValues)
 	})
+	return nil
 }
 
 func (ii *initInfo) Router() driver.Router {

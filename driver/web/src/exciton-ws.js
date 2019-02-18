@@ -8,21 +8,22 @@ var nsobj = window.exciton;
 var l = window.location;
 var ws_url = (l.protocol == 'https') ? 'wss://' : 'ws://';
 console.log(nsobj);
-ws_url += (l.host + l.pathname + 'exciton/' + nsobj.ID + '/ws');
+ws_url += (l.host + l.pathname + 'app/' + nsobj.ID + '/ws');
 console.log(ws_url);
 
 var sock = new WebSocket(ws_url);
 sock.onopen = function () {
     // send appid for communication
-    nsobj.callNativeMethod('/app/init', null);
+    nsobj.callNativeMethod('/init', null);
 };
 sock.onmessage = function (e) {
     const ed = JSON.parse(e.data);
+    console.log('onmessage: ', ed);
     const d = ed.data;
-    const winPrefix = '/exciton/:appid/window/:id/';
-    const menuPrefix = '/exciton/:appid/menu/:id/';
-    const dialogPrefix = '/exciton/:appid/dialog/:id/';
-    console.log(ed);
+    const winPrefix = '/app/:app/window/:window/';
+    const menuPrefix = '/app/:app/menu/:menu/';
+    const dialogPrefix = '/app/:app/dialog/:dialog/';
+    const appPrefix = '/app/:app/';
     if (ed.sync) {
         if (d.name == (winPrefix + 'new')) {
             return nsobj.newWindow(d);
@@ -32,9 +33,9 @@ sock.onmessage = function (e) {
         }
         if (d.name.startsWith(winPrefix)) {
             const winevnt = d.name.slice(winPrefix.length);
-            const winid = 'win' + d.parameter['id'];
+            const winid = 'win' + d.parameter['window'];
             const w = document.getElementById(winid);
-            console.log('call child event: ' + winevnt, d.argument);
+            console.log('call child event: ' + winevnt + ", winid = " + winid, d.argument, w, winid);
             const resultStr = w.contentWindow.exciton.requestBrowerEventSync(winevnt, JSON.stringify(d.argument));
             let result;
             if (resultStr) {
@@ -48,8 +49,8 @@ sock.onmessage = function (e) {
                     menu.updateDiffSetHandler(nsobj, d);
                     break;
             }
-        } else if (d.name.startsWith(dialogPrefix)) {
-            const dlgevt = d.name.slice(dialogPrefix.length);
+        } else if (d.name.startsWith(appPrefix)) {
+            const dlgevt = d.name.slice(appPrefix.length);
             switch (dlgevt) {
                 case 'showMessageBox':
                     nsobj.showMessageBox(d);
@@ -64,7 +65,7 @@ sock.onmessage = function (e) {
     } else {
         if (d.name.startsWith(winPrefix)) {
             const winevnt = d.name.slice(winPrefix.length);
-            const winid = 'win' + d.parameter['id'];
+            const winid = 'win' + d.parameter['window'];
             const w = document.getElementById(winid);
             console.log('call child event: ' + winevnt, d.argument);
             w.contentWindow.exciton.requestBrowserEvent(winevnt, JSON.stringify(d.argument));
@@ -73,6 +74,9 @@ sock.onmessage = function (e) {
             switch (menuevt) {
                 case 'setApplicationMenu':
                     menu.setApplicationMenu(nsobj, d);
+                    break;
+                case 'popupContextMenu':
+                    menu.popupContextMenu(nsobj, d);
                     break;
                 default:
                     throw 'invalid menu event:' + menuevt;
@@ -90,7 +94,7 @@ nsobj.newWindow = function (dd) {
     iframe.setAttribute('title', dd.argument.title);
     iframe.setAttribute('src', dd.argument.url);
     iframe.setAttribute('frameborder', 0);
-    iframe.id = 'win' + dd.parameter['id'];
+    iframe.id = 'win' + dd.parameter['window'];
     const p = document.getElementById('pagecontainer');
     while (p.firstChild) {
         //or hide children?
@@ -117,7 +121,7 @@ nsobj.responceValue = function (val, respNo) {
 
 nsobj.callNativeMethod = function (method, arg) {
     var data = {
-        name: '/exciton/' + nsobj.ID + method,
+        name: '/app/' + nsobj.ID + method,
         argument: arg,
         respCallbackNo: -1,
     };

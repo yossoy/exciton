@@ -5,23 +5,56 @@ import (
 
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
-	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/log"
 )
 
+type menuClass struct {
+	event.EventHostCore
+}
+
+func (mc *menuClass) GetTarget(id string, parent event.EventTarget) event.EventTarget {
+	log.PrintDebug("MenuClass: GetTarget() : %q", id)
+	itm := object.Menus.Get(object.ObjectKey(id))
+	log.PrintDebug("==> %v", id)
+	if itm == nil {
+		return nil
+	}
+	return itm.(*MenuInstance)
+}
+
+var MenuClass menuClass
+
 type Owner interface {
+	event.EventTarget
 	EventPath(fragments ...string) string
 	EventPath2(fragments1 []string, fragments2 []string) string
 }
 
 type MenuInstance struct {
+	event.EventTarget
 	markup.Buildable
 	builder markup.Builder
 	mounted markup.RenderResult
 	uuid    string
 	owner   Owner
+}
+
+func (m *MenuInstance) TargetID() string {
+	return m.uuid
+}
+
+func (m *MenuInstance) GetEventSlot(name string) *event.Slot {
+	return nil
+}
+
+func (m *MenuInstance) Host() event.EventHost {
+	return &MenuClass
+}
+
+func (m *MenuInstance) ParentTarget() event.EventTarget {
+	return m.owner
 }
 
 func (m *MenuInstance) Builder() markup.Builder {
@@ -38,7 +71,7 @@ func (m *MenuInstance) RequestAnimationFrame() {
 }
 
 func (m *MenuInstance) UpdateDiffSetHandler(ds *markup.DiffSet) {
-	result := ievent.EmitWithResult(m.EventPath("updateDiffSetHandler"), event.NewValue(ds))
+	result := event.EmitWithResult(m, "updateDiffSetHandler", event.NewValue(ds))
 	if result.Error() != nil {
 		panic(result.Error())
 	}
@@ -58,13 +91,13 @@ func newMenu(owner Owner) (*MenuInstance, error) {
 		uuid:  uid,
 		owner: owner,
 	}
+	object.Menus.Put(uid, m)
 
-	result := ievent.EmitWithResult(m.EventPath("new"), event.NewValue(nil))
+	result := event.EmitWithResult(m, "new", event.NewValue(nil))
 	if result.Error() != nil {
+		object.Menus.Delete(uid)
 		return nil, result.Error()
 	}
-
-	object.Menus.Put(uid, m)
 
 	return m, nil
 }
@@ -160,14 +193,14 @@ func toAppMenu(menu AppMenuTemplate) (markup.RenderResult, error) {
 	return markup.Tag("menu", items)
 }
 
-func InitMenus(gg event.Group) error {
-	err := gg.AddHandler("/menu/:id/finalize", func(e *event.Event) {
-		id := e.Params["id"]
-		_, _, err := object.Menus.Delete(object.ObjectKey(id))
-		if err != nil {
-			panic(err)
+func InitEvents(owner event.EventHost) {
+	event.InitHost(&MenuClass, "menu", owner)
+	MenuClass.AddHandler("finalize", func(e *event.Event) {
+		m, ok := e.Target.(*MenuInstance)
+		if !ok {
+			return
 		}
+		object.Menus.Delete(object.ObjectKey(m.uuid))
 	})
-
-	return err
+	markup.InitEvents(&MenuClass)
 }

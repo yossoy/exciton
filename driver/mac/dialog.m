@@ -109,7 +109,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
 + (void)initEventHandlers {
   Driver *d = [Driver current];
 
-  [d addEventHandler:@"/dialog/:id/showMessageBox"
+  [d addEventHandler:@"/app/showMessageBox"
               handler:^(id argument,
                         NSDictionary<NSString *, NSString *> *parameter,
                         int responceNo) {
@@ -117,7 +117,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
                                    parameter:parameter
                                   responceNo:responceNo];);
               }];
-  [d addEventHandler:@"/dialog/:id/showOpenDialog"
+  [d addEventHandler:@"/app/showOpenDialog"
               handler:^(id argument,
                         NSDictionary<NSString *, NSString *> *parameter,
                         int responceNo) {
@@ -126,7 +126,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
                                   responceNo:responceNo];);
 
               }];
-  [d addEventHandler:@"/dialog/:id/showSaveDialog"
+  [d addEventHandler:@"/app/showSaveDialog"
               handler:^(id argument,
                         NSDictionary<NSString *, NSString *> *parameter,
                         int responceNo) {
@@ -155,7 +155,6 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
 + (void)showMessageBox:(id)argument
              parameter:(NSDictionary<NSString *, NSString *> *)parameter
             responceNo:(int)responceNo {
-  NSString *idstr = parameter[@"id"];
   NSString *parentId = [argument objectForKey:@"windowId"];
   NSWindow *parent = [Dialog resolveParntWindow:parentId];
   NSAlert *alert = createNSAlert(argument);

@@ -3,7 +3,6 @@ package menu
 import (
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/geom"
-	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
 	"github.com/yossoy/exciton/window"
@@ -24,7 +23,7 @@ func (m *MenuInstance) Popup(mousePt geom.Point, parent *window.Window) error {
 		WindowID: parent.ID,
 	}
 	log.PrintInfo("Path ==> %q", parent.Owner().EventPath("menu", m.uuid, "popupContextMenu"))
-	return ievent.Emit(parent.Owner().EventPath("menu", m.uuid, "popupContextMenu"), event.NewValue(&arg))
+	return event.Emit(m, "popupContextMenu", event.NewValue(&arg))
 }
 
 func PopupMenu(menu MenuTemplate, mousePt geom.Point, w *window.Window) error {

@@ -8,58 +8,58 @@
 @implementation Window
 + (void)initEventHandlers {
   Driver *d = [Driver current];
-  [d addEventHandler:@"/window/:id/new"
+  [d addEventHandler:@"/window/:window/new"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-               NSString *idstr = parameter[@"id"];
+               NSString *idstr = parameter[@"window"];
                NSDictionary *cfg = (NSDictionary *)argument;
                if (![Window newWindow:idstr config:cfg]) {
                  LOG_ERROR(@"[Window newWindow failed\n");
                }
                [[Driver current] responceEventResult:responceNo boolean:TRUE];
              }];
-  [d addEventHandler:@"/window/:id/requestAnimationFrame"
+  [d addEventHandler:@"/window/:window/requestAnimationFrame"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-               NSString *idstr = parameter[@"id"];
+               NSString *idstr = parameter[@"window"];
                Driver *driver = [Driver current];
                Window *w = driver.elements[idstr];
                [w requestAnimationFrame];
              }];
-  [d addEventHandler:@"/window/:id/updateDiffSetHandler"
+  [d addEventHandler:@"/window/:window/updateDiffSetHandler"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-               NSString *idstr = parameter[@"id"];
+               NSString *idstr = parameter[@"window"];
                Driver *driver = [Driver current];
                Window *w = driver.elements[idstr];
                [w updateDiffSetHandler:argument];
              }];
-  [d addEventHandler:@"/window/:id/browserSync"
+  [d addEventHandler:@"/window/:window/browserSync"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-               NSString *idstr = parameter[@"id"];
+               NSString *idstr = parameter[@"window"];
                Driver *driver = [Driver current];
                Window *w = driver.elements[idstr];
                [w browserSyncRequest:argument responceNo:responceNo];
              }];
-  [d addEventHandler:@"/window/:id/browserAsync"
+  [d addEventHandler:@"/window/:window/browserAsync"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-               NSString *idstr = parameter[@"id"];
+               NSString *idstr = parameter[@"window"];
                Driver *driver = [Driver current];
                Window *w = driver.elements[idstr];
                [w browserAsyncRequest:argument responceNo:responceNo];
              }];
-  [d addEventHandler:@"/window/:id/redirectTo"
+  [d addEventHandler:@"/window/:window/redirectTo"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-               NSString *idstr = parameter[@"id"];
+               NSString *idstr = parameter[@"window"];
                Driver *driver = [Driver current];
                Window *w = driver.elements[idstr];
                [w redirectTo:argument];

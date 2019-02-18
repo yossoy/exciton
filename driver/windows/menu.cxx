@@ -18,7 +18,7 @@
 namespace {
 std::string
 getIdFromParam(const std::map<std::string, std::string> &parameter) {
-  auto fiter = parameter.find("id");
+  auto fiter = parameter.find("menu");
   if (fiter == parameter.end()) {
     return "";
   }
@@ -677,8 +677,8 @@ void popupContextMenu(const picojson::value &argument,
 
 void Menu_Init() {
   auto &d = Driver::Current();
-  d.addEventHandler("/menu/:id/new", newMenu);
-  d.addEventHandler("/menu/:id/updateDiffSetHandler", updateDiffSetHandler);
-  d.addEventHandler("/menu/:id/setApplicationMenu", setApplicationMenu);
-  d.addDeferEventHandler("/menu/:id/popupContextMenu", popupContextMenu);
+  d.addEventHandler("/menu/:menu/new", newMenu);
+  d.addEventHandler("/menu/:menu/updateDiffSetHandler", updateDiffSetHandler);
+  d.addEventHandler("/menu/:menu/setApplicationMenu", setApplicationMenu);
+  d.addDeferEventHandler("/menu/:menu/popupContextMenu", popupContextMenu);
 }

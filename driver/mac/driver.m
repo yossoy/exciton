@@ -78,6 +78,7 @@
     LOG_ERROR(@"driver.emitEvent: handler not found: %@", name);
     return FALSE;
   }
+  LOG_DEBUG(@"driver.emitEvent: %p", handler);
   LOG_DEBUG(@"driver.emitEvent: dispatch event: %@", driverEvent[@"name"]);
   handler(driverEvent[@"argument"], driverEvent[@"parameter"],
           [driverEvent[@"respCallbackNo"] intValue]);

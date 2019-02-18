@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/yossoy/exciton/event"
-	ievent "github.com/yossoy/exciton/internal/event"
+	//	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/object"
 )
 
@@ -68,6 +68,28 @@ type node struct {
 	builder                  *builder
 }
 
+func (n *node) TargetID() string {
+	return n.uuid
+}
+
+func (n *node) ParentTarget() event.EventTarget {
+	return rootBuilder(n).owner
+}
+
+func (n *node) GetEventHandler(name string) event.Handler {
+	l, ok := n.eventListeners[name]
+	if !ok {
+		return nil
+	}
+	return l.Listener
+}
+
+func (n *node) Host() event.EventHost {
+	pt := n.ParentTarget()
+	ph := pt.Host()
+	return ph.GetChild("html")
+}
+
 func (n *node) Node() Node {
 	if n == nil {
 		return nil
@@ -119,7 +141,8 @@ func (n *node) GetProperty(name string) (interface{}, error) {
 	if b == nil {
 		return nil, fmt.Errorf("Unmounted node")
 	}
-	result := ievent.EmitWithResult(b.owner.EventPath("browserSync"), event.NewValue(arg))
+	// result := ievent.EmitWithResult(b.owner.EventPath("browserSync"), event.NewValue(arg))
+	result := event.EmitWithResult(b.owner, "browserSync", event.NewValue(arg))
 	if result.Error() != nil {
 		return nil, result.Error()
 	}

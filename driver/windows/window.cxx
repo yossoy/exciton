@@ -17,7 +17,7 @@
 namespace {
 std::string
 getIdFromParam(const std::map<std::string, std::string> &parameter) {
-  auto fiter = parameter.find("id");
+  auto fiter = parameter.find("window");
   if (fiter == parameter.end()) {
     return "";
   }
@@ -146,13 +146,13 @@ void redirectTo(const picojson::value &argument,
 
 void Window_Init() {
   auto &d = Driver::Current();
-  d.addDeferEventHandler("/window/:id/new", newWindow);
-  d.addDeferEventHandler("/window/:id/requestAnimationFrame",
+  d.addDeferEventHandler("/window/:window/new", newWindow);
+  d.addDeferEventHandler("/window/:window/requestAnimationFrame",
                          requestAnimationFrame);
-  d.addDeferEventHandler("/window/:id/updateDiffSetHandler",
+  d.addDeferEventHandler("/window/:window/updateDiffSetHandler",
                          updateDiffSetHandler);
-  d.addDeferEventHandler("/window/:id/browserSync", browserSync);
-  d.addDeferEventHandler("/window/:id/redirectTo", redirectTo);
+  d.addDeferEventHandler("/window/:window/browserSync", browserSync);
+  d.addDeferEventHandler("/window/:window/redirectTo", redirectTo);
 
   if (!CMenuMgr::InitClass()) {
     LOG_ERROR("menumgr::initclass failed\n");

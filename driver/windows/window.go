@@ -10,35 +10,29 @@ package windows
 import "C"
 
 import (
+	"github.com/yossoy/exciton/window"
+	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
-	ievent "github.com/yossoy/exciton/internal/event"
 )
 
-func initializeWindow() error {
-	g, err := ievent.AddGroup("/window/:id")
-	if err != nil {
-		return err
-	}
-	err = g.AddHandlerWithResult("/new", func(e *event.Event, callback event.ResponceCallback) {
-		platform.relayEventWithResultToNative(e, callback)
+func initializeWindow(serializer driver.DriverEventSerializer) error {
+	window.WindowClass.AddHandlerWithResult("new", func(e *event.Event, callback event.ResponceCallback) {
+		serializer.RelayEventWithResult(e, callback)
 	})
-	if err != nil {
-		return err
-	}
-	g.AddHandler("/requestAnimationFrame", func(e *event.Event) {
-		platform.relayEventToNative(e)
+	window.WindowClass.AddHandler("requestAnimationFrame", func(e *event.Event) {
+		serializer.RelayEvent(e)
 	})
-	g.AddHandler("/updateDiffSetHandler", func(e *event.Event) {
-		platform.relayEventToNative(e)
+	window.WindowClass.AddHandler("updateDiffSetHandler", func(e *event.Event) {
+		serializer.RelayEvent(e)
 	})
-	g.AddHandlerWithResult("/browserSync", func(e *event.Event, callback event.ResponceCallback) {
-		platform.relayEventWithResultToNative(e, callback)
+	window.WindowClass.AddHandlerWithResult("browserSync", func(e *event.Event, callback event.ResponceCallback) {
+		serializer.RelayEventWithResult(e, callback)
 	})
-	g.AddHandler("/browserAsync", func(e *event.Event) {
-		platform.relayEventToNative(e)
+	window.WindowClass.AddHandler("browserAsync", func(e *event.Event) {
+		serializer.RelayEvent(e)
 	})
-	g.AddHandler("/redirectTo", func(e *event.Event) {
-		platform.relayEventToNative(e)
+	window.WindowClass.AddHandler("redirectTo", func(e *event.Event) {
+		serializer.RelayEvent(e)
 	})
 	C.Window_Init()
 	return nil

@@ -3,7 +3,7 @@ package dialog
 import (
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/event"
-	ievent "github.com/yossoy/exciton/internal/event"
+	// ievent "github.com/yossoy/exciton/internal/event"
 )
 
 type msgBoxOpt struct {
@@ -33,13 +33,15 @@ func makeMsgBoxOpt(parent string, message string, title string, messageBoxType d
 	return tmpl
 }
 
+// TODO: owner は実質App. package flat化でなんとかしよう……
 type Owner interface {
+	event.EventTarget
 	AppEventPath(name ...string) string
 }
 
 func ShowMessageBoxAsync(owner Owner, windowID string, message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {
 	opt := makeMsgBoxOpt(windowID, message, title, messageBoxType, cfg)
-	err := ievent.EmitWithCallback(owner.AppEventPath("dialog", "-", "showMessageBox"), event.NewValue(opt), func(result event.Result) {
+	err := event.EmitWithCallback(owner, "showMessageBox", event.NewValue(opt), func(result event.Result) {
 		if result.Error() != nil {
 			handler(-1, result.Error())
 			return
@@ -92,7 +94,7 @@ func ShowOpenDialogAsync(owner Owner, windowID string, cfg *dialog.FileDialogCon
 	if opt.Properties == 0 {
 		opt.Properties = dialog.OpenDialogForOpenFile
 	}
-	err := ievent.EmitWithCallback(owner.AppEventPath("dialog", "-", "showOpenDialog"), event.NewValue(opt), func(e event.Result) {
+	err := event.EmitWithCallback(owner, "showOpenDialog", event.NewValue(opt), func(e event.Result) {
 		if e.Error() != nil {
 			handler(nil, e.Error())
 			return
@@ -136,7 +138,7 @@ func ShowSaveDialogAsync(owner Owner, windowID string, cfg *dialog.FileDialogCon
 	if opt.Title == "" {
 		opt.Title = "Save"
 	}
-	err := ievent.EmitWithCallback(owner.AppEventPath("dialog", "-", "showSaveDialog"), event.NewValue(opt), func(e event.Result) {
+	err := event.EmitWithCallback(owner, "showSaveDialog", event.NewValue(opt), func(e event.Result) {
 		if e.Error() != nil {
 			handler("", e.Error())
 			return

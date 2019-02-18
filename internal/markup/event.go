@@ -1,8 +1,9 @@
 package markup
 
 import (
+	"fmt"
+
 	"github.com/yossoy/exciton/event"
-	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/log"
 )
 
@@ -100,38 +101,30 @@ func (l *eventListener) applyToNode(b Builder, n Node, on Node) {
 	}
 }
 
-func InitEvents(appg event.Group) error {
-	err := appg.AddHandler("/:evtroot/:id/html/:html/:event", func(e *event.Event) {
-		//id := e.Params["id"]
-		eventRoot := e.Params["evtroot"]
-		id := e.Params["id"]
-		html := e.Params["html"]
-		event := e.Params["event"]
-		//TODO: cleaup code!
-		var buildable Buildable
-		switch eventRoot {
-		case "window":
-			buildable = object.Windows.Get(id).(Buildable)
-		case "menu":
-			buildable = object.Menus.Get(id).(Buildable)
-		default:
-			panic("invalid html event path:/" + eventRoot + "/...")
-		}
-		itm := buildable.Builder().(*builder).elements.Get(html)
-		if itm == nil {
-			log.PrintError("obj not found: %q", html)
-			return
-		}
-		obj, ok := itm.(*node)
-		if !ok {
-			panic("obj not found(invalid sequecne): " + html)
-		}
-		l, ok := obj.eventListeners[event]
-		if !ok {
-			log.PrintError("event is not registerd: %q", event)
-			return
-		}
-		l.Listener(e)
-	})
-	return err
+type htmlEventHost struct {
+	event.EventHostCore
+}
+
+func (heh *htmlEventHost) GetTarget(id string, parent event.EventTarget) event.EventTarget {
+	buildable, ok := parent.(Buildable)
+	if !ok {
+		panic(fmt.Errorf("invalid parent: parent=%v", parent))
+	}
+	itm := buildable.Builder().(*builder).elements.Get(id)
+	if itm == nil {
+		log.PrintError("obj not found: %q", id)
+		return nil
+	}
+	obj, ok := itm.(*node)
+	if !ok {
+		panic("obj not found(invalid sequecne): " + id)
+	}
+	return obj
+}
+
+func InitEvents(owner event.EventHost) {
+	whh := &htmlEventHost{}
+	event.InitHost(whh, "html", owner)
+	//	mhh := &htmlEventHost{}
+	//	event.InitHost(mhh, "html", menuOwner)
 }

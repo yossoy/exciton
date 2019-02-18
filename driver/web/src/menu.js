@@ -411,12 +411,14 @@ class MenuData {
                   mi.subMenu.title = role.label;
                 }
               }
-              mi.handler = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                role.command(nsobj, e);
-              };
-              mi.enabled = true;
+              if (role.command) {
+                mi.handler = (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  role.command(nsobj, e);
+                };
+                mi.enabled = true;
+              }
             } else if (k == 'menuAcclerator') {
               console.log('menuAcclerator not implement yet.');
             } else {
@@ -530,9 +532,9 @@ const menuDatas = {};
 
 function newMenu(nsobj, dd) {
   const params = dd.parameter;
-  const id = params['id'];
+  const id = params['menu'];
   if (!id) {
-    throw 'parameter[id] not found';
+    throw 'parameter[menu] not found';
   }
   const menuData = new MenuData();
   menuData.id = id;
@@ -543,26 +545,26 @@ function newMenu(nsobj, dd) {
 function updateDiffSetHandler(nsobj, dd) {
   const params = dd.parameter;
   const argument = dd.argument;
-  const id = params['id'];
+  const id = params['menu'];
   if (!id) {
-    throw 'parameter[id] not found';
+    throw 'parameter[menu] not found';
   }
   const menuData = menuDatas[id];
   if (!menuData) {
-    throw 'invalid id';
+    throw 'invalid menu';
   }
   menuData.polulateWithDiffset(nsobj, argument);
   nsobj.responceValue(true, dd.respCallbackNo);
 }
 
 function getMenuData(params) {
-  const id = params['id'];
+  const id = params['menu'];
   if (!id) {
-    throw 'parameter[id] not found';
+    throw 'parameter[menu] not found';
   }
   const menuData = menuDatas[id];
   if (!menuData) {
-    throw 'invalid id';
+    throw 'invalid menu';
   }
   return menuData;
 }
@@ -577,9 +579,19 @@ function setApplicationMenu(nsobj, dd) {
   menuData.getAppMenuNode(menuBar);
 }
 
+function popupContextMenu(nsobj, dd) {
+  const params = dd.parameter;
+  const menuData = getMenuData(params);
+  const pos = dd.argument.position;
+  const winid = 'win' + dd.argument.windowId;
+  const win = document.getElementById(winid);
+  console.log('popupContextMenu is not supported ==> pos: ', pos, ',  win:', win);
+}
+
 export default {
   newMenu,
   updateDiffSetHandler,
   setApplicationMenu,
   getMenuData,
+  popupContextMenu,
 };

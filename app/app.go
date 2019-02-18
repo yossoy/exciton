@@ -2,7 +2,10 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"strings"
+
+	"github.com/yossoy/exciton/menu"
 
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/event"
@@ -13,8 +16,42 @@ import (
 	"github.com/yossoy/exciton/window"
 )
 
+type appClass struct {
+	event.EventHostCore
+}
+
+func (ac *appClass) GetTarget(id string, parent event.EventTarget) event.EventTarget {
+	if ac.IsSingleton() {
+		// if id != event.HostID {
+		// 	panic(fmt.Sprintf("invalid id: %q", id))
+		// }
+		id = object.SingletonName
+	}
+	a := object.Apps.Get(id)
+	if a == nil {
+		return nil
+	}
+	if app, ok := a.(*App); ok {
+		return app
+	}
+	panic(fmt.Sprintf("invalid object: %v", a))
+	return nil
+}
+
+var AppClass appClass
+
 type Owner interface {
 	PreferredLanguages() lang.PreferredLanguages
+}
+
+func InitEvents(isSingleton bool) {
+	if isSingleton {
+		event.InitSingletonRoot(&AppClass, "app")
+	} else {
+		event.InitHost(&AppClass, "app", nil)
+	}
+	window.InitEvents(&AppClass)
+	menu.InitEvents(&AppClass)
 }
 
 type App struct {
@@ -24,8 +61,25 @@ type App struct {
 	UserData   interface{}
 }
 
-func (app *App) ID() string {
+func (app *App) Parent() event.EventTarget {
+	return nil
+}
+func (app *App) Host() event.EventHost {
+	return &AppClass
+}
+
+func (app *App) GetEventSlot(name string) *event.Slot {
+	// TODO: add event slot?
+	return nil
+}
+
+func (app *App) TargetID() string {
 	return app.id
+}
+
+func (app *App) ParentTarget() event.EventTarget {
+	// app is nil
+	return nil
 }
 
 func (app *App) PreferredLanguages() lang.PreferredLanguages {
@@ -122,16 +176,17 @@ func GetAppFromEventTarget(e *markup.EventTarget) (*App, error) {
 	return a, nil
 }
 
-func GetAppFromEvent(e *event.Event) (*App, error) {
-	appid, ok := e.Params["appid"]
-	if !ok {
-		appid = object.SingletonName
+func GetAppFromEvent(e *event.Event) *App {
+	t := e.Target
+	log.Printf("Target: %v", t)
+	for t != nil {
+		app, ok := t.(*App)
+		if ok {
+			return app
+		}
+		t = t.ParentTarget()
 	}
-	a := GetAppByID(appid)
-	if a == nil {
-		return nil, fmt.Errorf("App not found")
-	}
-	return a, nil
+	return nil
 }
 
 func (app *App) ShowMessageBoxAsync(message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {

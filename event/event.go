@@ -5,7 +5,9 @@ type Event struct {
 	Name     string
 	Argument Value
 	Result   interface{}
-	Params   map[string]string
+	// Params   map[string]string
+	Target EventTarget // TODO: in event2
+	Host   EventHost
 }
 
 // ResponceCallback is internal response handler

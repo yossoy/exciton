@@ -2,7 +2,7 @@ package markup
 
 import (
 	"github.com/yossoy/exciton/event"
-	ievent "github.com/yossoy/exciton/internal/event"
+	//	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/object"
 )
 
@@ -10,6 +10,7 @@ import (
 // type UpdateDiffSetHandler func(ds *DiffSet)
 
 type Buildable interface {
+	event.EventTarget
 	Builder() Builder
 	EventPath(name ...string) string
 }
@@ -346,7 +347,8 @@ func (b *builder) OnRedirect(route string) {
 }
 
 func (b *builder) Redirect(route string) {
-	ievent.Emit(b.owner.EventPath("redirectTo"), event.NewValue(route))
+	// ievent.Emit(b.owner.EventPath("redirectTo"), event.NewValue(route))
+	event.Emit(b.owner, "redirectTo", event.NewValue(route))
 }
 
 func (b *builder) UserData() interface{} {

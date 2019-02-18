@@ -18,14 +18,6 @@
 #include "log.h"
 
 namespace {
-std::string
-getIdFromParam(const std::map<std::string, std::string> &parameter) {
-  auto fiter = parameter.find("id");
-  if (fiter == parameter.end()) {
-    return "";
-  }
-  return (*fiter).second;
-}
 
 HWND resolveParentWindow(const std::string &id) {
   Driver &d = Driver::Current();
@@ -166,7 +158,6 @@ void showMessageBox(const picojson::value &argument,
     }
   }
 
-  // auto idstr = getIdFromParam(parameter);
   int defaultIdx = static_cast<int>(argument.get("defaultId").get<int64_t>());
   int i;
 
@@ -484,7 +475,6 @@ void showOpenDialog(const picojson::value &argument,
                     const std::map<std::string, std::string> &parameter,
                     int responceNo) {
   Driver &d = Driver::Current();
-  //  auto idstr = getIdFromParam(parameter);
   createFileDialog(true, argument, responceNo);
 }
 
@@ -492,14 +482,13 @@ void showSaveDialog(const picojson::value &argument,
                     const std::map<std::string, std::string> &parameter,
                     int responceNo) {
   Driver &d = Driver::Current();
-  auto idstr = getIdFromParam(parameter);
   createFileDialog(false, argument, responceNo);
 }
 } // namespace
 
 void Dialog_Init() {
   auto &d = Driver::Current();
-  d.addDeferEventHandler("/dialog/:id/showMessageBox", showMessageBox);
-  d.addDeferEventHandler("/dialog/:id/showOpenDialog", showOpenDialog);
-  d.addDeferEventHandler("/dialog/:id/showSaveDialog", showSaveDialog);
+  d.addDeferEventHandler("/app/showMessageBox", showMessageBox);
+  d.addDeferEventHandler("/app/showOpenDialog", showOpenDialog);
+  d.addDeferEventHandler("/app/showSaveDialog", showSaveDialog);
 }

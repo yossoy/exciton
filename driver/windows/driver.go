@@ -14,7 +14,6 @@ import (
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
-	ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
@@ -32,6 +31,7 @@ type windows struct {
 	lock            *sync.Mutex
 	respCallbacks   []event.ResponceCallback
 	lastCallbackPos int
+	serializer *event.EventSerializer
 }
 
 var (
@@ -73,10 +73,12 @@ func (d *windows) relayEventToNative(e *event.Event) {
 			panic(err)
 		}
 	}
+	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	driverLogDebug("relayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
 	drvEvt := driver.DriverEvent{
-		Name:      e.Name,
+		Name:      drvEvtPath,
 		Argument:  arg,
-		Parameter: e.Params,
+		Parameter: params,
 	}
 	jb, err := json.Marshal(&drvEvt)
 	if err != nil {
@@ -93,10 +95,13 @@ func (d *windows) relayEventWithResultToNative(e *event.Event, respCallback even
 	if err != nil {
 		panic(err)
 	}
+	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	driverLogDebug("replayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
+
 	drvEvt := driver.DriverEvent{
-		Name:      e.Name,
+		Name:      drvEvtPath,
 		Argument:  arg,
-		Parameter: e.Params,
+		Parameter: params,
 		ResponceCallbackNo: d.addRespCallbackCallback(func(result event.Result) {
 			driverLogDebug("responce...........%v\n", result)
 			respCallback(result)
@@ -116,7 +121,12 @@ func (d *windows) requestEventEmit(devt *driver.DriverEvent) error {
 	driverLogDebug("requestEventEmit: %v", devt)
 	if devt.ResponceCallbackNo < 0 {
 		v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
-		return ievent.Emit(devt.Name, v)
+		t, name, err := event.StringToEventTarget(devt.Name)
+		if err != nil {
+			return err
+		}
+		go event.Emit(t, name, v)
+		return nil
 	}
 	panic("not implement yet.")
 }
@@ -124,22 +134,23 @@ func (d *windows) requestEventEmit(devt *driver.DriverEvent) error {
 func (d *windows) Init() error {
 	C.Log_Init()
 
-	err := ievent.AddHandler("/app/quit", func(e *event.Event) {
+	app.AppClass.AddHandler("quit", func(e *event.Event) {
 		driverLogDebug("driver::terminate!!")
 		C.Driver_Terminate()
 	})
 
-	err = initializeWindow()
+	var err error
+	err = initializeWindow(d.serializer)
 	if err != nil {
 		return err
 	}
 
-	err = initializeMenu()
+	err = initializeMenu(d.serializer)
 	if err != nil {
 		return err
 	}
 
-	err = initializeDialog()
+	err = initializeDialog(d.serializer)
 	if err != nil {
 		return err
 	}
@@ -149,7 +160,8 @@ func (d *windows) Init() error {
 func (d *windows) Run() {
 	d.running = true
 	//TODO: emit /init in native code
-	ievent.Emit("/app/init", event.NewValue(nil))
+	
+	event.Emit(&app.AppClass, "init", event.NewValue(nil))
 	C.Driver_Run()
 }
 
@@ -289,16 +301,21 @@ func (ao *appOwner) PreferredLanguages() lang.PreferredLanguages {
 	return ao.preferredLanguages
 }
 
+func (d *windows) initEvent() {
+	app.InitEvents(true)
+
+	d.serializer = event.NewSerializer(d.relayEventToNative, d.relayEventWithResultToNative)
+}
+
 // Startup is startup function in windows.
 func Startup(startup app.StartupFunc) error {
 	runtime.LockOSThread()
-	ievent.StartEventMgr()
-	defer ievent.StopEventMgr()
 	si := &app.StartupInfo{
 		AppMenu: windowsDefaultMenu,
 	}
-	si.StartupInfo.AppEventRoot = ievent.RootGroup()
 	d := newDriver()
+	d.initEvent()
+	defer d.serializer.Stop()
 	if err := d.Init(); err != nil {
 		return err
 	}

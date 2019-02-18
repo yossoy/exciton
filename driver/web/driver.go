@@ -20,7 +20,8 @@ import (
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
-	ievent "github.com/yossoy/exciton/internal/event"
+
+	// ievent "github.com/yossoy/exciton/internal/event"
 	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
@@ -38,6 +39,7 @@ type web struct {
 	lock            *sync.Mutex
 	respCallbacks   []event.ResponceCallback
 	lastCallbackPos int
+	serializer      *event.EventSerializer
 }
 
 type appOwner struct {
@@ -110,13 +112,9 @@ func (d *web) responceCallbackError(err error, responceNo int) {
 }
 
 func (d *web) relayEventToNative(e *event.Event) {
-	appid, ok := e.Params["appid"]
-	if !ok {
-		panic("invalid event (appid not found)")
-	}
-	a := app.GetAppByID(appid)
+	a := app.GetAppFromEvent(e)
 	if a == nil {
-		panic(fmt.Errorf("app [%s] not found", appid))
+		panic(fmt.Errorf("app [%v] not found", e.Target))
 	}
 	ao := a.Owner().(*appOwner)
 	var arg []byte
@@ -127,37 +125,38 @@ func (d *web) relayEventToNative(e *event.Event) {
 			panic(err)
 		}
 	}
+	// omit app Path?
+	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
 	item := &sendMessageItem{
 		Sync: false,
 		Data: driver.DriverEvent{
-			Name:      e.Name,
+			Name:      drvEvtPath,
 			Argument:  arg,
-			Parameter: e.Params,
+			Parameter: params,
 		},
 	}
 	ao.sendChan <- item
 }
 
 func (d *web) relayEventWithResultToNative(e *event.Event, respCallback event.ResponceCallback) {
-	appid, ok := e.Params["appid"]
-	if !ok {
-		panic("invalid event (appid not found)")
-	}
-	a := app.GetAppByID(appid)
+	a := app.GetAppFromEvent(e)
 	if a == nil {
-		panic(fmt.Errorf("app [%s] not found", appid))
+		panic(fmt.Errorf("app [%v] not found", e.Target))
 	}
 	ao := a.Owner().(*appOwner)
 	arg, err := e.Argument.Encode()
 	if err != nil {
 		panic(err)
 	}
+	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	driverLogDebug("relayEventWithResultToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
+
 	item := &sendMessageItem{
 		Sync: true,
 		Data: driver.DriverEvent{
-			Name:      e.Name,
+			Name:      drvEvtPath,
 			Argument:  arg,
-			Parameter: e.Params,
+			Parameter: params,
 			ResponceCallbackNo: d.addRespCallbackCallback(func(result event.Result) {
 				driverLogDebug("responce...........%v\n", result)
 				respCallback(result)
@@ -168,33 +167,27 @@ func (d *web) relayEventWithResultToNative(e *event.Event, respCallback event.Re
 }
 
 func (d *web) Init() error {
-	g, err := ievent.AddGroup("/exciton/:appid")
-	if err != nil {
-		return err
-	}
-	err = g.AddHandler("/app/quit", func(e *event.Event) {
-		appid := e.Params["appid"]
-		a := app.GetAppByID(appid)
+	app.AppClass.AddHandler("quit", func(e *event.Event) {
+		a := app.GetAppFromEvent(e)
 		if a != nil {
 			driverLogDebug("driver::terminate!!")
+			//TODO: これ変だな。。。 platform.quitChanに送って良いのは全てのchannelが終了した時だけの筈
 			platform.quitChan <- true
 		}
 	})
+
+	var err error
+	err = initializeWindow(d.serializer)
 	if err != nil {
 		return err
 	}
 
-	err = initializeWindow(g)
+	err = initializeMenu(d.serializer)
 	if err != nil {
 		return err
 	}
 
-	err = initializeMenu(g)
-	if err != nil {
-		return err
-	}
-
-	err = initializeDialog(g)
+	err = initializeDialog(d.serializer)
 	if err != nil {
 		return err
 	}
@@ -224,6 +217,12 @@ func (d *web) ResourcesFileSystem() (http.FileSystem, error) {
 		return nil, err
 	}
 	return http.Dir(resources), nil
+}
+
+func (d *web) initEvent() {
+	app.InitEvents(false)
+
+	d.serializer = event.NewSerializer(d.relayEventToNative, d.relayEventWithResultToNative)
 }
 
 func resourcesPath() (string, error) {
@@ -338,7 +337,7 @@ func rootHTMLHandler(si *app.StartupInfo) http.HandlerFunc {
 			ao.preferredLanguages = pl
 		}
 		a := app.NewApp(ao)
-		pb, err := webRoot(a.ID())
+		pb, err := webRoot(a.TargetID())
 		if err != nil {
 			driverLogDebug("webRoot faild: %v", err)
 			http.Error(w, err.Error(), http.StatusProcessing)
@@ -387,10 +386,17 @@ func driverWebSockHandler(si *app.StartupInfo) http.HandlerFunc {
 			driverLogDebug("driverEvent ==> %v", devt)
 			if devt.ResponceCallbackNo < 0 {
 				v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
-				if err := ievent.Emit(devt.Name, v); err != nil {
-					driverLogDebug("event.Emit error: %v", err)
-					//panic(err)
+				et, en, err := event.StringToEventTarget(devt.Name)
+				if err != nil {
+					driverLogDebug("event.Emit drv event error: %v", err)
+					panic(err)
 				}
+				go func() {
+					if err = event.Emit(et, en, v); err != nil {
+						driverLogDebug("event.Emit error: %v", err)
+						//panic(err)
+					}
+				}()
 			} else {
 				if devt.Name == "/responceEventResult" {
 					//TODO: error
@@ -398,7 +404,7 @@ func driverWebSockHandler(si *app.StartupInfo) http.HandlerFunc {
 					r := event.NewValueResult(event.NewJSONEncodedValueByEncodedBytes(devt.Argument))
 					callback := platform.respCallbacks[devt.ResponceCallbackNo]
 					platform.respCallbacks[devt.ResponceCallbackNo] = nil
-					callback(r)
+					go callback(r)
 				} else {
 					panic(fmt.Errorf("not implement yet"))
 				}
@@ -415,18 +421,15 @@ func addWebRootResources(si *driver.StartupInfo) error {
 // Startup is startup function in windows.
 func Startup(startup app.StartupFunc) error {
 	runtime.LockOSThread()
-	ievent.StartEventMgr()
-	defer ievent.StopEventMgr()
+	//	ievent.StartEventMgr()
+	//	defer ievent.StopEventMgr()
 	si := &app.StartupInfo{}
 	si.StartupInfo.PortNo = 8080
 	si.StartupInfo.AppURLBase = "/exciton/{appid}"
-	rootGroup, err := ievent.AddGroup("/exciton/:appid")
-	if err != nil {
-		return err
-	}
-	si.StartupInfo.AppEventRoot = rootGroup
-
 	d := newDriver()
+	d.initEvent()
+	defer d.serializer.Stop()
+
 	if err := d.Init(); err != nil {
 		return err
 	}
@@ -437,7 +440,7 @@ func Startup(startup app.StartupFunc) error {
 		if err := exciton.Init(si, internalInitFunc); err != nil {
 			return err
 		}
-		si.Router.HandleFunc("/exciton/{appid}/ws", driverWebSockHandler(si))
+		si.Router.HandleFunc("/app/{appid}/ws", driverWebSockHandler(si))
 		si.Router.HandleFunc("/", rootHTMLHandler(si))
 		return nil
 	}
