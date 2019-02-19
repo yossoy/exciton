@@ -6,7 +6,7 @@ export function onClickClient1(c, e) {
 }
 export function mountComponent(n, c) {
     c.clickCount = 0;
-    inst.callNativeEvent('/on-mount', 'called')
+    c.callNativeEvent('on-mount', 'called')
 }
 
 export function unmountComponent(c) {

@@ -142,10 +142,7 @@ function mountUnmountComponent(nsobj, n, itemv, mounted) {
     urlBase: urlBase,
     callNativeEvent: (method, ...arg) => {
       let args = arg.map(a => JSON.stringify(a));
-      nsobj.callnative({
-        path: '/components/' + nsobj.ID + '/' + id + method,
-        arg: JSON.stringify(args)
-      });
+      nsobj.callNativeMethod('components/' + id + '/' + method, args);
     }
   };
   console.log('locaJSKey = ' + localJSKey);
