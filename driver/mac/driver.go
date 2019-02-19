@@ -292,39 +292,34 @@ func responceEventResult(crespNo C.int, cstr unsafe.Pointer, clen C.int) {
 var macDefaultAppmenu = menu.AppMenuTemplate{
 	{Label: menu.AppMenuLabel,
 		SubMenu: menu.MenuTemplate{
-			{{Role: menu.RoleAbout}},
-			{{Label: "services", Role: menu.RoleServices}},
-			{
-				{Role: menu.RoleHideOthers},
-				{Role: menu.RoleUnhide},
-			},
-			{{Role: menu.RoleQuit}},
+			{Role: menu.RoleAbout},
+			menu.Separator,
+			{Label: "services", Role: menu.RoleServices},
+			menu.Separator,
+			{Role: menu.RoleHideOthers},
+			{Role: menu.RoleUnhide},
+			menu.Separator,
+			{Role: menu.RoleQuit},
 		}},
 	{Label: "Edit",
 		SubMenu: menu.MenuTemplate{
-			{
-				{Role: menu.RoleUndo},
-				{Role: menu.RoleRedo},
-			},
-			{
-				{Role: menu.RoleCut},
-				{Role: menu.RoleCopy},
-				{Role: menu.RolePaste},
-				{Role: menu.RolePasteAndMatchStyle},
-				{Role: menu.RoleDelete},
-			},
-			{
-				{Role: menu.RoleStartSpeaking},
-				{Role: menu.RoleStopSpeaking},
-			},
+			{Role: menu.RoleUndo},
+			{Role: menu.RoleRedo},
+			menu.Separator,
+			{Role: menu.RoleCut},
+			{Role: menu.RoleCopy},
+			{Role: menu.RolePaste},
+			{Role: menu.RolePasteAndMatchStyle},
+			{Role: menu.RoleDelete},
+			menu.Separator,
+			{Role: menu.RoleStartSpeaking},
+			{Role: menu.RoleStopSpeaking},
 		}},
 	{Label: "Window", Role: menu.RoleWindow,
 		SubMenu: menu.MenuTemplate{
-			{
-				{Role: menu.RoleMinimize},
-				{Role: menu.RoleClose},
-				{Role: menu.RoleFront},
-			},
+			{Role: menu.RoleMinimize},
+			{Role: menu.RoleClose},
+			{Role: menu.RoleFront},
 		}},
 }
 

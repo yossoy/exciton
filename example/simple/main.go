@@ -77,55 +77,47 @@ func appMenu(isDarwin bool) menu.AppMenuTemplate {
 	return menu.AppMenuTemplate{
 		{Label: menu.AppMenuLabel, Hidden: !isDarwin,
 			SubMenu: menu.MenuTemplate{
-				{{Role: menu.RoleAbout}},
-				{{Label: "services", Role: menu.RoleServices}},
-				{
-					{Role: menu.RoleHideOthers},
-					{Role: menu.RoleUnhide},
-				},
-				{{Role: menu.RoleQuit}},
+				{Role: menu.RoleAbout},
+				menu.Separator,
+				{Label: "services", Role: menu.RoleServices},
+				menu.Separator,
+				{Role: menu.RoleHideOthers},
+				{Role: menu.RoleUnhide},
+				menu.Separator,
+				{Role: menu.RoleQuit},
 			}},
 
 		{Label: "File",
 			SubMenu: menu.MenuTemplate{
-				{
-					{Label: "Open", Acclerator: "CommandOrControl+O", Handler: onOpenFile},
-					{Label: "Save", Acclerator: "CommandOrControl+S", Handler: onSaveFile},
-					{Hidden: isDarwin, Role: menu.RoleClose},
-				},
-				{
-					{Hidden: isDarwin, Role: menu.RoleQuit},
-				},
+				{Label: "Open", Acclerator: "CommandOrControl+O", Handler: onOpenFile},
+				{Label: "Save", Acclerator: "CommandOrControl+S", Handler: onSaveFile},
+				{Hidden: isDarwin, Role: menu.RoleClose},
+				menu.Separator,
+				{Hidden: isDarwin, Role: menu.RoleQuit},
 			}},
 		{Label: "Edit",
 			SubMenu: menu.MenuTemplate{
-				{
-					{Hidden: !isDarwin, Role: menu.RoleUndo},
-					{Hidden: !isDarwin, Role: menu.RoleRedo},
-				},
-				{
-					{Role: menu.RoleCut},
-					{Role: menu.RoleCopy},
-					{Role: menu.RolePaste},
-					{Hidden: !isDarwin, Role: menu.RolePasteAndMatchStyle},
-					{Role: menu.RoleDelete},
-				},
-				{
-					{Hidden: !isDarwin, Role: menu.RoleStartSpeaking},
-					{Hidden: !isDarwin, Role: menu.RoleStopSpeaking},
-				},
+				{Hidden: !isDarwin, Role: menu.RoleUndo},
+				{Hidden: !isDarwin, Role: menu.RoleRedo},
+				menu.Separator,
+				{Role: menu.RoleCut},
+				{Role: menu.RoleCopy},
+				{Role: menu.RolePaste},
+				{Hidden: !isDarwin, Role: menu.RolePasteAndMatchStyle},
+				{Role: menu.RoleDelete},
+				menu.Separator,
+				{Hidden: !isDarwin, Role: menu.RoleStartSpeaking},
+				{Hidden: !isDarwin, Role: menu.RoleStopSpeaking},
 			}},
 		{Label: "Window", Role: menu.RoleWindow,
 			SubMenu: menu.MenuTemplate{
-				{
-					{Role: menu.RoleMinimize},
-					{Hidden: !isDarwin, Role: menu.RoleClose},
-					{Hidden: !isDarwin, Role: menu.RoleFront},
-				},
+				{Role: menu.RoleMinimize},
+				{Hidden: !isDarwin, Role: menu.RoleClose},
+				{Hidden: !isDarwin, Role: menu.RoleFront},
 			}},
 		{Label: "Help", Role: menu.RoleHelp,
 			SubMenu: menu.MenuTemplate{
-				{{Hidden: isDarwin, Role: menu.RoleAbout}},
+				{Hidden: isDarwin, Role: menu.RoleAbout},
 			}},
 	}
 }
@@ -135,10 +127,8 @@ func onClickPopupItem(e *html.MouseEvent) {
 }
 
 var popupMenu = menu.MenuTemplate{
-	{
-		{Label: "Item1", Handler: onClickPopupItem},
-		{Label: "Item2", Handler: onClickPopupItem},
-	},
+	{Label: "Item1", Handler: onClickPopupItem},
+	{Label: "Item2", Handler: onClickPopupItem},
 }
 
 type testChildComponent struct {

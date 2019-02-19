@@ -14,9 +14,7 @@ type AppMenuItemTemplate struct {
 	SubMenu MenuTemplate
 }
 
-type MenuTemplate []SectionTemplate
-
-type SectionTemplate []ItemTemplate
+type MenuTemplate []ItemTemplate
 
 type ItemTemplate struct {
 	Label      string
@@ -25,6 +23,7 @@ type ItemTemplate struct {
 	Role       MenuRole
 	Handler    func(e *html.MouseEvent)
 	SubMenu    MenuTemplate
+	Separator  bool
 }
 
 type MenuEvent struct {
@@ -34,4 +33,8 @@ type MenuEvent struct {
 
 const (
 	AppMenuLabel = "*Appname*"
+)
+
+var (
+	Separator = ItemTemplate{Separator: true}
 )

@@ -117,48 +117,54 @@ func newInstance(owner Owner, component markup.RenderResult) (*MenuInstance, err
 
 func toPopupMenuSub(menu MenuTemplate) ([]markup.MarkupOrChild, error) {
 	var items []markup.MarkupOrChild
-	for sidx, s := range menu {
-		firstItem := true
-		for _, m := range s {
-			if m.Hidden {
-				continue
+	firstItem := true
+	addSeparator := false
+	for _, m := range menu {
+		if m.Hidden {
+			continue
+		}
+		if m.Separator {
+			if !firstItem {
+				addSeparator = true
 			}
-			if m.Label == "" && m.Role == "" {
-				return nil, fmt.Errorf("menu need Label or Role")
+			continue
+		}
+		if addSeparator {
+			items = append(items, html.HorizontalRule())
+			addSeparator = false
+		}
+		if m.Label == "" && m.Role == "" {
+			return nil, fmt.Errorf("menu need Label or Role")
+		}
+		var mitems []markup.MarkupOrChild
+		if m.Label != "" {
+			mitems = append(mitems, markup.AttrApplyer{Name: "label", Value: m.Label})
+		}
+		if m.Role != "" {
+			mitems = append(mitems, markup.DataApplyer{Name: "menuRole", Value: string(m.Role)})
+		}
+		if m.Acclerator != "" {
+			mitems = append(mitems, markup.DataApplyer{Name: "menuAcclerator", Value: m.Acclerator})
+		}
+		if m.Handler != nil {
+			//TODO: modify event type
+			mitems = append(mitems, html.OnClick(m.Handler))
+		}
+		if len(m.SubMenu) > 0 {
+			smitems, err := toPopupMenuSub(m.SubMenu)
+			if err != nil {
+				return nil, err
 			}
-			var mitems []markup.MarkupOrChild
-			if m.Label != "" {
-				mitems = append(mitems, markup.AttrApplyer{Name: "label", Value: m.Label})
-			}
-			if m.Role != "" {
-				mitems = append(mitems, markup.DataApplyer{Name: "menuRole", Value: string(m.Role)})
-			}
-			if m.Acclerator != "" {
-				mitems = append(mitems, markup.DataApplyer{Name: "menuAcclerator", Value: m.Acclerator})
-			}
-			if m.Handler != nil {
-				//TODO: modify event type
-				mitems = append(mitems, html.OnClick(m.Handler))
-			}
-			if firstItem && sidx != 0 {
-				items = append(items, html.HorizontalRule())
-				firstItem = false
-			}
-			if len(m.SubMenu) > 0 {
-				smitems, err := toPopupMenuSub(m.SubMenu)
-				if err != nil {
-					return nil, err
-				}
-				if len(smitems) > 0 {
-					mitems = append(mitems, smitems...)
-				}
-			}
-			if len(m.SubMenu) > 0 || roleIsMenuedRole(m.Role) {
-				items = append(items, markup.MustTag("menu", mitems))
-			} else {
-				items = append(items, markup.MustTag("menuitem", mitems))
+			if len(smitems) > 0 {
+				mitems = append(mitems, smitems...)
 			}
 		}
+		if len(m.SubMenu) > 0 || roleIsMenuedRole(m.Role) {
+			items = append(items, markup.MustTag("menu", mitems))
+		} else {
+			items = append(items, markup.MustTag("menuitem", mitems))
+		}
+		firstItem = false
 	}
 	return items, nil
 }

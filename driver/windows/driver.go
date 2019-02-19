@@ -237,25 +237,20 @@ func responceEventResult(crespNo C.int, cstr unsafe.Pointer, clen C.int) {
 var windowsDefaultMenu = menu.AppMenuTemplate{
 	{Label: "File",
 		SubMenu: menu.MenuTemplate{
-			{
-				{Role: menu.RoleClose},
-			},
-			{
-				{Role: menu.RoleQuit},
-			},
+			{Role: menu.RoleClose},
+			menu.Separator,
+			{Role: menu.RoleQuit},
 		}},
 	{Label: "Edit",
 		SubMenu: menu.MenuTemplate{
-			{
-				{Role: menu.RoleCut},
-				{Role: menu.RoleCopy},
-				{Role: menu.RolePaste},
-				{Role: menu.RoleDelete},
-			},
+			{Role: menu.RoleCut},
+			{Role: menu.RoleCopy},
+			{Role: menu.RolePaste},
+			{Role: menu.RoleDelete},
 		}},
 	{Label: "Help", Role: menu.RoleHelp,
 		SubMenu: menu.MenuTemplate{
-			{{Role: menu.RoleAbout}},
+			{Role: menu.RoleAbout},
 		}},
 }
 
