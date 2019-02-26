@@ -66,7 +66,7 @@ var ComponentClass componentClass
 
 type Component interface {
 	json.Marshaler
-	event.EventTarget
+	event.EventTargetWithSignal
 	Context() *Core
 	Builder() Builder
 	Key() interface{}
@@ -83,10 +83,18 @@ func (c *Core) Children() []RenderResult { return c.children }
 func (c *Core) ResourcesFilePath(fn string) string {
 	return path.Join(c.klass.ResourcePathBase(), "resources", fn)
 }
-func (c *Core) GetEventSlot(name string) *event.Slot {
-	// TODO: not implement yet
-	return nil
+func (c *Core) GetEventSignal(name string) *event.Signal {
+	if c.klass.Signals == nil {
+		return nil
+	}
+	idx, ok := c.klass.Signals[name]
+	if !ok {
+		return nil
+	}
+	v := reflect.ValueOf(c.self)
+	return v.Elem().Field(idx).Addr().Interface().(*event.Signal)
 }
+
 func (c *Core) Host() event.EventHost {
 	return &ComponentClass
 }
@@ -486,6 +494,16 @@ func createComponent(b *builder, vnode *ComponentRenderResult) Component {
 	c := vnode.Klass.NewInstance()
 	c.Context().builder = b
 	c.Context().id = b.components.NewKey()
+
+	// initialize component signals
+	if vnode.Klass.Signals != nil {
+		for n := range vnode.Klass.Signals {
+			sig := c.GetEventSignal(n)
+			if sig != nil {
+				sig.Register(n, c)
+			}
+		}
+	}
 
 	// call initializer
 	if i, ok := c.(Initializer); ok {

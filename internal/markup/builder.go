@@ -12,7 +12,6 @@ import (
 type Buildable interface {
 	event.EventTarget
 	Builder() Builder
-	EventPath(name ...string) string
 }
 
 type AsyncBuildable interface {

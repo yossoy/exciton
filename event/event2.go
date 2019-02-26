@@ -3,7 +3,6 @@ package event
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -15,6 +14,23 @@ type EventPathItem struct {
 }
 
 type EventPath []EventPathItem
+
+func eventTargeetToPathStringCore(target EventTarget) []string {
+	var result []string
+	if target.ParentTarget() != nil {
+		result = eventTargeetToPathStringCore(target.ParentTarget())
+	}
+	if !target.Host().IsSingleton() {
+		result = append(result, target.Host().Name(), target.TargetID())
+	}
+	return result
+}
+
+func EventTargetToPathString(target EventTarget, name string) string {
+	p := eventTargeetToPathStringCore(target)
+	p = append(p, name)
+	return "/" + strings.Join(p, "/")
+}
 
 func toDriverEventPathCore(target EventTarget, params map[string]string) []string {
 	var result []string
@@ -87,7 +103,7 @@ func StringToEventPath(path string) (EventPath, string, error) {
 	var ph EventHost = rootHost.Host()
 	for len(paths) > 0 {
 		name := paths[0]
-		log.Printf("name = %q, paths=%v, ph = %v\n", name, paths, ph)
+		// log.Printf("name = %q, paths=%v, ph = %v\n", name, paths, ph)
 		var val string
 		if ph.Name() != name {
 			if ph.IsSingleton() {
@@ -110,7 +126,7 @@ func StringToEventPath(path string) (EventPath, string, error) {
 		}
 		if len(paths) > 0 {
 			ph = ph.GetChild(paths[0])
-			log.Printf("ph => %v, %q", ph, paths[0])
+			// log.Printf("ph => %v, %q", ph, paths[0])
 			if ph == nil {
 				return nil, "", fmt.Errorf("invalid path: %q", path)
 			}
@@ -126,9 +142,9 @@ type EventTarget interface {
 	TargetID() string
 }
 
-type EventTargetWithSlot interface {
+type EventTargetWithSignal interface {
 	EventTarget
-	GetEventSlot(name string) *Slot
+	GetEventSignal(name string) *Signal
 }
 
 type EventTargetWithLocalHandler interface {
@@ -299,10 +315,6 @@ func (ehc *EventHostCore) TargetID() string {
 	return HostID
 }
 
-func (ehc *EventHostCore) GetEventSlot(name string) *Slot {
-	return nil
-}
-
 func (ehc *EventHostCore) Owner() EventHost {
 	return ehc.owner
 }
@@ -374,17 +386,11 @@ func (ehc *EventHostCore) Resolve(path EventPath) (EventHost, EventTarget, map[s
 
 // TODO : change path to Target?
 func (ehc *EventHostCore) Emit(path EventPath, name string, argument Value, callback ResponceCallback) error {
-	// TODO: というか、EmitはEventTargetに対して行うべきでは?
-	// TODO: やはり実行は一旦別のキューに流すべきか? その場合、元スレッドが複数あってもデッドロックが起きるけど……¡
-	// if ehc.owner != nil {
-	// 	return ehc.owner.Emit(path, name, argument)
-	// }
 	//log.Printf("EventHostCore::Emit(%v, %q, %v, %v)", path, name, argument, callback)
 	host, target, _ := ehc.Resolve(path) // params 要らんかも
 	if host == nil {
 		return errors.New("target not found in path")
 	}
-	// targetって実は使わない?
 	//log.Printf("======> target: %v, host: %v, params: %v\n", target, host, params)
 	e := &Event{
 		Name:     name,
@@ -410,8 +416,8 @@ func (ehc *EventHostCore) Emit(path EventPath, name string, argument Value, call
 			}
 		}
 	}
-	if ets, ok := target.(EventTargetWithSlot); ok {
-		if s := ets.GetEventSlot(name); s != nil {
+	if ets, ok := target.(EventTargetWithSignal); ok {
+		if s := ets.GetEventSignal(name); s != nil {
 			err := s.Emit(argument)
 			if callback != nil {
 				callback(NewErrorResult(err))

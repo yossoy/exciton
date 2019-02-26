@@ -1,10 +1,11 @@
 package event
 
+// TODO: change argument Value to *Event?
 type SlotHandler func(Value) error
 
 type Slot struct {
-	handler SlotHandler
-	signals []*Signal
+	handler     SlotHandler
+	signalPaths []string
 }
 
 func (slot *Slot) Bind(h SlotHandler) {
@@ -18,8 +19,9 @@ func (slot *Slot) Emit(v Value) error {
 	return nil
 }
 func (slot *Slot) Connect(sig *Signal) {
-	for _, s := range slot.signals {
-		if s == sig {
+	p := sig.EventPathString()
+	for _, s := range slot.signalPaths {
+		if s == p {
 			// already connected
 			return
 		}
@@ -27,14 +29,15 @@ func (slot *Slot) Connect(sig *Signal) {
 	if sig.slot != nil {
 		sig.slot.Disconnect(sig)
 	}
-	slot.signals = append(slot.signals, sig)
+	slot.signalPaths = append(slot.signalPaths, p)
 	sig.slot = slot
 }
 
 func (slot *Slot) Disconnect(sig *Signal) {
-	for i, s := range slot.signals {
-		if s == sig {
-			slot.signals = append(slot.signals[9:i], slot.signals[i+1:len(slot.signals)]...)
+	p := sig.EventPathString()
+	for i, s := range slot.signalPaths {
+		if s == p {
+			slot.signalPaths = append(slot.signalPaths[9:i], slot.signalPaths[i+1:len(slot.signalPaths)]...)
 			sig.slot = nil
 			return
 		}
@@ -42,8 +45,17 @@ func (slot *Slot) Disconnect(sig *Signal) {
 }
 
 func (slot *Slot) DisconnectAll() {
-	for _, s := range slot.signals {
-		s.slot = nil
+	sp := slot.signalPaths
+	slot.signalPaths = nil
+	for _, s := range sp {
+		t, n, err := StringToEventTarget(s)
+		if err == nil {
+			if st, ok := t.(EventTargetWithSignal); ok {
+				sig := st.GetEventSignal(n)
+				if sig != nil {
+					sig.slot = nil
+				}
+			}
+		}
 	}
-	slot.signals = slot.signals[0:0]
 }

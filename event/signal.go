@@ -1,7 +1,21 @@
 package event
 
 type Signal struct {
-	slot *Slot
+	slot       *Slot // TODO: remove this
+	name       string
+	hostTarget EventTarget
+}
+
+func (sig *Signal) Register(name string, target EventTarget) {
+	sig.name = name
+	sig.hostTarget = target
+}
+
+func (sig *Signal) EventPathString() string {
+	if sig.hostTarget == nil {
+		return ""
+	}
+	return EventTargetToPathString(sig.hostTarget, sig.name)
 }
 
 func (sig *Signal) Self() *Signal {

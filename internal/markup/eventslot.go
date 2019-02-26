@@ -41,9 +41,9 @@ func (sc SigConnecter) isMarkupOrChild()                       {}
 func (sc SigConnecter) applyToNode(b Builder, n Node, on Node) { panic(false) }
 func (sc SigConnecter) applyToComponent(c Component) {
 	ctx := c.Context()
-	idx, ok := ctx.klass.Properties[sc.Name]
+	idx, ok := ctx.klass.Slots[sc.Name]
 	if !ok {
-		panic("invalid signal name")
+		panic("invalid slot name")
 	}
 	v := reflect.ValueOf(c).Elem()
 	fv := v.Field(idx)
@@ -67,7 +67,7 @@ func (sc SlotConnecter) isMarkupOrChild()                       {}
 func (sc SlotConnecter) applyToNode(b Builder, n Node, on Node) { panic(false) }
 func (sc SlotConnecter) applyToComponent(c Component) {
 	ctx := c.Context()
-	idx, ok := ctx.klass.Properties[sc.Name]
+	idx, ok := ctx.klass.Signals[sc.Name]
 	if !ok {
 		panic("invalid signal name")
 	}

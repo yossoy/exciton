@@ -60,7 +60,12 @@ func (ep valueEventParameter) Decode(data interface{}) error {
 	}
 	vv := reflect.ValueOf(ep.value)
 	if !vv.Type().AssignableTo(dv.Type()) {
-		return errors.New("incompatible type")
+		if vv.Kind() == reflect.Ptr && vv.Elem().Type().AssignableTo(dv.Type()) {
+			// fallback.
+			vv = vv.Elem()
+		} else {
+			return errors.New("incompatible type")
+		}
 	}
 	dv.Set(vv)
 	return nil

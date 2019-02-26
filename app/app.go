@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/yossoy/exciton/menu"
 
@@ -70,8 +69,8 @@ func (app *App) Host() event.EventHost {
 	return &AppClass
 }
 
-func (app *App) GetEventSlot(name string) *event.Slot {
-	// TODO: add event slot?
+func (app *App) GetEventSignal(name string) *event.Signal {
+	// TODO: add event signal?
 	return nil
 }
 
@@ -90,42 +89,6 @@ func (app *App) PreferredLanguages() lang.PreferredLanguages {
 
 func (app *App) Owner() Owner {
 	return app.owner
-}
-
-func (app *App) EventPath(fragments ...string) string {
-	var sb strings.Builder
-	sb.Grow(100)
-	if app.id != object.SingletonName {
-		sb.WriteString("/exciton/")
-		sb.WriteString(app.id)
-	}
-	for _, f := range fragments {
-		sb.WriteString("/")
-		sb.WriteString(f)
-	}
-	return sb.String()
-}
-
-func (app *App) EventPath2(fragments1 []string, fragments2 []string) string {
-	var sb strings.Builder
-	sb.Grow(100)
-	if app.id != object.SingletonName {
-		sb.WriteString("/exciton/")
-		sb.WriteString(app.id)
-	}
-	for _, f := range fragments1 {
-		sb.WriteString("/")
-		sb.WriteString(f)
-	}
-	for _, f := range fragments2 {
-		sb.WriteString("/")
-		sb.WriteString(f)
-	}
-	return sb.String()
-}
-
-func (app *App) AppEventPath(fragments ...string) string {
-	return app.EventPath(fragments...)
 }
 
 func (app *App) URLBase() string {

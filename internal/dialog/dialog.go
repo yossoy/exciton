@@ -36,7 +36,6 @@ func makeMsgBoxOpt(parent string, message string, title string, messageBoxType d
 // TODO: owner は実質App. package flat化でなんとかしよう……
 type Owner interface {
 	event.EventTarget
-	AppEventPath(name ...string) string
 }
 
 func ShowMessageBoxAsync(owner Owner, windowID string, message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {

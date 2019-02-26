@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+
+	"github.com/yossoy/exciton/event"
 )
 
 type klassPathInfo struct {
@@ -38,6 +40,8 @@ type klass struct {
 	pathInfo     *klassPathInfo
 	Type         reflect.Type
 	Properties   map[string]int
+	Signals      map[string]int
+	Slots        map[string]int
 	localCSSFile string
 	localJSFile  string
 	cssIsGlobal  bool
@@ -87,13 +91,27 @@ func makeKlass(c Component, dir string) (*klass, error) {
 	}
 	k.Type = ct
 	fn := ct.NumField()
+	signalType := reflect.TypeOf(event.Signal{})
+	slotType := reflect.TypeOf(event.Slot{})
 	for i := 0; i < fn; i++ {
 		f := ct.Field(i)
 		if ft, ok := f.Tag.Lookup("exciton"); ok {
-			if k.Properties == nil {
-				k.Properties = make(map[string]int)
+			if f.Type == signalType {
+				if k.Signals == nil {
+					k.Signals = make(map[string]int)
+				}
+				k.Signals[ft] = i
+			} else if f.Type == slotType {
+				if k.Slots == nil {
+					k.Slots = make(map[string]int)
+				}
+				k.Slots[ft] = i
+			} else {
+				if k.Properties == nil {
+					k.Properties = make(map[string]int)
+				}
+				k.Properties[ft] = i
 			}
-			k.Properties[ft] = i
 		}
 	}
 	return k, nil

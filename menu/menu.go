@@ -28,8 +28,6 @@ var MenuClass menuClass
 
 type Owner interface {
 	event.EventTarget
-	EventPath(fragments ...string) string
-	EventPath2(fragments1 []string, fragments2 []string) string
 }
 
 type MenuInstance struct {
@@ -45,10 +43,6 @@ func (m *MenuInstance) TargetID() string {
 	return m.uuid
 }
 
-func (m *MenuInstance) GetEventSlot(name string) *event.Slot {
-	return nil
-}
-
 func (m *MenuInstance) Host() event.EventHost {
 	return &MenuClass
 }
@@ -59,10 +53,6 @@ func (m *MenuInstance) ParentTarget() event.EventTarget {
 
 func (m *MenuInstance) Builder() markup.Builder {
 	return m.builder
-}
-
-func (m *MenuInstance) EventPath(fragments ...string) string {
-	return m.owner.EventPath2([]string{"menu", m.uuid}, fragments)
 }
 
 func (m *MenuInstance) RequestAnimationFrame() {
@@ -80,7 +70,7 @@ func (m *MenuInstance) UpdateDiffSetHandler(ds *markup.DiffSet) {
 		panic(e)
 	}
 	if !ret {
-		panic(fmt.Sprintf("invalid %q results", m.EventPath("updateDiffSetHandler")))
+		panic(fmt.Sprintf("invalid results: &v", result.Value()))
 	}
 }
 

@@ -88,9 +88,6 @@ type Owner interface {
 	event.EventTarget
 	//	ID() string
 	PreferredLanguages() lang.PreferredLanguages
-	EventPath(fragments ...string) string
-	EventPath2(fragments1 []string, fragments2 []string) string
-	AppEventPath(fragments ...string) string
 	URLBase() string
 }
 
@@ -112,7 +109,7 @@ type Window struct {
 	cachedHTML        []byte
 }
 
-func (w *Window) GetEventSlot(name string) *event.Slot {
+func (w *Window) GetEventSignal(name string) *event.Signal {
 	// TODO: add event slot?
 	return nil
 }
@@ -145,22 +142,6 @@ func (w *Window) Owner() Owner {
 
 func (w *Window) Builder() markup.Builder {
 	return w.builder
-}
-
-func (w *Window) EventPath(fragments ...string) string {
-	return w.owner.EventPath2([]string{"window", w.ID}, fragments)
-}
-
-func (w *Window) EventPath2(fragments1 []string, fragments2 []string) string {
-	f := make([]string, 2, 2+len(fragments1))
-	f[0] = "window"
-	f[1] = w.ID
-	f = append(f, fragments1...)
-	return w.owner.EventPath2(f, fragments2)
-}
-
-func (w *Window) AppEventPath(fragments ...string) string {
-	return w.owner.AppEventPath(fragments...)
 }
 
 func (w *Window) RequestAnimationFrame() {
