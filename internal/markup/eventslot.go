@@ -7,14 +7,14 @@ import (
 )
 
 type eventSlotter interface {
-	Emit(event.Value) error
 	Connect(*event.Signal)
-	Disconnect(*event.Signal)
+	Disconnect(string)
 	DisconnectAll()
 }
 
 type eventSignaler interface {
 	Self() *event.Signal
+	Emit(event.Value) error
 }
 
 func disconnectSlotAll(c Component) {

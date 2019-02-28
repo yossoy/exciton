@@ -56,10 +56,33 @@ func InitEvents(isSingleton bool, si *StartupInfo) {
 }
 
 type App struct {
-	owner      Owner
-	id         string
-	MainWindow *window.Window
-	UserData   interface{}
+	owner              Owner
+	id                 string
+	MainWindow         *window.Window
+	userDefinedSignals map[string]*event.Signal
+	userDefinedSlots   map[string]*event.Slot
+	UserData           interface{}
+}
+
+func (app *App) RegisterEventSignal(name string) *event.Signal {
+	s := &event.Signal{}
+	s.Register(name, app)
+	if app.userDefinedSignals == nil {
+		app.userDefinedSignals = make(map[string]*event.Signal)
+	}
+	app.userDefinedSignals[name] = s
+	return s
+}
+
+func (app *App) RegisterEventSlot(name string, handler event.SlotHandler) *event.Slot {
+	if app.userDefinedSlots == nil {
+		app.userDefinedSlots = make(map[string]*event.Slot)
+	}
+	s := &event.Slot{}
+	s.Register(name, app)
+	s.Bind(handler)
+	app.userDefinedSlots[name] = s
+	return s
 }
 
 func (app *App) Parent() event.EventTarget {
@@ -70,8 +93,25 @@ func (app *App) Host() event.EventHost {
 }
 
 func (app *App) GetEventSignal(name string) *event.Signal {
-	// TODO: add event signal?
-	return nil
+	if app.userDefinedSignals == nil {
+		return nil
+	}
+	s, ok := app.userDefinedSignals[name]
+	if !ok {
+		return nil
+	}
+	return s
+}
+
+func (app *App) GetEventSlot(name string) *event.Slot {
+	if app.userDefinedSlots == nil {
+		return nil
+	}
+	s, ok := app.userDefinedSlots[name]
+	if !ok {
+		return nil
+	}
+	return s
 }
 
 func (app *App) TargetID() string {

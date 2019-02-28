@@ -18,13 +18,13 @@ type rootComponent struct {
 	markup.Core
 	components    []string
 	createdCount  int
-	killMeClicked event.Slot
-	clicked1      event.Slot
+	KillMeClicked event.Slot `exciton:"killMeClicked"`
+	Clicked1      event.Slot `exciton:"clicked1"`
 }
 
 func (rc *rootComponent) Initialize() {
-	rc.killMeClicked.Bind(rc.onKillmeClicked)
-	rc.clicked1.Bind(rc.onClick1)
+	rc.KillMeClicked.Bind(rc.onKillmeClicked)
+	rc.Clicked1.Bind(rc.onClick1)
 }
 
 func (rc *rootComponent) newComponentKey() string {
@@ -33,9 +33,9 @@ func (rc *rootComponent) newComponentKey() string {
 	return key
 }
 
-func (rc *rootComponent) onClick1(v event.Value) error {
+func (rc *rootComponent) onClick1(e *event.Event) error {
 	var arg sample.Click1Arg
-	if err := v.Decode(&arg); err != nil {
+	if err := e.Argument.Decode(&arg); err != nil {
 		log.PrintDebug("arg parse error : ===> %v", err)
 		return err
 	}
@@ -65,15 +65,15 @@ func (rc *rootComponent) onClickRemoveComponent(e *html.MouseEvent) {
 	rc.Builder().Rerender()
 }
 
-func (rc *rootComponent) onKillmeClicked(v event.Value) error {
+func (rc *rootComponent) onKillmeClicked(e *event.Event) error {
 	var arg sample.KillMeArg
-	err := v.Decode(&arg)
+	err := e.Argument.Decode(&arg)
 	if err != nil {
 		return err
 	}
 	c := arg.Target
 	if c == nil {
-		return errors.New("component not found!")
+		return errors.New("component not found")
 	}
 	k, ok := c.GetProperty("objectKey")
 	if ok {
@@ -98,8 +98,8 @@ func (rc *rootComponent) Render() markup.RenderResult {
 				k,
 				sample.SampleComponent(
 					markup.Property("objectKey", k),
-					markup.ConnectToSignal(sample.SlotClick1, &rc.clicked1),
-					markup.ConnectToSignal(sample.SlotKillMe, &rc.killMeClicked),
+					markup.ConnectToSignal(sample.SlotClick1, &rc.Clicked1),
+					markup.ConnectToSignal(sample.SlotKillMe, &rc.KillMeClicked),
 				),
 			),
 		)

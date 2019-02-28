@@ -1,4 +1,4 @@
 package markup
 
-type EventTarget interface {
+type EventTarget2 interface {
 }

@@ -66,7 +66,9 @@ var ComponentClass componentClass
 
 type Component interface {
 	json.Marshaler
+	event.EventTarget
 	event.EventTargetWithSignal
+	event.EventTargetWithSlot
 	Context() *Core
 	Builder() Builder
 	Key() interface{}
@@ -93,6 +95,17 @@ func (c *Core) GetEventSignal(name string) *event.Signal {
 	}
 	v := reflect.ValueOf(c.self)
 	return v.Elem().Field(idx).Addr().Interface().(*event.Signal)
+}
+func (c *Core) GetEventSlot(name string) *event.Slot {
+	if c.klass.Slots == nil {
+		return nil
+	}
+	idx, ok := c.klass.Slots[name]
+	if !ok {
+		return nil
+	}
+	v := reflect.ValueOf(c.self)
+	return v.Elem().Field(idx).Addr().Interface().(*event.Slot)
 }
 
 func (c *Core) Host() event.EventHost {
@@ -501,6 +514,15 @@ func createComponent(b *builder, vnode *ComponentRenderResult) Component {
 			sig := c.GetEventSignal(n)
 			if sig != nil {
 				sig.Register(n, c)
+			}
+		}
+	}
+	// initialize component slots
+	if vnode.Klass.Slots != nil {
+		for n := range vnode.Klass.Slots {
+			slot := c.GetEventSlot(n)
+			if slot != nil {
+				slot.Register(n, c)
 			}
 		}
 	}

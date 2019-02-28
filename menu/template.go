@@ -1,8 +1,8 @@
 package menu
 
 import (
+	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
-	"github.com/yossoy/exciton/markup"
 )
 
 type AppMenuTemplate []AppMenuItemTemplate
@@ -27,8 +27,8 @@ type ItemTemplate struct {
 }
 
 type MenuEvent struct {
-	View   *markup.EventTarget
-	Target *markup.EventTarget
+	View   event.EventTarget
+	Target event.EventTarget
 }
 
 const (

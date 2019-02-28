@@ -143,13 +143,16 @@ type EventTarget interface {
 }
 
 type EventTargetWithSignal interface {
-	EventTarget
 	GetEventSignal(name string) *Signal
 }
 
 type EventTargetWithLocalHandler interface {
 	EventTarget
 	GetEventHandler(name string) Handler
+}
+
+type EventTargetWithSlot interface {
+	GetEventSlot(name string) *Slot
 }
 
 type EventHandler interface {
@@ -397,7 +400,6 @@ func (ehc *EventHostCore) Emit(path EventPath, name string, argument Value, call
 		Argument: argument,
 		Target:   target,
 		Host:     host,
-		// Params:   params,
 	}
 	if etlh, ok := target.(EventTargetWithLocalHandler); ok {
 		if h := etlh.GetEventHandler(name); h != nil {
@@ -408,9 +410,8 @@ func (ehc *EventHostCore) Emit(path EventPath, name string, argument Value, call
 					if e, ok := r.(error); ok {
 						callback(NewErrorResult(e))
 						return e
-					} else {
-						callback(NewValueResult(NewValue(r)))
 					}
+					callback(NewValueResult(NewValue(r)))
 				}
 				return nil
 			}
@@ -419,6 +420,15 @@ func (ehc *EventHostCore) Emit(path EventPath, name string, argument Value, call
 	if ets, ok := target.(EventTargetWithSignal); ok {
 		if s := ets.GetEventSignal(name); s != nil {
 			err := s.Emit(argument)
+			if callback != nil {
+				callback(NewErrorResult(err))
+			}
+			return err
+		}
+	}
+	if ets, ok := target.(EventTargetWithSlot); ok {
+		if s := ets.GetEventSlot(name); s != nil {
+			err := s.emit(e)
 			if callback != nil {
 				callback(NewErrorResult(err))
 			}
