@@ -18,8 +18,8 @@ type rootComponent struct {
 	markup.Core
 	components    []string
 	createdCount  int
-	KillMeClicked event.Slot `exciton:"killMeClicked"`
-	Clicked1      event.Slot `exciton:"clicked1"`
+	KillMeClicked markup.EventSlot `exciton:"killMeClicked"`
+	Clicked1      markup.EventSlot `exciton:"clicked1"`
 }
 
 func (rc *rootComponent) Initialize() {

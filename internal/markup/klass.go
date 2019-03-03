@@ -91,17 +91,17 @@ func makeKlass(c Component, dir string) (*klass, error) {
 	}
 	k.Type = ct
 	fn := ct.NumField()
-	signalType := reflect.TypeOf(event.Signal{})
-	slotType := reflect.TypeOf(event.Slot{})
+	slotterType := reflect.TypeOf((*event.Slotter)(nil)).Elem()
+	signallerType := reflect.TypeOf((*event.Signaller)(nil)).Elem()
 	for i := 0; i < fn; i++ {
 		f := ct.Field(i)
 		if ft, ok := f.Tag.Lookup("exciton"); ok {
-			if f.Type == signalType {
+			if reflect.PtrTo(f.Type).Implements(signallerType) {
 				if k.Signals == nil {
 					k.Signals = make(map[string]int)
 				}
 				k.Signals[ft] = i
-			} else if f.Type == slotType {
+			} else if reflect.PtrTo(f.Type).Implements(slotterType) {
 				if k.Slots == nil {
 					k.Slots = make(map[string]int)
 				}

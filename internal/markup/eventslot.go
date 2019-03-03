@@ -6,34 +6,24 @@ import (
 	"github.com/yossoy/exciton/event"
 )
 
-type eventSlotter interface {
-	Connect(*event.Signal)
-	Disconnect(string)
-	DisconnectAll()
-}
-
-type eventSignaler interface {
-	Self() *event.Signal
-	Emit(event.Value) error
-}
-
-func disconnectSlotAll(c Component) {
+func disconnectAllSignalSlot(c Component) {
 	ctx := c.Context()
 	vv := reflect.ValueOf(c).Elem()
-	st := reflect.TypeOf(event.Slot{})
-	for _, idx := range ctx.klass.Properties {
+	for _, idx := range ctx.klass.Signals {
 		fv := vv.Field(idx)
-		if fv.Type() != st {
-			continue
-		}
-		es := fv.Addr().Interface().(eventSlotter)
-		es.DisconnectAll()
+		ss := fv.Addr().Interface().(event.Signaller)
+		ss.Core().DisconnectAll()
+	}
+	for _, idx := range ctx.klass.Slots {
+		fv := vv.Field(idx)
+		ss := fv.Addr().Interface().(event.Slotter)
+		ss.Core().DisconnectAll()
 	}
 }
 
 type SigConnecter struct {
 	Name string
-	Sig  *event.Signal
+	Sig  event.Signaller
 }
 
 func (sc SigConnecter) isMarkup()                              {}
@@ -43,23 +33,23 @@ func (sc SigConnecter) applyToComponent(c Component) {
 	ctx := c.Context()
 	idx, ok := ctx.klass.Slots[sc.Name]
 	if !ok {
-		panic("invalid slot name")
+		panic("invalid slot name: " + sc.Name + " in " + ctx.klass.Name())
 	}
 	v := reflect.ValueOf(c).Elem()
 	fv := v.Field(idx)
 	if !fv.CanAddr() || !fv.Addr().CanInterface() {
 		panic("invalid target")
 	}
-	es, ok := fv.Addr().Interface().(eventSlotter)
+	es, ok := fv.Addr().Interface().(event.Slotter)
 	if !ok {
 		panic("invalid target")
 	}
-	es.Connect(sc.Sig)
+	es.Core().Connect(sc.Sig.Core())
 }
 
 type SlotConnecter struct {
 	Name string
-	Slot *event.Slot
+	Slot event.Slotter
 }
 
 func (sc SlotConnecter) isMarkup()                              {}
@@ -76,9 +66,9 @@ func (sc SlotConnecter) applyToComponent(c Component) {
 	if !fv.CanAddr() || !fv.Addr().CanInterface() {
 		panic("invalid target")
 	}
-	es, ok := fv.Addr().Interface().(eventSignaler)
+	es, ok := fv.Addr().Interface().(event.Signaller)
 	if !ok {
 		panic("invalid target")
 	}
-	sc.Slot.Connect(es.Self())
+	sc.Slot.Core().Connect(es.Core())
 }

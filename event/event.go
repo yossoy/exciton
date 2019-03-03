@@ -17,3 +17,12 @@ type Handler func(e *Event)
 
 // HandlerWithResult is internal event handler function type with result
 type HandlerWithResult func(e *Event, callback ResponceCallback)
+
+type Signaller interface {
+	Core() *Signal
+	Emit(Value) error
+}
+
+type Slotter interface {
+	Core() *Slot
+}

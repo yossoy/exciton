@@ -12,8 +12,6 @@ import (
 	"github.com/yossoy/exciton/driver"
 	"github.com/yossoy/exciton/event"
 
-	//	ievent "github.com/yossoy/exciton/internal/event"
-
 	"github.com/yossoy/exciton/log"
 )
 
@@ -94,7 +92,7 @@ func (c *Core) GetEventSignal(name string) *event.Signal {
 		return nil
 	}
 	v := reflect.ValueOf(c.self)
-	return v.Elem().Field(idx).Addr().Interface().(*event.Signal)
+	return v.Elem().Field(idx).Addr().Interface().(event.Signaller).Core()
 }
 func (c *Core) GetEventSlot(name string) *event.Slot {
 	if c.klass.Slots == nil {
@@ -102,10 +100,11 @@ func (c *Core) GetEventSlot(name string) *event.Slot {
 	}
 	idx, ok := c.klass.Slots[name]
 	if !ok {
+		log.PrintDebug("Component::GetEventSlot(%q) is not found.", name)
 		return nil
 	}
 	v := reflect.ValueOf(c.self)
-	return v.Elem().Field(idx).Addr().Interface().(*event.Slot)
+	return v.Elem().Field(idx).Addr().Interface().(event.Slotter).Core()
 }
 
 func (c *Core) Host() event.EventHost {

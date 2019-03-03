@@ -53,7 +53,7 @@ func (slot *Slot) Disconnect(sigPath string) {
 	// TODO: lock
 	for i, s := range slot.signalPaths {
 		if s == sigPath {
-			slot.signalPaths = append(slot.signalPaths[9:i], slot.signalPaths[i+1:len(slot.signalPaths)]...)
+			slot.signalPaths = append(slot.signalPaths[:i], slot.signalPaths[i+1:]...)
 			// ここではdisconnectは必要ない?
 			return
 		}

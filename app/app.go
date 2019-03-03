@@ -55,32 +55,53 @@ func InitEvents(isSingleton bool, si *StartupInfo) {
 	si.StartupInfo.WinEventHost = &window.WindowClass
 }
 
+type appEventSlot struct {
+	core event.Slot
+}
+
+func (a *appEventSlot) Core() *event.Slot {
+	return &a.core
+}
+
+type appEventSignal struct {
+	core event.Signal
+}
+
+func (a *appEventSignal) Core() *event.Signal {
+	return &a.core
+}
+
+func (a *appEventSignal) Emit(v event.Value) error {
+	return a.core.Emit(v)
+}
+
 type App struct {
 	owner              Owner
 	id                 string
 	MainWindow         *window.Window
-	userDefinedSignals map[string]*event.Signal
-	userDefinedSlots   map[string]*event.Slot
+	userDefinedSignals map[string]*appEventSignal
+	userDefinedSlots   map[string]*appEventSlot
 	UserData           interface{}
 }
 
-func (app *App) RegisterEventSignal(name string) *event.Signal {
-	s := &event.Signal{}
-	s.Register(name, app)
+func (app *App) RegisterEventSignal(name string) event.Signaller {
 	if app.userDefinedSignals == nil {
-		app.userDefinedSignals = make(map[string]*event.Signal)
+		app.userDefinedSignals = make(map[string]*appEventSignal)
 	}
-	app.userDefinedSignals[name] = s
-	return s
+	ap := &appEventSignal{}
+	ap.core.Register(name, app)
+	app.userDefinedSignals[name] = ap
+
+	return ap
 }
 
-func (app *App) RegisterEventSlot(name string, handler event.SlotHandler) *event.Slot {
+func (app *App) RegisterEventSlot(name string, handler event.SlotHandler) event.Slotter {
 	if app.userDefinedSlots == nil {
-		app.userDefinedSlots = make(map[string]*event.Slot)
+		app.userDefinedSlots = make(map[string]*appEventSlot)
 	}
-	s := &event.Slot{}
-	s.Register(name, app)
-	s.Bind(handler)
+	s := &appEventSlot{}
+	s.core.Register(name, app)
+	s.core.Bind(handler)
 	app.userDefinedSlots[name] = s
 	return s
 }
@@ -100,7 +121,7 @@ func (app *App) GetEventSignal(name string) *event.Signal {
 	if !ok {
 		return nil
 	}
-	return s
+	return s.Core()
 }
 
 func (app *App) GetEventSlot(name string) *event.Slot {
@@ -111,7 +132,7 @@ func (app *App) GetEventSlot(name string) *event.Slot {
 	if !ok {
 		return nil
 	}
-	return s
+	return s.Core()
 }
 
 func (app *App) TargetID() string {

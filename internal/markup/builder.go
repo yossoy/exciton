@@ -277,7 +277,7 @@ func (b *builder) unmountComponent(c Component) {
 		um.Unmount()
 	}
 
-	disconnectSlotAll(c)
+	disconnectAllSignalSlot(c)
 
 	b.diffSet.addUnmountComponent(c)
 	b.components.Delete(ctx.id)
