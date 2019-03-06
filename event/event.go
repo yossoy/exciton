@@ -13,7 +13,7 @@ type Event struct {
 type ResponceCallback func(result Result)
 
 // Handler is internal event handler function type
-type Handler func(e *Event)
+type Handler func(e *Event) error
 
 // HandlerWithResult is internal event handler function type with result
 type HandlerWithResult func(e *Event, callback ResponceCallback)

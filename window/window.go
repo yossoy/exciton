@@ -3,6 +3,7 @@ package window
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/yossoy/exciton/lang"
 
@@ -30,22 +31,22 @@ func (wc *windowClass) GetTarget(id string, parent event.EventTarget) event.Even
 
 var WindowClass windowClass
 
-func onWindowFinalize(e *event.Event) {
+func onWindowFinalize(e *event.Event) error {
 	w, ok := e.Target.(*Window)
 	if !ok {
-		panic(fmt.Sprintf("invalid target: %v", e.Target))
-		return
+		return fmt.Errorf("invalid target: %v", e.Target)
 	}
 	_, empty, err := object.Windows.Delete(object.ObjectKey(w.ID))
 	if err != nil {
 		log.PrintError("invalid window: %v", w)
-		return
+		return err
 	}
 	// TODO: emit to AppClass?
 	event.Emit(w.Parent(), "finalizeWindow", event.NewValue(w))
 	if empty {
 		event.Emit(w.Parent(), "window-all-closed", nil)
 	}
+	return nil
 }
 
 func InitEvents(owner event.EventHost) {
@@ -58,23 +59,25 @@ func InitEvents(owner event.EventHost) {
 	WindowClass.AddHandler("keyup", onWindowKeyUp)
 	WindowClass.AddHandler("focus", onWindowFocus)
 	WindowClass.AddHandler("blur", onWindowBlur)
-	WindowClass.AddHandler("onRequestAnimationFrame", func(e *event.Event) {
+	WindowClass.AddHandler("onRequestAnimationFrame", func(e *event.Event) error {
 		w, ok := e.Target.(*Window)
 		if !ok {
-			panic(fmt.Sprintf("invalid target: %v", e.Target))
+			return fmt.Errorf("invalid target: %v", e.Target)
 		}
 		var tick float64
 		if err := e.Argument.Decode(&tick); err != nil {
-			panic(err)
+			return err
 		}
 		w.onRequestAnimationFrame(tick)
+		return nil
 	})
-	WindowClass.AddHandler("ready", func(e *event.Event) {
+	WindowClass.AddHandler("ready", func(e *event.Event) error {
 		w, ok := e.Target.(*Window)
 		if !ok {
-			panic(fmt.Sprintf("invalid target: %v", e.Target))
+			return fmt.Errorf("invalid target: %v", e.Target)
 		}
 		w.onReady() // TODO
+		return nil
 	})
 	markup.InitEvents(&WindowClass)
 
@@ -86,14 +89,15 @@ type UserData interface{}
 
 type Owner interface {
 	event.EventTarget
+	event.EventTargetWithScopedNameResolver
 	//	ID() string
 	PreferredLanguages() lang.PreferredLanguages
 	URLBase() string
+	OnActiveWindowChange(w *Window, actived bool)
 }
 
 // Window is browser window
 type Window struct {
-	//	markup.Buildable
 	owner             Owner
 	ID                string
 	UserData          UserData
@@ -130,10 +134,11 @@ func (w *Window) ParentTarget() event.EventTarget {
 	return w.owner
 }
 
-var activeWindow *Window
-
-func ActiveWindow() *Window {
-	return activeWindow
+func (w *Window) GetTargetByScopedName(scopedName string) (event.EventTarget, string) {
+	if strings.HasPrefix(scopedName, "win.") {
+		return w, strings.TrimPrefix(scopedName, "win.")
+	}
+	return w.owner.GetTargetByScopedName(scopedName)
 }
 
 func (w *Window) Owner() Owner {
@@ -212,95 +217,98 @@ func getWindowByID(id string) *Window {
 	return itm.(*Window)
 }
 
-func onWindowClosed(e *event.Event) {
+func onWindowClosed(e *event.Event) error {
 	w, ok := e.Target.(*Window)
 	if !ok {
-		return
+		return fmt.Errorf("invalid target: %v", e.Target)
 	}
-	if activeWindow == w {
-		activeWindow = nil
-	}
+	w.owner.OnActiveWindowChange(w, false)
 	if w.OnClosed != nil {
 		w.OnClosed(e)
 	}
+	return nil
 }
 
-func onWindowResized(e *event.Event) {
+func onWindowResized(e *event.Event) error {
 	w, ok := e.Target.(*Window)
 	if !ok {
-		return
+		return fmt.Errorf("invalid target: %v", e.Target)
 	}
 	sz := geom.Size{}
 	if err := e.Argument.Decode(&sz); err != nil {
 		log.PrintError("/window/:id/resize: parameter decode failed: %#v", e.Argument)
-		return
+		return err
 	}
 	log.PrintDebug("Window: resized (%#v)", sz)
 	if w.OnResize != nil {
 		w.OnResize(sz.Width, sz.Height)
 	}
+	return nil
 }
 
-func onWindowKeyDown(e *event.Event) {
+func onWindowKeyDown(e *event.Event) error {
 	w, ok := e.Target.(*Window)
 	if !ok {
-		return
+		return fmt.Errorf("invalid target: %v", e.Target)
 	}
 	var ke html.KeyboardEvent
 	err := e.Argument.Decode(&ke)
 	if err != nil {
 		log.PrintError("/window/:id/keydown: parameter decode failed: %#v", e.Argument)
-		return
+		return err
 	}
 	log.PrintDebug("Window: keydown (%#v)", ke)
 	if w.OnKeyDown != nil {
 		w.OnKeyDown(w, &ke)
 	}
+	return nil
 }
 
-func onWindowKeyUp(e *event.Event) {
+func onWindowKeyUp(e *event.Event) error {
 	w, ok := e.Target.(*Window)
 	if !ok {
-		return
+		return fmt.Errorf("invalid target: %v", e.Target)
 	}
 	var ke html.KeyboardEvent
 	err := e.Argument.Decode(&ke)
 	if err != nil {
 		log.PrintError("/window/:id/keyup: parameter decode failed: %#v", e.Argument)
-		return
+		return err
 	}
 	log.PrintDebug("Window: keyup (%#v)", ke)
 	if w.OnKeyUp != nil {
 		w.OnKeyUp(w, &ke)
 	}
+	return nil
 }
 
-func onWindowFocus(e *event.Event) {
+func onWindowFocus(e *event.Event) error {
 	w, ok := e.Target.(*Window)
 	if !ok {
-		return
+		return fmt.Errorf("invalid target: %v", e.Target)
 	}
-	activeWindow = w
+
+	w.owner.OnActiveWindowChange(w, true)
+	return nil
 }
 
-func onWindowBlur(e *event.Event) {
+func onWindowBlur(e *event.Event) error {
 	w, ok := e.Target.(*Window)
 	if !ok {
-		return
+		return fmt.Errorf("invalid target: %v", e.Target)
 	}
-	if activeWindow == w {
-		activeWindow = nil
-	}
+	w.owner.OnActiveWindowChange(w, false)
+	return nil
 }
 
 type changeRouteArg struct {
 	Route string `json:"route"`
 }
 
-func onChangeRoute(e *event.Event) {
+func onChangeRoute(e *event.Event) error {
 	w, ok := e.Target.(*Window)
 	if !ok {
-		return
+		return fmt.Errorf("invalid target: %v", e.Target)
 	}
 	var arg changeRouteArg
 	if err := e.Argument.Decode(&arg); err != nil {
@@ -308,6 +316,7 @@ func onChangeRoute(e *event.Event) {
 	}
 	log.PrintDebug("onChangeRoute: %q", arg.Route)
 	w.Builder().OnRedirect(arg.Route)
+	return nil
 }
 
 func InitWindows(si *driver.StartupInfo) error {
@@ -315,61 +324,6 @@ func InitWindows(si *driver.StartupInfo) error {
 	if err := initHTML(si); err != nil {
 		return err
 	}
-	// if err := appg.AddHandler("/window/:id/finalize", func(e *event.Event) {
-	// 	id := e.Params["id"]
-	// 	log.PrintInfo("finalized: %q", id)
-	// 	wobj, empty, err := object.Windows.Delete(object.ObjectKey(id))
-	// 	if err != nil {
-	// 		log.PrintInfo("finalize: %q", err)
-	// 		return
-	// 	}
-	// 	win := wobj.(*Window)
-	// 	event.Emit("/app/finalizedWindow", event.NewValue(win))
-	// 	if empty {
-	// 		ievent.Emit("/app/window-all-closed", nil)
-	// 	}
-	// }); err != nil {
-	// 	return err
-	// }
-	// if err := appg.AddHandler("/window/:id/changeRoute", onChangeRoute); err != nil {
-	// 	return err
-	// }
-	// if err := appg.AddHandler("/window/:id/closed", onWindowClosed); err != nil {
-	// 	return err
-	// }
-	// if err := appg.AddHandler("/window/:id/resize", onWindowResized); err != nil {
-	// 	return err
-	// }
-	// if err := appg.AddHandler("/window/:id/keydown", onWindowKeyDown); err != nil {
-	// 	return err
-	// }
-	// if err := appg.AddHandler("/window/:id/keyup", onWindowKeyUp); err != nil {
-	// 	return err
-	// }
-	// if err := appg.AddHandler("/window/:id/focus", onWindowFocus); err != nil {
-	// 	return err
-	// }
-	// if err := ievent.AddHandler("/window/:id/blur", onWindowBlur); err != nil {
-	// 	return err
-	// }
-
-	// if err := appg.AddHandler("/window/:id/onRequestAnimationFrame", func(e *event.Event) {
-	// 	w := getWindowByID(e.Params["id"])
-	// 	var tick float64
-	// 	if err := e.Argument.Decode(&tick); err != nil {
-	// 		panic(err)
-	// 	}
-	// 	w.onRequestAnimationFrame(tick)
-	// }); err != nil {
-	// 	return err
-	// }
-
-	// if err := appg.AddHandler("/window/:id/ready", func(e *event.Event) {
-	// 	w := getWindowByID(e.Params["id"])
-	// 	w.onReady()
-	// }); err != nil {
-	// 	return err
-	// }
 	log.PrintInfo("initß ok\n")
 	return nil
 }

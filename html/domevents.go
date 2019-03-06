@@ -31,12 +31,12 @@ type Event struct {
 	IsTrusted        bool                `json:"isTrusted"`               // Indicates whether or not the event was initiated by the browser (after a user click for instance) or by a script (using an event creation method, like event.initEvent)
 }
 
-func dispatchEventHelperEvent(ee *event.Event, handler func(e *Event)) {
+func dispatchEventHelperEvent(ee *event.Event, handler func(e *Event) error) error {
 	var e Event
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // UIEvent derives from Event.
@@ -48,12 +48,12 @@ type UIEvent struct {
 	View   *markup.EventTarget `json:"view,omitempty"` // View returns a WindowProxy that contains the view that generated the event.
 }
 
-func dispatchEventHelperUIEvent(ee *event.Event, handler func(e *UIEvent)) {
+func dispatchEventHelperUIEvent(ee *event.Event, handler func(e *UIEvent) error) error {
 	var e UIEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // BeforeUnloadEvent is fired when the window, the document and its resources are about to be unloaded.
@@ -63,12 +63,12 @@ type BeforeUnloadEvent struct {
 	Event
 }
 
-func dispatchEventHelperBeforeUnloadEvent(ee *event.Event, handler func(e *BeforeUnloadEvent)) {
+func dispatchEventHelperBeforeUnloadEvent(ee *event.Event, handler func(e *BeforeUnloadEvent) error) error {
 	var e BeforeUnloadEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // EventPhase describe which phase the event flow is currently being evaluated.
@@ -119,12 +119,12 @@ func (e *MouseEvent) ScreenPos() geom.Point {
 	return geom.Point{X: e.ScreenX, Y: e.ScreenY}
 }
 
-func dispatchEventHelperMouseEvent(ee *event.Event, handler func(e *MouseEvent)) {
+func dispatchEventHelperMouseEvent(ee *event.Event, handler func(e *MouseEvent) error) error {
 	var e MouseEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // PopStateEvent is dispatched to the window every time the active history entry changes between two history entries for the same document.
@@ -135,12 +135,12 @@ type PopStateEvent struct {
 	Event
 }
 
-func dispatchEventHelperPopStateEvent(ee *event.Event, handler func(e *PopStateEvent)) {
+func dispatchEventHelperPopStateEvent(ee *event.Event, handler func(e *PopStateEvent) error) error {
 	var e PopStateEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // WheelDeltaMode represents the unit of the delta values scroll amount.
@@ -167,12 +167,12 @@ type WheelEvent struct {
 	DeltaMode WheelDeltaMode `json:"deltaMode"` // DeltaMode returns an unsigned long representing the unit of the delta values scroll
 }
 
-func dispatchEventHelperWheelEvent(ee *event.Event, handler func(e *WheelEvent)) {
+func dispatchEventHelperWheelEvent(ee *event.Event, handler func(e *WheelEvent) error) error {
 	var e WheelEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // PageTransitionEvent fire when a webpage is being loaded or unloaded.
@@ -183,12 +183,12 @@ type PageTransitionEvent struct {
 	Persisted bool `json:"persisted"` // Persisted indicates if a webpage is loading from a cache.
 }
 
-func dispatchEventHelperPageTransitionEvent(ee *event.Event, handler func(e *PageTransitionEvent)) {
+func dispatchEventHelperPageTransitionEvent(ee *event.Event, handler func(e *PageTransitionEvent) error) error {
 	var e PageTransitionEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // ProgressEvent represents events measuring progress of an underlying process,
@@ -203,12 +203,12 @@ type ProgressEvent struct {
 	Total            uint64 `json:"total"`            // Total is an unsigned long long representing the total amount of work that the underlying process is in the progress of performing.
 }
 
-func dispatchEventHelperProgressEvent(ee *event.Event, handler func(e *ProgressEvent)) {
+func dispatchEventHelperProgressEvent(ee *event.Event, handler func(e *ProgressEvent) error) error {
 	var e ProgressEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // KeyboardEvent escribe a user interaction with the keyboard. Each event describes a key;
@@ -230,12 +230,12 @@ type KeyboardEvent struct {
 	ShiftKey    bool        `json:"shiftKey"`    // ShitKey returns a Boolean that is true if the Shift key was active when the key event was generated.
 }
 
-func dispatchEventHelperKeyboardEvent(ee *event.Event, handler func(e *KeyboardEvent)) {
+func dispatchEventHelperKeyboardEvent(ee *event.Event, handler func(e *KeyboardEvent) error) error {
 	var e KeyboardEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // FocusEvent represents focus-related events like focus, blur, focusin, or focusout.
@@ -247,12 +247,12 @@ type FocusEvent struct {
 	RelatedTarget *markup.EventTarget `json:"relatedTarget,omitempty"` // RelatedTarget is an EventTarget representing a secondary target for this event.
 }
 
-func dispatchEventHelperFocusEvent(ee *event.Event, handler func(e *FocusEvent)) {
+func dispatchEventHelperFocusEvent(ee *event.Event, handler func(e *FocusEvent) error) error {
 	var e FocusEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // CompositionEvent represents events that occur due to the user indirectly entering text.
@@ -265,12 +265,12 @@ type CompositionEvent struct {
 	Locale string `json:"locale"` // Locale returns the locale of current input method (for example, the keyboard layout locale if the composition is associated with IME).
 }
 
-func dispatchEventHelperCompositionEvent(ee *event.Event, handler func(e *CompositionEvent)) {
+func dispatchEventHelperCompositionEvent(ee *event.Event, handler func(e *CompositionEvent) error) error {
 	var e CompositionEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // DragEvent is a DOM event that represents a drag and drop interaction.
@@ -285,12 +285,12 @@ type DragEvent struct {
 	DataTransfer interface{} `json:"dataTransfer,omitempty"` // The data that is transferred during a drag and drop interaction.
 }
 
-func dispatchEventHelperDragEvent(ee *event.Event, handler func(e *DragEvent)) {
+func dispatchEventHelperDragEvent(ee *event.Event, handler func(e *DragEvent) error) error {
 	var e DragEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // HashChangeEvent is fired when the fragment identifier of the URL has changed
@@ -306,12 +306,12 @@ type HashChangeEvent struct {
 	NewURL     string              `json:"newURL"`
 }
 
-func dispatchEventHelperHashChangeEvent(ee *event.Event, handler func(e *HashChangeEvent)) {
+func dispatchEventHelperHashChangeEvent(ee *event.Event, handler func(e *HashChangeEvent) error) error {
 	var e HashChangeEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }
 
 // OfflineAudioCompletionEvent represents events that occur when the processing of an OfflineAudioContext
@@ -325,10 +325,10 @@ type OfflineAudioCompletionEvent struct {
 	RenderedBuffer interface{} `json:"renderedBuffer,omitempty"`
 }
 
-func dispatchEventHelperOfflineAudioCompletionEvent(ee *event.Event, handler func(e *OfflineAudioCompletionEvent)) {
+func dispatchEventHelperOfflineAudioCompletionEvent(ee *event.Event, handler func(e *OfflineAudioCompletionEvent) error) error {
 	var e OfflineAudioCompletionEvent
 	if err := ee.Argument.Decode(&e); err != nil {
-		panic(err)
+		return err
 	}
-	handler(&e)
+	return handler(&e)
 }

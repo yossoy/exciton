@@ -350,14 +350,16 @@ type dtAddEventListenerItem struct {
 	ID              string `json:"id"`
 	PreventDefault  bool   `json:"pd"`
 	StopPropagation bool   `json:"sp"`
+	ScopedName      string `json:"sn,omitempty"`
 }
 
-func (ds *DiffSet) AddEventListener(t *node, name string, eventId string, preventDefault bool, stopPropagation bool) {
+func (ds *DiffSet) AddEventListener(t *node, name string, eventId string, scopedName string, preventDefault bool, stopPropagation bool) {
 	ds.selectCurNode(t)
 	ds.addItemWithKey(ditAddEventListener, name, dtAddEventListenerItem{
 		ID:              eventId,
 		PreventDefault:  preventDefault,
 		StopPropagation: stopPropagation,
+		ScopedName:      scopedName,
 	})
 }
 

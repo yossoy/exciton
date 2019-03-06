@@ -49,6 +49,7 @@ function addEventCallback(nsobj, n, name, itemv) {
   const id = itemv.id;
   const pd = itemv.pd;
   const sp = itemv.sp;
+  const sn = itemv.sn;
   if (n[ExcitonEventData] === undefined) {
     n[ExcitonEventData] = {};
   }
@@ -64,7 +65,11 @@ function addEventCallback(nsobj, n, name, itemv) {
       console.log('dataset:', e.target.dataset);
     }
     console.log('called', goevent);
-    nsobj.callNativeMethod('html/' + id + '/' + name, goevent);
+    if (sn) {
+      nsobj.callNativeMethod('html/' + id + '/' + sn, goevent);
+    } else {
+      nsobj.callNativeMethod('html/' + id + '/' + name, goevent);
+    }
   };
   n.addEventListener(name, f);
   n[ExcitonEventData][name] = f;

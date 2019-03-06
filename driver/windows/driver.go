@@ -134,9 +134,10 @@ func (d *windows) requestEventEmit(devt *driver.DriverEvent) error {
 func (d *windows) Init() error {
 	C.Log_Init()
 
-	app.AppClass.AddHandler("quit", func(e *event.Event) {
+	app.AppClass.AddHandler("quit", func(e *event.Event) error {
 		driverLogDebug("driver::terminate!!")
 		C.Driver_Terminate()
+		return nil
 	})
 
 	var err error

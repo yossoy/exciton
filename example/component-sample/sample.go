@@ -41,11 +41,11 @@ type KillMeArg struct {
 	Target markup.Component
 }
 
-func (s *sampleComponent) onKillMeClicked(e *html.MouseEvent) {
+func (s *sampleComponent) onKillMeClicked(e *html.MouseEvent) error {
 	arg := KillMeArg{
 		Target: e.Target.HostComponent(),
 	}
-	s.OnKillMeClicked.Emit(event.NewValue(arg))
+	return s.OnKillMeClicked.Emit(event.NewValue(arg))
 }
 
 type Click1Arg struct {
@@ -53,14 +53,16 @@ type Click1Arg struct {
 	Value int64
 }
 
-func (s *sampleComponent) onButton1Clicked(e *html.MouseEvent) {
+func (s *sampleComponent) onButton1Clicked(e *html.MouseEvent) error {
 	v, err := s.getClickCount()
-	log.PrintDebug("**************** onButton1Clicked: %v, %v", v, err)
+	if err != nil {
+		return err
+	}
 	arg := Click1Arg{
 		Err:   err,
 		Value: v,
 	}
-	s.OnButton1Clicked.Emit(event.NewValue(arg))
+	return s.OnButton1Clicked.Emit(event.NewValue(arg))
 }
 
 func (s *sampleComponent) Render() markup.RenderResult {

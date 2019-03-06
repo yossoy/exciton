@@ -167,13 +167,14 @@ func (d *web) relayEventWithResultToNative(e *event.Event, respCallback event.Re
 }
 
 func (d *web) Init() error {
-	app.AppClass.AddHandler("quit", func(e *event.Event) {
+	app.AppClass.AddHandler("quit", func(e *event.Event) error {
 		a := app.GetAppFromEvent(e)
 		if a != nil {
 			driverLogDebug("driver::terminate!!")
 			//TODO: これ変だな。。。 platform.quitChanに送って良いのは全てのchannelが終了した時だけの筈
 			platform.quitChan <- true
 		}
+		return nil
 	})
 
 	var err error

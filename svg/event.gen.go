@@ -11,9 +11,9 @@ import "github.com/yossoy/exciton/event"
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/beginEvent
-func OnBeginEvent(listener func(e *TimeEvent)) markup.EventListener {
-	return mkup.NewEventListener("beginEvent", func(le *event.Event) {
-		dispatchEventHelperTimeEvent(le, listener)
+func OnBeginEvent(listener func(e *TimeEvent) error) markup.EventListener {
+	return mkup.NewEventListener("beginEvent", func(le *event.Event) error {
+		return dispatchEventHelperTimeEvent(le, listener)
 	})
 }
 
@@ -22,9 +22,9 @@ func OnBeginEvent(listener func(e *TimeEvent)) markup.EventListener {
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/endEvent
-func OnEndEvent(listener func(e *TimeEvent)) markup.EventListener {
-	return mkup.NewEventListener("endEvent", func(le *event.Event) {
-		dispatchEventHelperTimeEvent(le, listener)
+func OnEndEvent(listener func(e *TimeEvent) error) markup.EventListener {
+	return mkup.NewEventListener("endEvent", func(le *event.Event) error {
+		return dispatchEventHelperTimeEvent(le, listener)
 	})
 }
 
@@ -33,9 +33,9 @@ func OnEndEvent(listener func(e *TimeEvent)) markup.EventListener {
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/repeatEvent
-func OnRepeatEvent(listener func(e *TimeEvent)) markup.EventListener {
-	return mkup.NewEventListener("repeatEvent", func(le *event.Event) {
-		dispatchEventHelperTimeEvent(le, listener)
+func OnRepeatEvent(listener func(e *TimeEvent) error) markup.EventListener {
+	return mkup.NewEventListener("repeatEvent", func(le *event.Event) error {
+		return dispatchEventHelperTimeEvent(le, listener)
 	})
 }
 
@@ -45,9 +45,9 @@ func OnRepeatEvent(listener func(e *TimeEvent)) markup.EventListener {
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/SVGAbort
-func OnSVGAbort(listener func(e *SVGEvent)) markup.EventListener {
-	return mkup.NewEventListener("SVGAbort", func(le *event.Event) {
-		dispatchEventHelperSVGEvent(le, listener)
+func OnSVGAbort(listener func(e *SVGEvent) error) markup.EventListener {
+	return mkup.NewEventListener("SVGAbort", func(le *event.Event) error {
+		return dispatchEventHelperSVGEvent(le, listener)
 	})
 }
 
@@ -57,9 +57,9 @@ func OnSVGAbort(listener func(e *SVGEvent)) markup.EventListener {
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/SVGError
-func OnSVGError(listener func(e *SVGEvent)) markup.EventListener {
-	return mkup.NewEventListener("SVGError", func(le *event.Event) {
-		dispatchEventHelperSVGEvent(le, listener)
+func OnSVGError(listener func(e *SVGEvent) error) markup.EventListener {
+	return mkup.NewEventListener("SVGError", func(le *event.Event) error {
+		return dispatchEventHelperSVGEvent(le, listener)
 	})
 }
 
@@ -68,9 +68,9 @@ func OnSVGError(listener func(e *SVGEvent)) markup.EventListener {
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/SVGLoad
-func OnSVGLoad(listener func(e *SVGEvent)) markup.EventListener {
-	return mkup.NewEventListener("SVGLoad", func(le *event.Event) {
-		dispatchEventHelperSVGEvent(le, listener)
+func OnSVGLoad(listener func(e *SVGEvent) error) markup.EventListener {
+	return mkup.NewEventListener("SVGLoad", func(le *event.Event) error {
+		return dispatchEventHelperSVGEvent(le, listener)
 	})
 }
 
@@ -79,9 +79,9 @@ func OnSVGLoad(listener func(e *SVGEvent)) markup.EventListener {
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/SVGResize
-func OnSVGResize(listener func(e *SVGEvent)) markup.EventListener {
-	return mkup.NewEventListener("SVGResize", func(le *event.Event) {
-		dispatchEventHelperSVGEvent(le, listener)
+func OnSVGResize(listener func(e *SVGEvent) error) markup.EventListener {
+	return mkup.NewEventListener("SVGResize", func(le *event.Event) error {
+		return dispatchEventHelperSVGEvent(le, listener)
 	})
 }
 
@@ -90,9 +90,9 @@ func OnSVGResize(listener func(e *SVGEvent)) markup.EventListener {
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/SVGScroll
-func OnSVGScroll(listener func(e *SVGEvent)) markup.EventListener {
-	return mkup.NewEventListener("SVGScroll", func(le *event.Event) {
-		dispatchEventHelperSVGEvent(le, listener)
+func OnSVGScroll(listener func(e *SVGEvent) error) markup.EventListener {
+	return mkup.NewEventListener("SVGScroll", func(le *event.Event) error {
+		return dispatchEventHelperSVGEvent(le, listener)
 	})
 }
 
@@ -102,9 +102,9 @@ func OnSVGScroll(listener func(e *SVGEvent)) markup.EventListener {
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/SVGUnload
-func OnSVGUnload(listener func(e *SVGEvent)) markup.EventListener {
-	return mkup.NewEventListener("SVGUnload", func(le *event.Event) {
-		dispatchEventHelperSVGEvent(le, listener)
+func OnSVGUnload(listener func(e *SVGEvent) error) markup.EventListener {
+	return mkup.NewEventListener("SVGUnload", func(le *event.Event) error {
+		return dispatchEventHelperSVGEvent(le, listener)
 	})
 }
 
@@ -113,8 +113,8 @@ func OnSVGUnload(listener func(e *SVGEvent)) markup.EventListener {
 // Category: SVG
 //
 // https://developer.mozilla.org/docs/Web/Events/SVGZoom
-func OnSVGZoom(listener func(e *SVGZoomEvent)) markup.EventListener {
-	return mkup.NewEventListener("SVGZoom", func(le *event.Event) {
-		dispatchEventHelperSVGZoomEvent(le, listener)
+func OnSVGZoom(listener func(e *SVGZoomEvent) error) markup.EventListener {
+	return mkup.NewEventListener("SVGZoom", func(le *event.Event) error {
+		return dispatchEventHelperSVGZoomEvent(le, listener)
 	})
 }

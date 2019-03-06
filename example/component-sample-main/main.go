@@ -52,17 +52,19 @@ func (rc *rootComponent) onClick1(e *event.Event) error {
 	return nil
 }
 
-func (rc *rootComponent) onClickAddComponent(e *html.MouseEvent) {
+func (rc *rootComponent) onClickAddComponent(e *html.MouseEvent) error {
 	rc.components = append(rc.components, rc.newComponentKey())
 	log.PrintInfo("onClickAddCompnent: %d", len(rc.components))
 	rc.Builder().Rerender()
+	return nil
 }
 
-func (rc *rootComponent) onClickRemoveComponent(e *html.MouseEvent) {
+func (rc *rootComponent) onClickRemoveComponent(e *html.MouseEvent) error {
 	if len(rc.components) > 0 {
 		rc.components = rc.components[0 : len(rc.components)-1]
 	}
 	rc.Builder().Rerender()
+	return nil
 }
 
 func (rc *rootComponent) onKillmeClicked(e *event.Event) error {

@@ -144,9 +144,10 @@ func (d *mac) Init() error {
 
 	driverLogInfo("driverMac.Init called")
 
-	app.AppClass.AddHandler("quit", func(e *event.Event) {
+	app.AppClass.AddHandler("quit", func(e *event.Event) error {
 		driverLogInfo("driver::terminate!!")
 		C.Driver_Terminate()
+		return nil
 	})
 
 	var err error

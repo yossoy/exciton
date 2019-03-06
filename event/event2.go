@@ -142,17 +142,21 @@ type EventTarget interface {
 	TargetID() string
 }
 
-type EventTargetWithSignal interface {
-	GetEventSignal(name string) *Signal
-}
-
 type EventTargetWithLocalHandler interface {
 	EventTarget
 	GetEventHandler(name string) Handler
 }
 
+type EventTargetWithSignal interface {
+	GetEventSignal(name string) *Signal
+}
+
 type EventTargetWithSlot interface {
 	GetEventSlot(name string) *Slot
+}
+
+type EventTargetWithScopedNameResolver interface {
+	GetTargetByScopedName(scopedName string) (EventTarget, string)
 }
 
 type EventHandler interface {
@@ -165,13 +169,15 @@ type eventHandlerHandler struct {
 }
 
 func (ehh *eventHandlerHandler) Emit(e *Event, callback ResponceCallback) error {
-	//go func() {
-	ehh.handler(e)
+	err := ehh.handler(e)
 	if callback != nil {
-		callback(NewValueResult(nil))
+		if err != nil {
+			callback(NewErrorResult(err))
+		} else {
+			callback(NewValueResult(nil))
+		}
 	}
-	// }()
-	return nil
+	return err
 }
 
 type eventHandlerHandlerWithResult struct {
@@ -247,33 +253,6 @@ func InitSingletonRoot(host EventHost, name string) {
 func (ehc *EventHostCore) Core() *EventHostCore {
 	return ehc
 }
-
-// func (ehc *EventHostCore) Init(name string, owner EventHost) {
-// 	ehc.name = name
-// 	ehc.owner = owner
-// 	if owner != nil {
-// 		owner.AddChild(ehc.Host())
-// 	} else {
-// 		if rootHost != nil {
-// 			panic("already exist event root")
-// 		}
-// 		rootHost = ehc
-// 	}
-// }
-
-// func (ehc *EventHostCore) InitSingleton(name string, owner EventHost) {
-// 	ehc.name = name
-// 	ehc.owner = owner
-// 	ehc.singleton = true
-// 	if owner != nil {
-// 		owner.AddChild(ehc.Host())
-// 	} else {
-// 		if rootHost != nil {
-// 			panic("already exist event root")
-// 		}
-// 		rootHost = ehc
-// 	}
-// }
 
 func (ehc *EventHostCore) IsSingleton() bool {
 	return ehc.singleton
@@ -356,6 +335,7 @@ func (ehc *EventHostCore) GetChild(name string) EventHost {
 }
 
 func (ehc *EventHostCore) Resolve(path EventPath) (EventHost, EventTarget, map[string]string) {
+	//TODO: remove EventHost from return value?
 	ph := ehc.Host()
 	var target EventTarget
 	var host EventHost
@@ -387,12 +367,20 @@ func (ehc *EventHostCore) Resolve(path EventPath) (EventHost, EventTarget, map[s
 	return host, target, params
 }
 
-// TODO : change path to Target?
 func (ehc *EventHostCore) Emit(path EventPath, name string, argument Value, callback ResponceCallback) error {
+	// TODO : change path to Target?
 	//log.Printf("EventHostCore::Emit(%v, %q, %v, %v)", path, name, argument, callback)
 	host, target, _ := ehc.Resolve(path) // params 要らんかも
-	if host == nil {
+	if host == nil || target == nil {
 		return errors.New("target not found in path")
+	}
+	if tsn, ok := target.(EventTargetWithScopedNameResolver); ok {
+		t, n := tsn.GetTargetByScopedName(name)
+		if t != nil {
+			target = t
+			host = t.Host()
+			name = n
+		}
 	}
 	//log.Printf("======> target: %v, host: %v, params: %v\n", target, host, params)
 	e := &Event{

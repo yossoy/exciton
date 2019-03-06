@@ -296,16 +296,17 @@ func FieldSet(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("fieldset", markup...)
 }
 
-// FigureCaption represents a caption or legend for the rest of the contents
-// its parent <figure> element, if any.
+// The HTML <figcaption> or Figure Caption element represents a caption or
+// legend describing the rest of the contents of its parent <figure> element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/figcaption
 func FigureCaption(markup ...mkup.MarkupOrChild) mkup.RenderResult {
 	return mkup.Tag("figcaption", markup...)
 }
 
-// Figure represents self-contained content, frequently with a caption
-// (<figcaption>), and is typically referenced as a single unit.
+// The HTML <figure> (Figure With Optional Caption) element represents
+// self-contained content, potentially with an optional caption, which is
+// specified using the (<figcaption>) element.
 //
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/figure
 func Figure(markup ...mkup.MarkupOrChild) mkup.RenderResult {

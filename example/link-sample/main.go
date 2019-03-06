@@ -19,28 +19,26 @@ const (
 var appMenu = menu.AppMenuTemplate{
 	{Label: menu.AppMenuLabel, Hidden: !isDarwin,
 		SubMenu: menu.MenuTemplate{
-			{{Role: menu.RoleAbout}},
-			{{Label: "services", Role: menu.RoleServices}},
-			{
-				{Role: menu.RoleHideOthers},
-				{Role: menu.RoleUnhide},
-			},
-			{{Role: menu.RoleQuit}},
+			{Role: menu.RoleAbout},
+			{Label: "services", Role: menu.RoleServices},
+			menu.Separator,
+			{Role: menu.RoleHideOthers},
+			{Role: menu.RoleUnhide},
+			menu.Separator,
+			{Role: menu.RoleQuit},
 		}},
 	{Label: "File", Hidden: isDarwin,
 		SubMenu: menu.MenuTemplate{
-			{{Role: menu.RoleQuit}},
+			{Role: menu.RoleQuit},
 		}},
 	{Label: "History",
 		SubMenu: menu.MenuTemplate{
-			{
-				{Role: menu.RoleGoBack},
-				{Role: menu.RoleGoForward},
-			},
+			{Role: menu.RoleGoBack},
+			{Role: menu.RoleGoForward},
 		}},
 	{Label: "Help", Hidden: isDarwin,
 		SubMenu: menu.MenuTemplate{
-			{{Role: menu.RoleHelp}},
+			{Role: menu.RoleHelp},
 		}},
 }
 
@@ -52,13 +50,14 @@ func (rc *rootComponent) onClickServerRedirect(path string) {
 	rc.Builder().Redirect(path)
 }
 
-func (rc *rootComponent) onChangeSelect(e *html.Event) {
+func (rc *rootComponent) onChangeSelect(e *html.Event) error {
 	v, err := e.Target.Node().GetProperty("value")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	log.PrintDebug("redirect ==> %v", v)
 	rc.Builder().Redirect(v.(string))
+	return nil
 }
 
 func (rc *rootComponent) Render() markup.RenderResult {
@@ -68,7 +67,10 @@ func (rc *rootComponent) Render() markup.RenderResult {
 			markup.Link("/aaa", markup.Text("[/aaa]")),
 			markup.Link("/bbb", markup.Text("[/bbb]")),
 			html.Button(markup.Text("[/ccc]"), markup.OnClickRedirectTo("/ccc")),
-			html.Button(markup.Text("[/ddd]"), html.OnClick(func(e *html.MouseEvent) { rc.onClickServerRedirect("/ddd") })),
+			html.Button(markup.Text("[/ddd]"), html.OnClick(func(e *html.MouseEvent) error {
+				rc.onClickServerRedirect("/ddd")
+				return nil
+			})),
 			html.Select(
 				html.OnChange(rc.onChangeSelect),
 				html.Option(markup.Attribute("value", "/eee/1"), markup.Text("[/eee/1]")),

@@ -90,6 +90,33 @@ func (n *node) Host() event.EventHost {
 	return ph.GetChild("html")
 }
 
+func (n *node) getHostComponent() Component {
+	if n.component != nil {
+		return n.component
+	}
+	if n.parent == nil {
+		return nil
+	}
+	return n.parent.getHostComponent()
+}
+
+func (n *node) GetTargetByScopedName(scopedName string) (event.EventTarget, string) {
+	c := n.getHostComponent()
+	if c != nil {
+		t, n := c.Context().GetTargetByScopedName(scopedName)
+		if t != nil {
+			return t, n
+		}
+	}
+	pt := n.ParentTarget()
+	if pt != nil {
+		if psnr, ok := pt.(event.EventTargetWithScopedNameResolver); ok {
+			return psnr.GetTargetByScopedName(scopedName)
+		}
+	}
+	return nil, scopedName
+}
+
 func (n *node) Node() Node {
 	if n == nil {
 		return nil

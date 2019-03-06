@@ -8,22 +8,23 @@ import (
 type AppMenuTemplate []AppMenuItemTemplate
 
 type AppMenuItemTemplate struct {
-	Label   string
-	Hidden  bool
-	Role    MenuRole
-	SubMenu MenuTemplate
+	Label   string       `json:"label"`
+	Hidden  bool         `json:"hidden"`
+	Role    MenuRole     `json:"role"`
+	SubMenu MenuTemplate `json:"subMenu"`
 }
 
 type MenuTemplate []ItemTemplate
 
 type ItemTemplate struct {
-	Label      string
-	Acclerator string
-	Hidden     bool
-	Role       MenuRole
-	Handler    func(e *html.MouseEvent)
-	SubMenu    MenuTemplate
-	Separator  bool
+	Label           string       `json:"label"`
+	Acclerator      string       `json:"acclerator"`
+	Hidden          bool         `json:"hidden"`
+	Role            MenuRole     `json:"role"`
+	EventSignalName string       `json:"eventSignalName"`
+	SubMenu         MenuTemplate `json:"subMenu"`
+	Separator       bool         `json:"separator"`
+	Handler         func(e *html.MouseEvent) error
 }
 
 type MenuEvent struct {

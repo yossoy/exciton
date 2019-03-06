@@ -13,7 +13,7 @@ func (es *EventSlot) Core() *event.Slot {
 	return &es.core
 }
 
-func (es *EventSlot) Bind(handler event.SlotHandler) {
+func (es *EventSlot) Bind(handler event.Handler) {
 	es.core.Bind(handler)
 }
 

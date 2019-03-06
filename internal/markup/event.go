@@ -17,6 +17,7 @@ type eventListener struct {
 	EventListener
 	Name                string
 	Listener            event.Handler
+	scopedName          string
 	clientScriptPrefix  string
 	scriptHandlerName   string
 	scriptArguments     []interface{}
@@ -25,10 +26,38 @@ type eventListener struct {
 	//TODO: binding position
 }
 
+func (l *eventListener) isMatch(l2 *eventListener) bool {
+	if l.callPreventDefault != l2.callPreventDefault || l.callStopPropagation != l2.callStopPropagation {
+		return false
+	}
+	if l.Listener != nil {
+		// There is not need to compare Listener,
+		//   	 because Listner is used only in go region and is not used in js region.
+		return l2.Listener != nil
+	}
+	if l2.Listener != nil {
+		return false
+	}
+	if l.scopedName != "" {
+		return l2.scopedName == l.scopedName
+	}
+	if l.clientScriptPrefix != "" || l.scriptHandlerName != "" {
+		return l.clientScriptPrefix == l2.clientScriptPrefix && l.scriptHandlerName == l2.scriptHandlerName
+	}
+	return false
+}
+
 func NewEventListener(name string, listener event.Handler) *eventListener {
 	return &eventListener{
 		Name:     name,
 		Listener: listener,
+	}
+}
+
+func NewScopedEventListener(name string, scopedName string) *eventListener {
+	return &eventListener{
+		Name:       name,
+		scopedName: scopedName,
 	}
 }
 
@@ -72,15 +101,7 @@ func (l *eventListener) applyToNode(b Builder, n Node, on Node) {
 	exist := false
 	if onn.eventListeners != nil {
 		if oe, ok := onn.eventListeners[l.Name]; ok {
-			if l.callPreventDefault == oe.callPreventDefault && l.callStopPropagation == oe.callStopPropagation {
-				if l.Listener != nil && oe.Listener != nil {
-					// There is not need to compare Listener,
-					//   	 because Listner is used only in go region and is not used in js region.
-					match = true
-				} else if l.Listener == nil && oe.Listener == nil {
-					match = (l.clientScriptPrefix == oe.clientScriptPrefix) && (l.scriptHandlerName == oe.scriptHandlerName)
-				}
-			}
+			match = l.isMatch(oe)
 			exist = true
 			delete(onn.eventListeners, l.Name)
 		}
@@ -93,8 +114,8 @@ func (l *eventListener) applyToNode(b Builder, n Node, on Node) {
 		if exist {
 			bb.diffSet.RemoveEventListener(nn, l.Name)
 		}
-		if l.Listener != nil {
-			bb.diffSet.AddEventListener(nn, l.Name, nn.uuid, l.callPreventDefault, l.callStopPropagation)
+		if l.Listener != nil || l.scopedName != "" {
+			bb.diffSet.AddEventListener(nn, l.Name, nn.uuid, l.scopedName, l.callPreventDefault, l.callStopPropagation)
 		} else {
 			bb.diffSet.AddClientEvent(nn, l.Name, nn.uuid, l.clientScriptPrefix, l.scriptHandlerName, l.scriptArguments)
 		}

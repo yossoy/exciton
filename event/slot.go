@@ -1,7 +1,5 @@
 package event
 
-type SlotHandler func(*Event) error
-
 type EventSlotTarget interface {
 	EventTarget
 	EventTargetWithSlot
@@ -10,7 +8,7 @@ type EventSlotTarget interface {
 type Slot struct {
 	target      EventSlotTarget
 	name        string
-	handler     SlotHandler
+	handler     Handler
 	signalPaths []string
 }
 
@@ -26,7 +24,7 @@ func (slot *Slot) EventPathString() string {
 	return EventTargetToPathString(slot.target, slot.name)
 }
 
-func (slot *Slot) Bind(h SlotHandler) {
+func (slot *Slot) Bind(h Handler) {
 	slot.handler = h
 }
 

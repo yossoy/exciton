@@ -113,9 +113,9 @@ import "github.com/yossoy/exciton/event"
 // Category: %s
 //
 // https://developer.mozilla.org%s
-func %s(listener func(e *%s)) markup.EventListener {
-	return mkup.NewEventListener("%s", func(le *event.Event) {
-		dispatchEventHelper%s(le, listener)
+func %s(listener func(e *%s) error) markup.EventListener {
+	return mkup.NewEventListener("%s", func(le *event.Event) error {
+		return dispatchEventHelper%s(le, listener)
 	})
 }
 `, descToComments(e.Desc), e.Category, e.Link[6:], name, e.EventType, e.Name, e.EventType)

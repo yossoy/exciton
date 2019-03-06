@@ -3,8 +3,7 @@ package app
 import (
 	"fmt"
 	"log"
-
-	"github.com/yossoy/exciton/menu"
+	"strings"
 
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/event"
@@ -12,6 +11,7 @@ import (
 	"github.com/yossoy/exciton/internal/markup"
 	"github.com/yossoy/exciton/internal/object"
 	"github.com/yossoy/exciton/lang"
+	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
 )
 
@@ -82,6 +82,7 @@ type App struct {
 	userDefinedSignals map[string]*appEventSignal
 	userDefinedSlots   map[string]*appEventSlot
 	UserData           interface{}
+	activeWindow       *window.Window
 }
 
 func (app *App) RegisterEventSignal(name string) event.Signaller {
@@ -95,7 +96,7 @@ func (app *App) RegisterEventSignal(name string) event.Signaller {
 	return ap
 }
 
-func (app *App) RegisterEventSlot(name string, handler event.SlotHandler) event.Slotter {
+func (app *App) RegisterEventSlot(name string, handler event.Handler) event.Slotter {
 	if app.userDefinedSlots == nil {
 		app.userDefinedSlots = make(map[string]*appEventSlot)
 	}
@@ -140,8 +141,19 @@ func (app *App) TargetID() string {
 }
 
 func (app *App) ParentTarget() event.EventTarget {
-	// app is nil
+	// app is root target
 	return nil
+}
+
+func (app *App) GetTargetByScopedName(scopedName string) (event.EventTarget, string) {
+	switch {
+	case strings.HasPrefix(scopedName, "app."):
+		return app, strings.TrimPrefix(scopedName, "app.")
+	case strings.HasPrefix(scopedName, "win."):
+		return app.activeWindow, strings.TrimPrefix(scopedName, "win.")
+	default:
+		return nil, scopedName
+	}
 }
 
 func (app *App) PreferredLanguages() lang.PreferredLanguages {
@@ -157,6 +169,30 @@ func (app *App) URLBase() string {
 		return ""
 	}
 	return "/exciton/" + app.id
+}
+
+func (app *App) OnActiveWindowChange(w *window.Window, actived bool) {
+	if actived {
+		app.activeWindow = w
+	} else if app.activeWindow == w {
+		app.activeWindow = nil
+	}
+}
+
+func (app *App) ActiveWindow() *window.Window {
+	return app.activeWindow
+}
+
+func (app *App) ResolveEventScopeNameToTarget(scope string) event.EventTarget {
+	switch scope {
+	case "app":
+		return app
+	case "win":
+		return app.activeWindow
+	default:
+		// TODO: need "component" scope?
+		return nil
+	}
 }
 
 func NewApp(owner Owner) *App {

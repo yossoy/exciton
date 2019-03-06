@@ -28,10 +28,10 @@ var MenuClass menuClass
 
 type Owner interface {
 	event.EventTarget
+	event.EventTargetWithScopedNameResolver
 }
 
 type MenuInstance struct {
-	event.EventTarget
 	markup.Buildable
 	builder markup.Builder
 	mounted markup.RenderResult
@@ -191,12 +191,13 @@ func toAppMenu(menu AppMenuTemplate) (markup.RenderResult, error) {
 
 func InitEvents(owner event.EventHost) {
 	event.InitHost(&MenuClass, "menu", owner)
-	MenuClass.AddHandler("finalize", func(e *event.Event) {
+	MenuClass.AddHandler("finalize", func(e *event.Event) error {
 		m, ok := e.Target.(*MenuInstance)
 		if !ok {
-			return
+			return fmt.Errorf("invalid target: %v", e.Target)
 		}
 		object.Menus.Delete(object.ObjectKey(m.uuid))
+		return nil
 	})
 	markup.InitEvents(&MenuClass)
 }

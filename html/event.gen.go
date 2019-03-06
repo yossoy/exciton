@@ -17,9 +17,9 @@ import "github.com/yossoy/exciton/event"
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/afterprint
-func AfterPrint(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("afterprint", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func AfterPrint(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("afterprint", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -29,9 +29,9 @@ func AfterPrint(listener func(e *Event)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/beforeprint
-func BeforePrint(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("beforeprint", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func BeforePrint(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("beforeprint", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -41,9 +41,9 @@ func BeforePrint(listener func(e *Event)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/beforeunload
-func BeforeUnload(listener func(e *BeforeUnloadEvent)) markup.EventListener {
-	return mkup.NewEventListener("beforeunload", func(le *event.Event) {
-		dispatchEventHelperBeforeUnloadEvent(le, listener)
+func BeforeUnload(listener func(e *BeforeUnloadEvent) error) markup.EventListener {
+	return mkup.NewEventListener("beforeunload", func(le *event.Event) error {
+		return dispatchEventHelperBeforeUnloadEvent(le, listener)
 	})
 }
 
@@ -54,9 +54,9 @@ func BeforeUnload(listener func(e *BeforeUnloadEvent)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/canplay
-func CanPlay(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("canplay", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func CanPlay(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("canplay", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -66,9 +66,9 @@ func CanPlay(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/canplaythrough
-func CanPlayThrough(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("canplaythrough", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func CanPlayThrough(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("canplaythrough", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -78,9 +78,9 @@ func CanPlayThrough(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/compositionend
-func CompositionEnd(listener func(e *CompositionEvent)) markup.EventListener {
-	return mkup.NewEventListener("compositionend", func(le *event.Event) {
-		dispatchEventHelperCompositionEvent(le, listener)
+func CompositionEnd(listener func(e *CompositionEvent) error) markup.EventListener {
+	return mkup.NewEventListener("compositionend", func(le *event.Event) error {
+		return dispatchEventHelperCompositionEvent(le, listener)
 	})
 }
 
@@ -91,9 +91,9 @@ func CompositionEnd(listener func(e *CompositionEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/compositionstart
-func CompositionStart(listener func(e *CompositionEvent)) markup.EventListener {
-	return mkup.NewEventListener("compositionstart", func(le *event.Event) {
-		dispatchEventHelperCompositionEvent(le, listener)
+func CompositionStart(listener func(e *CompositionEvent) error) markup.EventListener {
+	return mkup.NewEventListener("compositionstart", func(le *event.Event) error {
+		return dispatchEventHelperCompositionEvent(le, listener)
 	})
 }
 
@@ -103,9 +103,9 @@ func CompositionStart(listener func(e *CompositionEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/compositionupdate
-func CompositionUpdate(listener func(e *CompositionEvent)) markup.EventListener {
-	return mkup.NewEventListener("compositionupdate", func(le *event.Event) {
-		dispatchEventHelperCompositionEvent(le, listener)
+func CompositionUpdate(listener func(e *CompositionEvent) error) markup.EventListener {
+	return mkup.NewEventListener("compositionupdate", func(le *event.Event) error {
+		return dispatchEventHelperCompositionEvent(le, listener)
 	})
 }
 
@@ -115,9 +115,9 @@ func CompositionUpdate(listener func(e *CompositionEvent)) markup.EventListener 
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/contextmenu
-func ContextMenu(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("contextmenu", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func ContextMenu(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("contextmenu", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -127,9 +127,9 @@ func ContextMenu(listener func(e *MouseEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/dblclick
-func DoubleClick(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("dblclick", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func DoubleClick(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("dblclick", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -139,9 +139,9 @@ func DoubleClick(listener func(e *MouseEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/dragend
-func DragEnd(listener func(e *DragEvent)) markup.EventListener {
-	return mkup.NewEventListener("dragend", func(le *event.Event) {
-		dispatchEventHelperDragEvent(le, listener)
+func DragEnd(listener func(e *DragEvent) error) markup.EventListener {
+	return mkup.NewEventListener("dragend", func(le *event.Event) error {
+		return dispatchEventHelperDragEvent(le, listener)
 	})
 }
 
@@ -151,9 +151,9 @@ func DragEnd(listener func(e *DragEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/dragenter
-func DragEnter(listener func(e *DragEvent)) markup.EventListener {
-	return mkup.NewEventListener("dragenter", func(le *event.Event) {
-		dispatchEventHelperDragEvent(le, listener)
+func DragEnter(listener func(e *DragEvent) error) markup.EventListener {
+	return mkup.NewEventListener("dragenter", func(le *event.Event) error {
+		return dispatchEventHelperDragEvent(le, listener)
 	})
 }
 
@@ -163,9 +163,9 @@ func DragEnter(listener func(e *DragEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/dragleave
-func DragLeave(listener func(e *DragEvent)) markup.EventListener {
-	return mkup.NewEventListener("dragleave", func(le *event.Event) {
-		dispatchEventHelperDragEvent(le, listener)
+func DragLeave(listener func(e *DragEvent) error) markup.EventListener {
+	return mkup.NewEventListener("dragleave", func(le *event.Event) error {
+		return dispatchEventHelperDragEvent(le, listener)
 	})
 }
 
@@ -175,9 +175,9 @@ func DragLeave(listener func(e *DragEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/dragover
-func DragOver(listener func(e *DragEvent)) markup.EventListener {
-	return mkup.NewEventListener("dragover", func(le *event.Event) {
-		dispatchEventHelperDragEvent(le, listener)
+func DragOver(listener func(e *DragEvent) error) markup.EventListener {
+	return mkup.NewEventListener("dragover", func(le *event.Event) error {
+		return dispatchEventHelperDragEvent(le, listener)
 	})
 }
 
@@ -187,9 +187,9 @@ func DragOver(listener func(e *DragEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/dragstart
-func DragStart(listener func(e *DragEvent)) markup.EventListener {
-	return mkup.NewEventListener("dragstart", func(le *event.Event) {
-		dispatchEventHelperDragEvent(le, listener)
+func DragStart(listener func(e *DragEvent) error) markup.EventListener {
+	return mkup.NewEventListener("dragstart", func(le *event.Event) error {
+		return dispatchEventHelperDragEvent(le, listener)
 	})
 }
 
@@ -199,9 +199,9 @@ func DragStart(listener func(e *DragEvent)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/durationchange
-func DurationChange(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("durationchange", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func DurationChange(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("durationchange", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -211,9 +211,9 @@ func DurationChange(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/focusin
-func FocusIn(listener func(e *FocusEvent)) markup.EventListener {
-	return mkup.NewEventListener("focusin", func(le *event.Event) {
-		dispatchEventHelperFocusEvent(le, listener)
+func FocusIn(listener func(e *FocusEvent) error) markup.EventListener {
+	return mkup.NewEventListener("focusin", func(le *event.Event) error {
+		return dispatchEventHelperFocusEvent(le, listener)
 	})
 }
 
@@ -222,9 +222,9 @@ func FocusIn(listener func(e *FocusEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/focusout
-func FocusOut(listener func(e *FocusEvent)) markup.EventListener {
-	return mkup.NewEventListener("focusout", func(le *event.Event) {
-		dispatchEventHelperFocusEvent(le, listener)
+func FocusOut(listener func(e *FocusEvent) error) markup.EventListener {
+	return mkup.NewEventListener("focusout", func(le *event.Event) error {
+		return dispatchEventHelperFocusEvent(le, listener)
 	})
 }
 
@@ -234,9 +234,9 @@ func FocusOut(listener func(e *FocusEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/hashchange
-func HashChange(listener func(e *HashChangeEvent)) markup.EventListener {
-	return mkup.NewEventListener("hashchange", func(le *event.Event) {
-		dispatchEventHelperHashChangeEvent(le, listener)
+func HashChange(listener func(e *HashChangeEvent) error) markup.EventListener {
+	return mkup.NewEventListener("hashchange", func(le *event.Event) error {
+		return dispatchEventHelperHashChangeEvent(le, listener)
 	})
 }
 
@@ -245,9 +245,9 @@ func HashChange(listener func(e *HashChangeEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/keydown
-func KeyDown(listener func(e *KeyboardEvent)) markup.EventListener {
-	return mkup.NewEventListener("keydown", func(le *event.Event) {
-		dispatchEventHelperKeyboardEvent(le, listener)
+func KeyDown(listener func(e *KeyboardEvent) error) markup.EventListener {
+	return mkup.NewEventListener("keydown", func(le *event.Event) error {
+		return dispatchEventHelperKeyboardEvent(le, listener)
 	})
 }
 
@@ -257,9 +257,9 @@ func KeyDown(listener func(e *KeyboardEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/keypress
-func KeyPress(listener func(e *KeyboardEvent)) markup.EventListener {
-	return mkup.NewEventListener("keypress", func(le *event.Event) {
-		dispatchEventHelperKeyboardEvent(le, listener)
+func KeyPress(listener func(e *KeyboardEvent) error) markup.EventListener {
+	return mkup.NewEventListener("keypress", func(le *event.Event) error {
+		return dispatchEventHelperKeyboardEvent(le, listener)
 	})
 }
 
@@ -268,9 +268,9 @@ func KeyPress(listener func(e *KeyboardEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/keyup
-func KeyUp(listener func(e *KeyboardEvent)) markup.EventListener {
-	return mkup.NewEventListener("keyup", func(le *event.Event) {
-		dispatchEventHelperKeyboardEvent(le, listener)
+func KeyUp(listener func(e *KeyboardEvent) error) markup.EventListener {
+	return mkup.NewEventListener("keyup", func(le *event.Event) error {
+		return dispatchEventHelperKeyboardEvent(le, listener)
 	})
 }
 
@@ -280,9 +280,9 @@ func KeyUp(listener func(e *KeyboardEvent)) markup.EventListener {
 // Category: HTML 5.1The definition of 'NavigatorLanguage.languages' in that specification.
 //
 // https://developer.mozilla.org/docs/Web/Events/languagechange
-func LanguageChange(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("languagechange", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func LanguageChange(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("languagechange", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -292,9 +292,9 @@ func LanguageChange(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/loadeddata
-func LoadedData(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("loadeddata", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func LoadedData(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("loadeddata", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -303,9 +303,9 @@ func LoadedData(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/loadedmetadata
-func LoadedMetadata(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("loadedmetadata", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func LoadedMetadata(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("loadedmetadata", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -315,9 +315,9 @@ func LoadedMetadata(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/mousedown
-func MouseDown(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("mousedown", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func MouseDown(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("mousedown", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -327,9 +327,9 @@ func MouseDown(listener func(e *MouseEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/mouseenter
-func MouseEnter(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("mouseenter", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func MouseEnter(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("mouseenter", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -339,9 +339,9 @@ func MouseEnter(listener func(e *MouseEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/mouseleave
-func MouseLeave(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("mouseleave", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func MouseLeave(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("mouseleave", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -350,9 +350,9 @@ func MouseLeave(listener func(e *MouseEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/mousemove
-func MouseMove(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("mousemove", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func MouseMove(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("mousemove", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -362,9 +362,9 @@ func MouseMove(listener func(e *MouseEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/mouseout
-func MouseOut(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("mouseout", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func MouseOut(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("mouseout", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -374,9 +374,9 @@ func MouseOut(listener func(e *MouseEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/mouseover
-func MouseOver(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("mouseover", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func MouseOver(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("mouseover", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -386,9 +386,9 @@ func MouseOver(listener func(e *MouseEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/mouseup
-func MouseUp(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("mouseup", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func MouseUp(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("mouseup", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -397,9 +397,9 @@ func MouseUp(listener func(e *MouseEvent)) markup.EventListener {
 // Category: Offline
 //
 // https://developer.mozilla.org/docs/Web/Events/noupdate
-func NoUpdate(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("noupdate", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func NoUpdate(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("noupdate", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -408,9 +408,9 @@ func NoUpdate(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/abort
-func OnAbort(listener func(e *UIEvent)) markup.EventListener {
-	return mkup.NewEventListener("abort", func(le *event.Event) {
-		dispatchEventHelperUIEvent(le, listener)
+func OnAbort(listener func(e *UIEvent) error) markup.EventListener {
+	return mkup.NewEventListener("abort", func(le *event.Event) error {
+		return dispatchEventHelperUIEvent(le, listener)
 	})
 }
 
@@ -419,9 +419,9 @@ func OnAbort(listener func(e *UIEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/blur
-func OnBlur(listener func(e *FocusEvent)) markup.EventListener {
-	return mkup.NewEventListener("blur", func(le *event.Event) {
-		dispatchEventHelperFocusEvent(le, listener)
+func OnBlur(listener func(e *FocusEvent) error) markup.EventListener {
+	return mkup.NewEventListener("blur", func(le *event.Event) error {
+		return dispatchEventHelperFocusEvent(le, listener)
 	})
 }
 
@@ -431,9 +431,9 @@ func OnBlur(listener func(e *FocusEvent)) markup.EventListener {
 // Category: Offline
 //
 // https://developer.mozilla.org/docs/Web/Events/cached
-func OnCached(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("cached", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnCached(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("cached", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -444,9 +444,9 @@ func OnCached(listener func(e *Event)) markup.EventListener {
 // Category: DOM L2, HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/change
-func OnChange(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("change", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnChange(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("change", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -456,9 +456,9 @@ func OnChange(listener func(e *Event)) markup.EventListener {
 // Category: Offline
 //
 // https://developer.mozilla.org/docs/Web/Events/checking
-func OnChecking(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("checking", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnChecking(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("checking", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -468,9 +468,9 @@ func OnChecking(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/click
-func OnClick(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("click", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func OnClick(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("click", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -480,9 +480,9 @@ func OnClick(listener func(e *MouseEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/DOMContentLoaded
-func OnDOMContentLoaded(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("DOMContentLoaded", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnDOMContentLoaded(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("DOMContentLoaded", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -493,9 +493,9 @@ func OnDOMContentLoaded(listener func(e *Event)) markup.EventListener {
 // Category: Offline
 //
 // https://developer.mozilla.org/docs/Web/Events/downloading
-func OnDownloading(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("downloading", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnDownloading(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("downloading", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -505,9 +505,9 @@ func OnDownloading(listener func(e *Event)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/drag
-func OnDrag(listener func(e *DragEvent)) markup.EventListener {
-	return mkup.NewEventListener("drag", func(le *event.Event) {
-		dispatchEventHelperDragEvent(le, listener)
+func OnDrag(listener func(e *DragEvent) error) markup.EventListener {
+	return mkup.NewEventListener("drag", func(le *event.Event) error {
+		return dispatchEventHelperDragEvent(le, listener)
 	})
 }
 
@@ -516,9 +516,9 @@ func OnDrag(listener func(e *DragEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/drop
-func OnDrop(listener func(e *DragEvent)) markup.EventListener {
-	return mkup.NewEventListener("drop", func(le *event.Event) {
-		dispatchEventHelperDragEvent(le, listener)
+func OnDrop(listener func(e *DragEvent) error) markup.EventListener {
+	return mkup.NewEventListener("drop", func(le *event.Event) error {
+		return dispatchEventHelperDragEvent(le, listener)
 	})
 }
 
@@ -529,9 +529,9 @@ func OnDrop(listener func(e *DragEvent)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/emptied
-func OnEmptied(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("emptied", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnEmptied(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("emptied", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -541,9 +541,9 @@ func OnEmptied(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/ended
-func OnEnded(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("ended", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnEnded(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("ended", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -553,9 +553,9 @@ func OnEnded(listener func(e *Event)) markup.EventListener {
 // Category: Offline
 //
 // https://developer.mozilla.org/docs/Web/Events/error
-func OnError(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("error", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnError(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("error", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -565,9 +565,9 @@ func OnError(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/focus
-func OnFocus(listener func(e *FocusEvent)) markup.EventListener {
-	return mkup.NewEventListener("focus", func(le *event.Event) {
-		dispatchEventHelperFocusEvent(le, listener)
+func OnFocus(listener func(e *FocusEvent) error) markup.EventListener {
+	return mkup.NewEventListener("focus", func(le *event.Event) error {
+		return dispatchEventHelperFocusEvent(le, listener)
 	})
 }
 
@@ -577,9 +577,9 @@ func OnFocus(listener func(e *FocusEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/input
-func OnInput(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("input", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnInput(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("input", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -589,9 +589,9 @@ func OnInput(listener func(e *Event)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/invalid
-func OnInvalid(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("invalid", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnInvalid(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("invalid", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -601,9 +601,9 @@ func OnInvalid(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/load
-func OnLoad(listener func(e *UIEvent)) markup.EventListener {
-	return mkup.NewEventListener("load", func(le *event.Event) {
-		dispatchEventHelperUIEvent(le, listener)
+func OnLoad(listener func(e *UIEvent) error) markup.EventListener {
+	return mkup.NewEventListener("load", func(le *event.Event) error {
+		return dispatchEventHelperUIEvent(le, listener)
 	})
 }
 
@@ -613,9 +613,9 @@ func OnLoad(listener func(e *UIEvent)) markup.EventListener {
 // Category: Offline
 //
 // https://developer.mozilla.org/docs/Web/Events/obsolete
-func OnObsolete(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("obsolete", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnObsolete(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("obsolete", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -624,9 +624,9 @@ func OnObsolete(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 offline
 //
 // https://developer.mozilla.org/docs/Web/Events/offline
-func OnOffline(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("offline", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnOffline(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("offline", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -636,9 +636,9 @@ func OnOffline(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 offline
 //
 // https://developer.mozilla.org/docs/Web/Events/online
-func OnOnline(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("online", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnOnline(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("online", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -647,9 +647,9 @@ func OnOnline(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/pause
-func OnPause(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("pause", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnPause(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("pause", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -658,9 +658,9 @@ func OnPause(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/play
-func OnPlay(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("play", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnPlay(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("play", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -670,9 +670,9 @@ func OnPlay(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/playing
-func OnPlaying(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("playing", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnPlaying(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("playing", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -682,9 +682,9 @@ func OnPlaying(listener func(e *Event)) markup.EventListener {
 // Category: Offline
 //
 // https://developer.mozilla.org/docs/Web/Reference/Events/progress_(appcache_event)
-func OnProgress(listener func(e *ProgressEvent)) markup.EventListener {
-	return mkup.NewEventListener("progress", func(le *event.Event) {
-		dispatchEventHelperProgressEvent(le, listener)
+func OnProgress(listener func(e *ProgressEvent) error) markup.EventListener {
+	return mkup.NewEventListener("progress", func(le *event.Event) error {
+		return dispatchEventHelperProgressEvent(le, listener)
 	})
 }
 
@@ -693,9 +693,9 @@ func OnProgress(listener func(e *ProgressEvent)) markup.EventListener {
 // Category: DOM L2, HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/reset
-func OnReset(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("reset", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnReset(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("reset", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -704,9 +704,9 @@ func OnReset(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/resize
-func OnResize(listener func(e *UIEvent)) markup.EventListener {
-	return mkup.NewEventListener("resize", func(le *event.Event) {
-		dispatchEventHelperUIEvent(le, listener)
+func OnResize(listener func(e *UIEvent) error) markup.EventListener {
+	return mkup.NewEventListener("resize", func(le *event.Event) error {
+		return dispatchEventHelperUIEvent(le, listener)
 	})
 }
 
@@ -716,9 +716,9 @@ func OnResize(listener func(e *UIEvent)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/scroll
-func OnScroll(listener func(e *UIEvent)) markup.EventListener {
-	return mkup.NewEventListener("scroll", func(le *event.Event) {
-		dispatchEventHelperUIEvent(le, listener)
+func OnScroll(listener func(e *UIEvent) error) markup.EventListener {
+	return mkup.NewEventListener("scroll", func(le *event.Event) error {
+		return dispatchEventHelperUIEvent(le, listener)
 	})
 }
 
@@ -727,9 +727,9 @@ func OnScroll(listener func(e *UIEvent)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/seeked
-func OnSeeked(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("seeked", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnSeeked(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("seeked", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -738,9 +738,9 @@ func OnSeeked(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/seeking
-func OnSeeking(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("seeking", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnSeeking(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("seeking", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -749,9 +749,9 @@ func OnSeeking(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/select
-func OnSelect(listener func(e *UIEvent)) markup.EventListener {
-	return mkup.NewEventListener("select", func(le *event.Event) {
-		dispatchEventHelperUIEvent(le, listener)
+func OnSelect(listener func(e *UIEvent) error) markup.EventListener {
+	return mkup.NewEventListener("select", func(le *event.Event) error {
+		return dispatchEventHelperUIEvent(le, listener)
 	})
 }
 
@@ -761,9 +761,9 @@ func OnSelect(listener func(e *UIEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/show
-func OnShow(listener func(e *MouseEvent)) markup.EventListener {
-	return mkup.NewEventListener("show", func(le *event.Event) {
-		dispatchEventHelperMouseEvent(le, listener)
+func OnShow(listener func(e *MouseEvent) error) markup.EventListener {
+	return mkup.NewEventListener("show", func(le *event.Event) error {
+		return dispatchEventHelperMouseEvent(le, listener)
 	})
 }
 
@@ -773,9 +773,9 @@ func OnShow(listener func(e *MouseEvent)) markup.EventListener {
 // Category: DOM
 //
 // https://developer.mozilla.org/docs/Web/Events/slotchange
-func OnSlotchange(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("slotchange", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnSlotchange(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("slotchange", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -785,9 +785,9 @@ func OnSlotchange(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/stalled
-func OnStalled(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("stalled", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnStalled(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("stalled", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -796,9 +796,9 @@ func OnStalled(listener func(e *Event)) markup.EventListener {
 // Category: DOM L2, HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/submit
-func OnSubmit(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("submit", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnSubmit(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("submit", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -807,9 +807,9 @@ func OnSubmit(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/suspend
-func OnSuspend(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("suspend", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnSuspend(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("suspend", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -819,9 +819,9 @@ func OnSuspend(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/unload
-func OnUnload(listener func(e *UIEvent)) markup.EventListener {
-	return mkup.NewEventListener("unload", func(le *event.Event) {
-		dispatchEventHelperUIEvent(le, listener)
+func OnUnload(listener func(e *UIEvent) error) markup.EventListener {
+	return mkup.NewEventListener("unload", func(le *event.Event) error {
+		return dispatchEventHelperUIEvent(le, listener)
 	})
 }
 
@@ -831,9 +831,9 @@ func OnUnload(listener func(e *UIEvent)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/waiting
-func OnWaiting(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("waiting", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func OnWaiting(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("waiting", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -843,9 +843,9 @@ func OnWaiting(listener func(e *Event)) markup.EventListener {
 // Category: DOM L3
 //
 // https://developer.mozilla.org/docs/Web/Events/wheel
-func OnWheel(listener func(e *WheelEvent)) markup.EventListener {
-	return mkup.NewEventListener("wheel", func(le *event.Event) {
-		dispatchEventHelperWheelEvent(le, listener)
+func OnWheel(listener func(e *WheelEvent) error) markup.EventListener {
+	return mkup.NewEventListener("wheel", func(le *event.Event) error {
+		return dispatchEventHelperWheelEvent(le, listener)
 	})
 }
 
@@ -855,9 +855,9 @@ func OnWheel(listener func(e *WheelEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/pagehide
-func PageHide(listener func(e *PageTransitionEvent)) markup.EventListener {
-	return mkup.NewEventListener("pagehide", func(le *event.Event) {
-		dispatchEventHelperPageTransitionEvent(le, listener)
+func PageHide(listener func(e *PageTransitionEvent) error) markup.EventListener {
+	return mkup.NewEventListener("pagehide", func(le *event.Event) error {
+		return dispatchEventHelperPageTransitionEvent(le, listener)
 	})
 }
 
@@ -867,9 +867,9 @@ func PageHide(listener func(e *PageTransitionEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/pageshow
-func PageShow(listener func(e *PageTransitionEvent)) markup.EventListener {
-	return mkup.NewEventListener("pageshow", func(le *event.Event) {
-		dispatchEventHelperPageTransitionEvent(le, listener)
+func PageShow(listener func(e *PageTransitionEvent) error) markup.EventListener {
+	return mkup.NewEventListener("pageshow", func(le *event.Event) error {
+		return dispatchEventHelperPageTransitionEvent(le, listener)
 	})
 }
 
@@ -879,9 +879,9 @@ func PageShow(listener func(e *PageTransitionEvent)) markup.EventListener {
 // Category: HTML5
 //
 // https://developer.mozilla.org/docs/Web/Events/popstate
-func PopState(listener func(e *PopStateEvent)) markup.EventListener {
-	return mkup.NewEventListener("popstate", func(le *event.Event) {
-		dispatchEventHelperPopStateEvent(le, listener)
+func PopState(listener func(e *PopStateEvent) error) markup.EventListener {
+	return mkup.NewEventListener("popstate", func(le *event.Event) error {
+		return dispatchEventHelperPopStateEvent(le, listener)
 	})
 }
 
@@ -890,9 +890,9 @@ func PopState(listener func(e *PopStateEvent)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/ratechange
-func RateChange(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("ratechange", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func RateChange(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("ratechange", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -902,9 +902,9 @@ func RateChange(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 and XMLHttpRequest
 //
 // https://developer.mozilla.org/docs/Web/Events/readystatechange
-func ReadyStateChange(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("readystatechange", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func ReadyStateChange(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("readystatechange", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -913,9 +913,9 @@ func ReadyStateChange(listener func(e *Event)) markup.EventListener {
 // Category: Selection API
 //
 // https://developer.mozilla.org/docs/Web/Events/selectstart
-func SelectStart(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("selectstart", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func SelectStart(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("selectstart", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -925,9 +925,9 @@ func SelectStart(listener func(e *Event)) markup.EventListener {
 // Category: Selection API
 //
 // https://developer.mozilla.org/docs/Web/Events/selectionchange
-func SelectionChange(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("selectionchange", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func SelectionChange(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("selectionchange", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -937,9 +937,9 @@ func SelectionChange(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/timeupdate
-func TimeUpdate(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("timeupdate", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func TimeUpdate(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("timeupdate", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -950,9 +950,9 @@ func TimeUpdate(listener func(e *Event)) markup.EventListener {
 // Category: Offline
 //
 // https://developer.mozilla.org/docs/Web/Events/updateready
-func UpdateReady(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("updateready", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func UpdateReady(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("updateready", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }
 
@@ -961,8 +961,8 @@ func UpdateReady(listener func(e *Event)) markup.EventListener {
 // Category: HTML5 media
 //
 // https://developer.mozilla.org/docs/Web/Events/volumechange
-func VolumeChange(listener func(e *Event)) markup.EventListener {
-	return mkup.NewEventListener("volumechange", func(le *event.Event) {
-		dispatchEventHelperEvent(le, listener)
+func VolumeChange(listener func(e *Event) error) markup.EventListener {
+	return mkup.NewEventListener("volumechange", func(le *event.Event) error {
+		return dispatchEventHelperEvent(le, listener)
 	})
 }

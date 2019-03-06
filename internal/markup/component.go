@@ -115,6 +115,19 @@ func (c *Core) ParentTarget() event.EventTarget {
 	return c.builder.Buildable()
 }
 
+func (c *Core) GetTargetByScopedName(scopedName string) (event.EventTarget, string) {
+	if strings.HasPrefix(scopedName, "component.") {
+		return c, strings.TrimPrefix(scopedName, "component.")
+	}
+	pt := c.ParentTarget()
+	if pt != nil {
+		if psnr, ok := pt.(event.EventTargetWithScopedNameResolver); ok {
+			return psnr.GetTargetByScopedName(scopedName)
+		}
+	}
+	return nil, scopedName
+}
+
 func (c *Core) TargetID() string {
 	return c.id
 }
@@ -381,24 +394,25 @@ func (ii *initInfo) AddHandler(name string, handler EventHandler) error {
 	if err != nil {
 		return err
 	}
-	group.AddHandler(name, func(e *event.Event) {
+	group.AddHandler(name, func(e *event.Event) error {
 		log.PrintDebug("InitInfo: handler called: %q, %v", name, e)
 		c, err := eventToComponent(e)
 		if err != nil {
 			log.PrintError("event is not handled: %v", err)
-			return
+			return err
 		}
 		var args []string
 		err = e.Argument.Decode(&args)
 		if err != nil {
 			log.PrintError("component handler argument decode error")
-			return
+			return err
 		}
 		argValues := make([]event.Value, len(args))
 		for i, s := range args {
 			argValues[i] = event.NewJSONEncodedValueByEncodedBytes([]byte(s))
 		}
 		handler(c, argValues)
+		return nil
 	})
 	return nil
 }

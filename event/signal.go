@@ -1,7 +1,6 @@
 package event
 
 type Signal struct {
-	//	slot       *Slot // TODO: remove this
 	name        string
 	hostTarget  EventSignalTarget
 	targetPaths []string

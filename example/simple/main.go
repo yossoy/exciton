@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"runtime"
 	"strings"
 
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/dialog"
 	"github.com/yossoy/exciton/driver"
+	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/log"
 	"github.com/yossoy/exciton/markup"
@@ -15,10 +15,10 @@ import (
 	"github.com/yossoy/exciton/window"
 )
 
-func onOpenFile(e *html.MouseEvent) {
+func onOpenFile(e *html.MouseEvent) error {
 	app, err := app.GetAppFromEventTarget(e.Target)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	log.PrintInfo("OnOpen...")
 	cfg := &dialog.FileDialogConfig{
@@ -28,7 +28,7 @@ func onOpenFile(e *html.MouseEvent) {
 	files, err := app.ShowOpenDialog(cfg)
 	if err != nil {
 		log.PrintError("ShowOpenFiles error: %q", err)
-		return
+		return err
 	}
 	defer files.Cleanup()
 
@@ -44,13 +44,13 @@ func onOpenFile(e *html.MouseEvent) {
 	} else {
 		log.PrintInfo("ShowMessageBox result: %d", r)
 	}
-
+	return err
 }
 
-func onSaveFile(e *html.MouseEvent) {
+func onSaveFile(e *html.MouseEvent) error {
 	app, err := app.GetAppFromEventTarget(e.Target)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	log.PrintInfo("OnSave...")
 	cfg := &dialog.FileDialogConfig{
@@ -59,7 +59,7 @@ func onSaveFile(e *html.MouseEvent) {
 	file, err := app.ShowSaveDialog(cfg)
 	if err != nil {
 		log.PrintError("ShowOpenFiles error: %q", err)
-		return
+		return err
 	}
 
 	log.PrintInfo("select file: %#v", file)
@@ -70,7 +70,7 @@ func onSaveFile(e *html.MouseEvent) {
 	} else {
 		log.PrintInfo("ShowMessageBox result: %d", r)
 	}
-
+	return err
 }
 
 func appMenu(isDarwin bool) menu.AppMenuTemplate {
@@ -122,8 +122,9 @@ func appMenu(isDarwin bool) menu.AppMenuTemplate {
 	}
 }
 
-func onClickPopupItem(e *html.MouseEvent) {
+func onClickPopupItem(e *html.MouseEvent) error {
 	log.PrintInfo("select Item: %#v", e.Target.ElementID)
+	return nil
 }
 
 var popupMenu = menu.MenuTemplate{
@@ -145,15 +146,16 @@ func (c *testChildComponent) Render() markup.RenderResult {
 	)
 }
 
-func (c *testChildComponent) OnContextMenu(e *html.MouseEvent) {
+func (c *testChildComponent) OnContextMenu(e *html.MouseEvent) error {
 	w, err := window.GetWindowFromEventTarget(e.Target)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	err = menu.PopupMenu(popupMenu, e.ScreenPos(), w)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 var TestChildComponent = markup.MustRegisterComponent((*testChildComponent)(nil))
@@ -164,13 +166,19 @@ type testComponent struct {
 	checked bool   `exciton:"checked"`
 }
 
-func (c *testComponent) clickHandler(e *html.MouseEvent) {
+func (c *testComponent) clickSlotHandler(e *event.Event) error {
+	log.PrintDebug("component clickSlotHandler is called: %v", *e)
+	return nil
+}
+
+func (c *testComponent) clickHandler(e *html.MouseEvent) error {
 	log.PrintInfo("clickHandler is called!!")
 	n := e.UIEvent.Event.Target.Node()
 	if n != nil {
 		v, err := n.GetProperty("type")
 		if err != nil {
-			log.PrintError(fmt.Sprint(err))
+			log.PrintError("%v", err)
+			return err
 		} else {
 			vs := v.(string)
 			log.PrintInfo("type = %q (%#v)", vs, v)
@@ -178,20 +186,23 @@ func (c *testComponent) clickHandler(e *html.MouseEvent) {
 	}
 	c.Text = c.Text + "@"
 	c.Context().Builder().Rerender(c)
+	return nil
 }
 
-func (c *testComponent) checkHandler(e *html.MouseEvent) {
+func (c *testComponent) checkHandler(e *html.MouseEvent) error {
 	n := e.UIEvent.Event.Target.Node()
 	if n != nil {
 		v, err := n.GetProperty("checked")
 		if err != nil {
-			log.PrintError(fmt.Sprint(err))
+			log.PrintError("%v", err)
+			return err
 		} else {
 			log.PrintInfo("checked = %#v", v)
 			c.checked = v.(bool)
 		}
 	}
 	c.Context().Builder().Rerender(c)
+	return nil
 }
 
 func (c *testComponent) Render() markup.RenderResult {
