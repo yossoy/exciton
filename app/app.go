@@ -63,6 +63,22 @@ func (a *appEventSlot) Core() *event.Slot {
 	return &a.core
 }
 
+func (a *appEventSlot) Bind(h event.Handler) {
+	a.core.Bind(h)
+}
+
+func (a *appEventSlot) BindWithResult(h event.HandlerWithResult) {
+	a.core.BindWithResult(h)
+}
+
+func (a *appEventSlot) IsEnabled() bool {
+	return a.core.IsEnabled()
+}
+
+func (a *appEventSlot) SetValidateEnabledHandler(validator func(name string) bool) {
+	a.core.SetValidateEnabledHandler(validator)
+}
+
 type appEventSignal struct {
 	core event.Signal
 }
@@ -238,17 +254,17 @@ func GetAppFromEventTarget(e *markup.EventTarget) (*App, error) {
 	return a, nil
 }
 
-func GetAppFromEvent(e *event.Event) *App {
+func GetAppFromEvent(e *event.Event) (*App, error) {
 	t := e.Target
 	log.Printf("Target: %v", t)
 	for t != nil {
 		app, ok := t.(*App)
 		if ok {
-			return app
+			return app, nil
 		}
 		t = t.ParentTarget()
 	}
-	return nil
+	return nil, fmt.Errorf("App not found")
 }
 
 func (app *App) ShowMessageBoxAsync(message string, title string, messageBoxType dialog.MessageBoxType, cfg *dialog.MessageBoxConfig, handler func(int, error)) error {

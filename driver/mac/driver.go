@@ -80,10 +80,11 @@ func (d *mac) relayEventToNative(e *event.Event) {
 			panic(err)
 		}
 	}
-	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	drvEvtPath, params := event.ToDriverEventPath(e.Target)
 	driverLogDebug("relayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
 	drvEvt := driver.DriverEvent{
-		Name:      drvEvtPath,
+		TargetPath: drvEvtPath,
+		Name:      e.Name,
 		Argument:  arg,
 		Parameter: params,
 	}
@@ -103,11 +104,12 @@ func (d *mac) relayEventWithResultToNative(e *event.Event, respCallback event.Re
 	if err != nil {
 		panic(err)
 	}
-	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
-	driverLogDebug("replayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
+	drvEvtPath, params := event.ToDriverEventPath(e.Target)
+	driverLogDebug("replayEventToNative: drvEvtPath = %q, name=%q, parms = %v", drvEvtPath, e.Name, params)
 
 	drvEvt := driver.DriverEvent{
-		Name:      drvEvtPath,
+		TargetPath: drvEvtPath,
+		Name:      e.Name,
 		Argument:  arg,
 		Parameter: params,
 		ResponceCallbackNo: d.addRespCallbackCallback(func(result event.Result) {
@@ -129,14 +131,43 @@ func (d *mac) requestEventEmit(devt *driver.DriverEvent) error {
 	driverLogInfo("requestEventEmit: %v", devt)
 	if devt.ResponceCallbackNo < 0 {
 		v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
-		t, name, err := event.StringToEventTarget(devt.Name)
+		t, err := event.StringToEventTarget(devt.TargetPath)
 		if err != nil {
 			return err
 		}
-		go event.Emit(t, name, v)
+		go event.Emit(t, devt.Name, v)
+		return nil
+	} else {
+		v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
+		t, err := event.StringToEventTarget(devt.TargetPath)
+		if err != nil {
+			return err
+		}
+		go event.EmitWithCallback(t, devt.Name, v, func(result event.Result) {
+			der := driver.DriverEventResponse{}
+			e := result.Error()
+			if e == nil {
+				b, err := result.Value().Encode()
+				if err != nil {
+					e = err
+				} else {
+					der.Result = b
+				}
+			}
+			if e != nil {
+				der.Error = e.Error()
+			}
+			jb, err := json.Marshal(&der)
+			if err != nil {
+				panic(err)
+			}
+			if C.Driver_ResponseEvent(C.NSInteger(devt.ResponceCallbackNo), C.CBytes(jb), C.NSUInteger(len(jb))) == 0 {
+				driverLogError("Error: Driver_EmitEvent")
+				//TODO: error responce!
+			}
+		})
 		return nil
 	}
-	panic("not implement yet.")
 }
 
 func (d *mac) Init() error {
@@ -147,6 +178,10 @@ func (d *mac) Init() error {
 	app.AppClass.AddHandler("quit", func(e *event.Event) error {
 		driverLogInfo("driver::terminate!!")
 		C.Driver_Terminate()
+		return nil
+	})
+	app.AppClass.AddHandler("about", func(e *event.Event) error {
+		d.serializer.RelayEvent(e)
 		return nil
 	})
 

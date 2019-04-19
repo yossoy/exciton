@@ -488,7 +488,7 @@ void showSaveDialog(const picojson::value &argument,
 
 void Dialog_Init() {
   auto &d = Driver::Current();
-  d.addDeferEventHandler("/app/showMessageBox", showMessageBox);
-  d.addDeferEventHandler("/app/showOpenDialog", showOpenDialog);
-  d.addDeferEventHandler("/app/showSaveDialog", showSaveDialog);
+  d.addDeferEventHandler("/app", "showMessageBox", showMessageBox);
+  d.addDeferEventHandler("/app", "showOpenDialog", showOpenDialog);
+  d.addDeferEventHandler("/app", "showSaveDialog", showSaveDialog);
 }

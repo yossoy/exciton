@@ -41,18 +41,21 @@ struct Menu : public std::enable_shared_from_this<Menu> {
   std::weak_ptr<MenuItem> hostItem;
   std::string title_;
   Menu();
-  Menu(const std::string &id);
+  explicit Menu(const std::string &id);
   Menu(const Menu &) = delete;
   Menu(Menu &&) = delete;
   std::size_t GetMenuItemCount() const { return items_.size(); }
-  std::shared_ptr<MenuItem> GetMenuItem(size_t idx) const { return items_[idx]; }
+  std::shared_ptr<MenuItem> GetMenuItem(size_t idx) const {
+    return items_[idx];
+  }
   void AddMenuItem(std::shared_ptr<MenuItem> item);
   std::shared_ptr<Menu> GetSubMenu(size_t idx) const;
   std::shared_ptr<MenuItem> itemAtIndex(size_t idx) const;
   HMENU GetHMenuAtIndex(size_t idx) const;
   HMENU GetHMenu() const;
   std::shared_ptr<MenuItem> FindMenuItemFromId(int cmdId) const;
-  const std::string& ID() const { return id_; }
+  const std::string &ID() const { return id_; }
+  bool InitWithMenuTemplate(const std::vector<picojson::value>& items);
 };
 struct MenuItem : public std::enable_shared_from_this<MenuItem> {
   std::string id_;
@@ -63,7 +66,7 @@ struct MenuItem : public std::enable_shared_from_this<MenuItem> {
   bool enabled_;
   bool separator_;
   MenuItem();
-
+  bool InitWithItemTemplate(const picojson::value& itemTemplate);
 public:
   void setSubMenu(std::shared_ptr<Menu> menu);
   const std::string ID() const { return id_; }
@@ -97,6 +100,12 @@ public:
   void NewMenu(const picojson::value &argument,
                const std::map<std::string, std::string> &parameter,
                int responceNo);
+  void NewAppMenu(const picojson::value &argument,
+                  const std::map<std::string, std::string> &parameter,
+                  int responceNo);
+  void NewPopupMenu(const picojson::value &argument,
+                    const std::map<std::string, std::string> &parameter,
+                    int responceNo);
   void UpdateDiffSetHandler(const picojson::value &argument,
                             const std::map<std::string, std::string> &parameter,
                             int responceNo);
@@ -104,9 +113,9 @@ public:
                           const std::map<std::string, std::string> &parameter,
                           int responceNo);
   void PopupContextMenu(const picojson::value &argument,
-                          const std::map<std::string, std::string> &parameter,
-                          int responceNo);
-  int GetNewCommandId(const std::string& id);
+                        const std::map<std::string, std::string> &parameter,
+                        int responceNo);
+  int GetNewCommandId(const std::string &id);
 
 public:
   std::shared_ptr<exciton::menu::Menu> GetApplicationMenu() const;

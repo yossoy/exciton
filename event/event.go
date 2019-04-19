@@ -25,4 +25,8 @@ type Signaller interface {
 
 type Slotter interface {
 	Core() *Slot
+	Bind(h Handler)
+	BindWithResult(h HandlerWithResult)
+	IsEnabled() bool
+	SetValidateEnabledHandler(validator func(name string) bool)
 }

@@ -66,9 +66,9 @@ function addEventCallback(nsobj, n, name, itemv) {
     }
     console.log('called', goevent);
     if (sn) {
-      nsobj.callNativeMethod('html/' + id + '/' + sn, goevent);
+      nsobj.callNativeMethod('/html/' + id, sn, goevent);
     } else {
-      nsobj.callNativeMethod('html/' + id + '/' + name, goevent);
+      nsobj.callNativeMethod('/html/' + id, name, goevent);
     }
   };
   n.addEventListener(name, f);
@@ -147,7 +147,7 @@ function mountUnmountComponent(nsobj, n, itemv, mounted) {
     urlBase: urlBase,
     callNativeEvent: (method, ...arg) => {
       let args = arg.map(a => JSON.stringify(a));
-      nsobj.callNativeMethod('components/' + id + '/' + method, args);
+      nsobj.callNativeMethod('/components/' + id, method, args);
     }
   };
   console.log('locaJSKey = ' + localJSKey);

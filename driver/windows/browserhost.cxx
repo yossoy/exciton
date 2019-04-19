@@ -189,6 +189,7 @@ STDMETHODIMP CWebBrowserHost::Invoke(DISPID dispIdMember, REFIID riid,
       LPOLESTR lpProp;
       DISPPARAMS dispparamsNoArgs;
       std::string strPath;
+      std::string strName;
       std::string strArg;
       lpProp = const_cast<LPWSTR>(L"path");
       dispparamsNoArgs.cArgs = 0;
@@ -203,6 +204,22 @@ STDMETHODIMP CWebBrowserHost::Invoke(DISPID dispIdMember, REFIID riid,
                                &varProp, nullptr, nullptr);
         if (hr == S_OK) {
           strPath = exciton::util::ToUTF8String(varProp.bstrVal);
+        }
+        ::VariantClear(&varProp);
+      }
+      lpProp = const_cast<LPWSTR>(L"name");
+      hr = lpArgDisp->GetIDsOfNames(IID_NULL, &lpProp, 1, LOCALE_USER_DEFAULT, &dispIdProp);
+      dispparamsNoArgs.cArgs = 0;
+      dispparamsNoArgs.cNamedArgs = 0;
+      hr = lpArgDisp->GetIDsOfNames(IID_NULL, &lpProp, 1, LOCALE_USER_DEFAULT, &dispIdProp);
+      if (hr == S_OK) {
+        VARIANT varProp;
+        ::VariantInit(&varProp);
+        hr = lpArgDisp->Invoke(dispIdProp, IID_NULL, LOCALE_USER_DEFAULT,
+                               DISPATCH_PROPERTYGET, &dispparamsNoArgs,
+                               &varProp, nullptr, nullptr);
+        if (hr == S_OK) {
+          strName = exciton::util::ToUTF8String(varProp.bstrVal);
         }
         ::VariantClear(&varProp);
       }
@@ -221,9 +238,9 @@ STDMETHODIMP CWebBrowserHost::Invoke(DISPID dispIdMember, REFIID riid,
         }
         ::VariantClear(&varProp);
       }
-      LOG_DEBUG("[%d] CWebBrowserHost::Invoke: call external: path=%s, args=%s",
-                __LINE__, strPath.c_str(), strArg.c_str());
-      Driver::Current().emitEvent(strPath, strArg);
+      LOG_DEBUG("[%d] CWebBrowserHost::Invoke: call external: path=%s, name=%s args=%s",
+                __LINE__, strPath.c_str(), strName.c_str(), strArg.c_str());
+      Driver::Current().emitEvent(strPath, strName, strArg);
     }
     return S_OK;
   }
@@ -478,9 +495,9 @@ LRESULT CWebBrowserHost::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
     arg.emplace("height", static_cast<int64_t>(HIWORD(lParam)));
     picojson::value val(arg);
     auto json = val.serialize();
-    auto name =
-        exciton::util::FormatString("/window/%s/resize", m_strID.c_str());
-    Driver::Current().emitEvent(name, json);
+    auto path =
+        exciton::util::FormatString("/window/%s", m_strID.c_str());
+    Driver::Current().emitEvent(path, "resize", json);
     return 0;
   }
 

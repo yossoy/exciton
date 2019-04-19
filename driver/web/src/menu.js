@@ -49,11 +49,24 @@ function resolveMenuNode(menu, items) {
 }
 
 class Menu {
-  constructor() {
+  constructor(menuData) {
     this.id = null;
     this.items = [];
     this.hostItem = null;
     this.title = "";
+    this.menuData = menuData;
+  }
+
+  initWithMenuTemplate(nsobj, templ) {
+    for (var t of templ) {
+      const mi = new MenuItem(this.menuData);
+      if (t['separator']) {
+        mi.separator = true;
+      } else {
+        mi.initWithMenuTemplate(nsobj, t);
+      }
+      this.addMenuItem(mi);
+    }
   }
 
   addMenuItem(item) {
@@ -310,6 +323,12 @@ class MenuData {
     return popup;
   }
 
+  populateWithAppMenuTemplate(nsobj, temp) {
+    const menu = new Menu(this);
+    this.menu = menu;
+    menu.initWithMenuTemplate(nsobj, temp);
+  }
+
   polulateWithDiffset(nsobj, diffSet) {
     const items = diffSet.items;
     const creNodes = [];
@@ -512,7 +531,7 @@ class MenuData {
 };
 
 class MenuItem {
-  constructor() {
+  constructor(menuData) {
     this.id = "";
     this.subMenu = null;
     this.title = "";
@@ -520,6 +539,52 @@ class MenuItem {
     this.enabled = false;
     this.separator = false;
     this.handler = null;
+    this.menuData = menuData;
+  }
+
+  initWithMenuTemplate(nsobj, templ) {
+    const label = templ['label'];
+    const subMenu = templ['subMenu'];
+    this.id = templ['id'];
+    if (subMenu) {
+      const m = new Menu(this.menuData);
+      m.initWithMenuTemplate(nsobj, subMenu);
+      this.setSubMenu(m);
+    }
+    const role0 = templ['role'];
+    if (role0) {
+      const role = defaultRoleInfo[role0];
+      if (!role) {
+        console.warn('unsupported role name:', role0);
+        return;
+      }
+      if (role.label) {
+        this.title = role.label;
+        if (this.subMenu) {
+          this.subMenu.title = role.label;
+        }
+      }
+      if (role.command) {
+        this.handler = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          role.command(nsobj, e);
+        };
+        this.enabled = true;
+      }
+    } else if (!this.subMenu) {
+      this.handler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // const ee = translateEvent(nsobj, e, id, this.menu);
+        // console.log('fakeEvent ==> ', ee);
+        nsobj.callNativeMethod('/menu/' + this.menuData.id, 'emit', this.id);
+      };
+      this.enabled = true;
+    }
+    if (label) {
+      this.title = label;
+    }
   }
 
   setSubMenu(menu) {
@@ -539,6 +604,21 @@ function newMenu(nsobj, dd) {
   const menuData = new MenuData();
   menuData.id = id;
   menuDatas[id] = menuData;
+  nsobj.responceValue(true, dd.respCallbackNo);
+}
+
+function newAppMenu(nsobj, dd) {
+  const params = dd.parameter;
+  const id = params['menu'];
+  const argument = dd.argument;
+  if (!id) {
+    throw 'parameter[menu] not found';
+  }
+  const menuData = new MenuData();
+  menuData.id = id;
+  menuData.populateWithAppMenuTemplate(nsobj,argument);
+  menuDatas[id] = menuData;
+  
   nsobj.responceValue(true, dd.respCallbackNo);
 }
 
@@ -590,6 +670,7 @@ function popupContextMenu(nsobj, dd) {
 
 export default {
   newMenu,
+  newAppMenu,
   updateDiffSetHandler,
   setApplicationMenu,
   getMenuData,

@@ -21,10 +21,16 @@ const (
 )
 
 type DriverEvent struct {
+	TargetPath         string            `json:"target"`
 	Name               string            `json:"name"`
 	Argument           json.RawMessage   `json:"argument"`
 	Parameter          map[string]string `json:"parameter"`
 	ResponceCallbackNo int               `json:"respCallbackNo"`
+}
+
+type DriverEventResponse struct {
+	Result json.RawMessage `json:"result"`
+	Error  string          `json:"error,omitempty"`
 }
 
 type Driver interface {

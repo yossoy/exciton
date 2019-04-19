@@ -8,7 +8,8 @@
 @implementation Window
 + (void)initEventHandlers {
   Driver *d = [Driver current];
-  [d addEventHandler:@"/window/:window/new"
+  [d addEventHandler:@"/window/:window"
+                name:@"new"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
@@ -19,7 +20,8 @@
                }
                [[Driver current] responceEventResult:responceNo boolean:TRUE];
              }];
-  [d addEventHandler:@"/window/:window/requestAnimationFrame"
+  [d addEventHandler:@"/window/:window"
+                name:@"requestAnimationFrame"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
@@ -28,7 +30,8 @@
                Window *w = driver.elements[idstr];
                [w requestAnimationFrame];
              }];
-  [d addEventHandler:@"/window/:window/updateDiffSetHandler"
+  [d addEventHandler:@"/window/:window"
+                name:@"updateDiffSetHandler"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
@@ -37,7 +40,8 @@
                Window *w = driver.elements[idstr];
                [w updateDiffSetHandler:argument];
              }];
-  [d addEventHandler:@"/window/:window/browserSync"
+  [d addEventHandler:@"/window/:window"
+                name:@"browserSync"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
@@ -46,7 +50,8 @@
                Window *w = driver.elements[idstr];
                [w browserSyncRequest:argument responceNo:responceNo];
              }];
-  [d addEventHandler:@"/window/:window/browserAsync"
+  [d addEventHandler:@"/window/:window"
+                name:@"browserAsync"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
@@ -55,7 +60,8 @@
                Window *w = driver.elements[idstr];
                [w browserAsyncRequest:argument responceNo:responceNo];
              }];
-  [d addEventHandler:@"/window/:window/redirectTo"
+  [d addEventHandler:@"/window/:window"
+                name:@"redirectTo"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
@@ -149,7 +155,8 @@
 - (void)dealloc {
   LOG_DEBUG(@"window::dealloc\n");
   Driver *d = [Driver current];
-  [d emitEvent:[NSString stringWithFormat:@"/window/%@/finalize", self.ID]];
+  [d emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+          name:@"finalize"];
 }
 
 - (void)configBackgroundColor:(NSString *)color
@@ -222,7 +229,9 @@
   NSDictionary *arg = message.body;
 
   //  LOG_DEBUG(@"userContentController:%@, data:%@", self.ID, message.body);
-  [[Driver current] emitEvent:arg[@"path"] jsonEncodedArgument:arg[@"arg"]];
+  [[Driver current] emitEvent:arg[@"path"]
+                         name:arg[@"name"]
+          jsonEncodedArgument:arg[@"arg"]];
 }
 
 - (void)webView:(WKWebView *)webView
@@ -296,12 +305,12 @@
 - (void)updateDiffSetHandler:(id)diff {
   // LOG_INFO(@"updateDiffSetHandler: %@", diff);
   NSData *jsonData = [JSONEncoder encodeFromObject:diff];
-  NSString *jsonStr =
-      [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-  NSString *jsonStr2 =
-      [[jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
-          stringByReplacingOccurrencesOfString:@"\'"
-                                    withString:@"\\\'"];
+  NSString *jsonStr = [[NSString alloc] initWithData:jsonData
+                                            encoding:NSUTF8StringEncoding];
+  NSString *jsonStr2 = [[jsonStr stringByReplacingOccurrencesOfString:@"\\"
+                                                           withString:@"\\\\"]
+      stringByReplacingOccurrencesOfString:@"\'"
+                                withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowserEvent('"
                                  @"updateDiffSetHandler', '%@');",
@@ -311,12 +320,12 @@
 
 - (void)browserSyncRequest:(id)argument responceNo:(int)responceNo {
   NSData *jsonData = [JSONEncoder encodeFromObject:argument];
-  NSString *jsonStr =
-      [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-  NSString *jsonStr2 =
-      [[jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
-          stringByReplacingOccurrencesOfString:@"\'"
-                                    withString:@"\\\'"];
+  NSString *jsonStr = [[NSString alloc] initWithData:jsonData
+                                            encoding:NSUTF8StringEncoding];
+  NSString *jsonStr2 = [[jsonStr stringByReplacingOccurrencesOfString:@"\\"
+                                                           withString:@"\\\\"]
+      stringByReplacingOccurrencesOfString:@"\'"
+                                withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowerEventSync('"
                                  @"doBrowserEvent', '%@');",
@@ -333,12 +342,12 @@
 
 - (void)browserAsyncRequest:(id)argument responceNo:(int)responceNo {
   NSData *jsonData = [JSONEncoder encodeFromObject:argument];
-  NSString *jsonStr =
-      [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-  NSString *jsonStr2 =
-      [[jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
-          stringByReplacingOccurrencesOfString:@"\'"
-                                    withString:@"\\\'"];
+  NSString *jsonStr = [[NSString alloc] initWithData:jsonData
+                                            encoding:NSUTF8StringEncoding];
+  NSString *jsonStr2 = [[jsonStr stringByReplacingOccurrencesOfString:@"\\"
+                                                           withString:@"\\\\"]
+      stringByReplacingOccurrencesOfString:@"\'"
+                                withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowserEvent('"
                                  @"browserAsync', '%@');",
@@ -349,12 +358,12 @@
 - (void)redirectTo:(id)args {
   // LOG_INFO(@"updateDiffSetHandler: %@", diff);
   NSData *jsonData = [JSONEncoder encodeFromObject:args];
-  NSString *jsonStr =
-      [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-  NSString *jsonStr2 =
-      [[jsonStr stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
-          stringByReplacingOccurrencesOfString:@"\'"
-                                    withString:@"\\\'"];
+  NSString *jsonStr = [[NSString alloc] initWithData:jsonData
+                                            encoding:NSUTF8StringEncoding];
+  NSString *jsonStr2 = [[jsonStr stringByReplacingOccurrencesOfString:@"\\"
+                                                           withString:@"\\\\"]
+      stringByReplacingOccurrencesOfString:@"\'"
+                                withString:@"\\\'"];
   NSString *cmdstr =
       [NSString stringWithFormat:@"window.exciton.requestBrowserEvent('"
                                  @"redirectTo', '%@');",
@@ -370,49 +379,54 @@
     @"width" : [NSNumber numberWithDouble:self.window.frame.size.width],
     @"height" : [NSNumber numberWithDouble:self.window.frame.size.height]
   };
-  [driver emitEvent:[NSString stringWithFormat:@"/window/%@/resize", self.ID]
+  [driver emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+               name:@"resize"
            argument:size];
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
   Driver *driver = [Driver current];
 
-  [driver emitEvent:[NSString stringWithFormat:@"/window/%@/focus", self.ID]];
+  [driver emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+               name:@"focus"];
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification {
   Driver *driver = [Driver current];
 
-  [driver emitEvent:[NSString stringWithFormat:@"/window/%@/blur", self.ID]];
+  [driver emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+               name:@"blur"];
 }
 
 - (void)windowDidEnterFullScreen:(NSNotification *)notification {
   Driver *driver = [Driver current];
 
-  [driver
-      emitEvent:[NSString stringWithFormat:@"/window/%@/fullscreen", self.ID]
-       argument:@YES];
+  [driver emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+               name:@"fullscreen"
+           argument:@YES];
 }
 
 - (void)windowDidExitFullScreen:(NSNotification *)notification {
   Driver *driver = [Driver current];
 
-  [driver
-      emitEvent:[NSString stringWithFormat:@"/window/%@/fullscreen", self.ID]
-       argument:@NO];
+  [driver emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+               name:@"fullscreen"
+           argument:@NO];
 }
 
 - (void)windowDidMiniaturize:(NSNotification *)notification {
   Driver *driver = [Driver current];
 
-  [driver emitEvent:[NSString stringWithFormat:@"/window/%@/minimize", self.ID]
+  [driver emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+               name:@"minimize"
            argument:@YES];
 }
 
 - (void)windowDidDeminiaturize:(NSNotification *)notification {
   Driver *driver = [Driver current];
 
-  [driver emitEvent:[NSString stringWithFormat:@"/window/%@/minimize", self.ID]
+  [driver emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+               name:@"minimize"
            argument:@NO];
 }
 
@@ -422,9 +436,9 @@
   LOG_INFO(@"windowShouldClose: %@", self.ID);
 
   // TOOD: return value
-  [[Driver current]
-      emitEvent:[NSString stringWithFormat:@"/window/%@/close", self.ID]
-       argument:[NSNull null]];
+  [[Driver current] emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+                         name:@"close"
+                     argument:[NSNull null]];
 
   return TRUE;
 }
@@ -440,7 +454,8 @@
   LOG_INFO(@"windowWillClose: %@", self.ID);
 
   Driver *driver = [Driver current];
-  [driver emitEvent:[NSString stringWithFormat:@"/window/%@/closed", self.ID]
+  [driver emitEvent:[NSString stringWithFormat:@"/window/%@", self.ID]
+               name:@"closed"
            argument:[NSNull null]];
   [driver.elements removeObjectForKey:self.ID];
 }

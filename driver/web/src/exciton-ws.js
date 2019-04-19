@@ -14,44 +14,45 @@ console.log(ws_url);
 var sock = new WebSocket(ws_url);
 sock.onopen = function () {
     // send appid for communication
-    nsobj.callNativeMethod('/init', null);
+    nsobj.callNativeMethod('', 'init', null);
 };
 sock.onmessage = function (e) {
     const ed = JSON.parse(e.data);
     console.log('onmessage: ', ed);
     const d = ed.data;
-    const winPrefix = '/app/:app/window/:window/';
-    const menuPrefix = '/app/:app/menu/:menu/';
-    const dialogPrefix = '/app/:app/dialog/:dialog/';
-    const appPrefix = '/app/:app/';
+    const winTarget = '/app/:app/window/:window';
+    const menuTarget = '/app/:app/menu/:menu';
+    const dialogTarget = '/app/:app/dialog/:dialog';
+    const appTarget = '/app/:app';
+    console.log('onmessage ===> ', e);
     if (ed.sync) {
-        if (d.name == (winPrefix + 'new')) {
+        if (d.target === winTarget && d.name === 'new') {
             return nsobj.newWindow(d);
         }
-        if (d.name == (menuPrefix + 'new')) {
+        if (d.target === menuTarget && d.name === 'new') {
             return menu.newMenu(nsobj, d);
         }
-        if (d.name.startsWith(winPrefix)) {
-            const winevnt = d.name.slice(winPrefix.length);
+        if (d.target === menuTarget && d.name === 'newApplicationMenu') {
+            return menu.newAppMenu(nsobj, d);
+        }
+        if (d.target === winTarget) {
             const winid = 'win' + d.parameter['window'];
             const w = document.getElementById(winid);
-            console.log('call child event: ' + winevnt + ", winid = " + winid, d.argument, w, winid);
-            const resultStr = w.contentWindow.exciton.requestBrowerEventSync(winevnt, JSON.stringify(d.argument));
+            console.log('call child event: ' + d.name + ", winid = " + winid, d.argument, w, winid);
+            const resultStr = w.contentWindow.exciton.requestBrowerEventSync(d.name, JSON.stringify(d.argument));
             let result;
             if (resultStr) {
                 result = JSON.parse(resultStr);
             }
             nsobj.responceValue(result, d.respCallbackNo);
-        } else if (d.name.startsWith(menuPrefix)) {
-            const menuevt = d.name.slice(menuPrefix.length);
-            switch (menuevt) {
+        } else if (d.target === menuTarget) {
+            switch (d.name) {
                 case 'updateDiffSetHandler':
                     menu.updateDiffSetHandler(nsobj, d);
                     break;
             }
-        } else if (d.name.startsWith(appPrefix)) {
-            const dlgevt = d.name.slice(appPrefix.length);
-            switch (dlgevt) {
+        } else if (d.target === appTarget) {
+            switch (d.name) {
                 case 'showMessageBox':
                     nsobj.showMessageBox(d);
                     break;
@@ -63,15 +64,13 @@ sock.onmessage = function (e) {
             throw 'invalid event: ' + d.name;
         }
     } else {
-        if (d.name.startsWith(winPrefix)) {
-            const winevnt = d.name.slice(winPrefix.length);
+        if (d.target === winTarget) {
             const winid = 'win' + d.parameter['window'];
             const w = document.getElementById(winid);
-            console.log('call child event: ' + winevnt, d.argument);
-            w.contentWindow.exciton.requestBrowserEvent(winevnt, JSON.stringify(d.argument));
-        } else if (d.name.startsWith(menuPrefix)) {
-            const menuevt = d.name.slice(menuPrefix.length);
-            switch (menuevt) {
+            console.log('call child event: ' + d.name, d.argument);
+            w.contentWindow.exciton.requestBrowserEvent(d.name, JSON.stringify(d.argument));
+        } else if (d.target === menuTarget) {
+            switch (d.name) {
                 case 'setApplicationMenu':
                     menu.setApplicationMenu(nsobj, d);
                     break;
@@ -106,12 +105,13 @@ nsobj.newWindow = function (dd) {
 
 nsobj.callWindowMethod = function (d) {
     console.log('callWindowMethod', d);
-    nsobj.callNativeMethod(d.path, JSON.parse(d.arg));
+    nsobj.callNativeMethod(d.path, d.name, JSON.parse(d.arg));
 };
 
 nsobj.responceValue = function (val, respNo) {
     var data = {
-        name: '/responceEventResult',
+        target: '',
+        name: 'responceEventResult',
         argument: val, //TODO: error result
         respCallbackNo: respNo,
     };
@@ -119,9 +119,10 @@ nsobj.responceValue = function (val, respNo) {
     nsobj.callnative(data);
 };
 
-nsobj.callNativeMethod = function (method, arg) {
+nsobj.callNativeMethod = function (path, name, arg) {
     var data = {
-        name: '/app/' + nsobj.ID + method,
+        target: '/app/' + nsobj.ID + path,
+        name: name,
         argument: arg,
         respCallbackNo: -1,
     };

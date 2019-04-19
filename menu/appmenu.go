@@ -1,15 +1,9 @@
 package menu
 
-import (
-	"github.com/yossoy/exciton/event"
-)
+import "github.com/yossoy/exciton/event"
 
 func SetApplicationMenu(owner Owner, menu AppMenuTemplate) error {
-	r, err := toAppMenu(menu)
-	if err != nil {
-		return err
-	}
-	mi, err := newInstance(owner, r)
+	mi, err := newAppMenu(owner, owner, menu)
 	if err != nil {
 		return err
 	}

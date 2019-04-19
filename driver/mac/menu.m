@@ -131,9 +131,8 @@ enum {
             VS(@selector(performZoom:)), @"zoom",                      //
             VS(@selector(terminate:)), @"quit",                        //
             VS(@selector(toggleFullScreen:)), @"togglefullscreen",     //
-            VS(@selector(goBack:)), @"back",
-            VS(@selector(goForward:)), @"forward",
-            nil];
+            VS(@selector(goBack:)), @"back", VS(@selector(goForward:)),
+            @"forward", nil];
   }
   NSValue *val = [roleMap objectForKey:role];
   if (val) {
@@ -145,7 +144,8 @@ enum {
 + (void)initEventHandlers {
   Driver *d = [Driver current];
 
-  [d addEventHandler:@"/menu/:menu/new"
+  [d addEventHandler:@"/menu/:menu"
+                name:@"new"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
@@ -156,11 +156,61 @@ enum {
                [d responceEventResult:responceNo boolean:TRUE];
                LOG_DEBUG(@"menu::new callback end");
              }];
-  [d addEventHandler:@"/menu/:menu/updateDiffSetHandler"
+  [d addEventHandler:@"/menu/:menu"
+                name:@"newApplicationMenu"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
-              LOG_DEBUG(@"menu::updateDiffSetHandler is called, call defer");
+               NSString *idstr = parameter[@"menu"];
+               NSArray<NSDictionary *> *json =
+                   (NSArray<NSDictionary *> *)argument;
+               Menu *m = [[Menu alloc] initWithID:idstr];
+               MenuContainer *mc =
+                   [[MenuContainer alloc] initWithAppMenuTemplate:json
+                                                            title:@""
+                                                         delegate:m];
+               Driver *d = [Driver current];
+               if (mc == nil) {
+                 [d responceEventResult:responceNo boolean:NO];
+               } else {
+                 mc.ID = idstr;
+                 m.pMenu = mc;
+                 d.elements[idstr] = m;
+                 // [NSApp setMainMenu:m.pMenu];
+                 [d responceEventResult:responceNo boolean:TRUE];
+               }
+               LOG_DEBUG(@"menu::new callback end");
+             }];
+  [d addEventHandler:@"/menu/:menu"
+                name:@"newPopupMenu"
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               NSString *idstr = parameter[@"menu"];
+               NSArray<NSDictionary *> *json =
+                   (NSArray<NSDictionary *> *)argument;
+               Menu *m = [[Menu alloc] initWithID:idstr];
+               MenuContainer *mc =
+                   [[MenuContainer alloc] initWithMenuTemplate:json
+                                                         title:@""
+                                                      delegate:m];
+               Driver *d = [Driver current];
+               if (mc == nil) {
+                 [d responceEventResult:responceNo boolean:NO];
+               } else {
+                 mc.ID = idstr;
+                 m.pMenu = mc;
+                 d.elements[idstr] = m;
+                 [d responceEventResult:responceNo boolean:TRUE];
+               }
+               LOG_DEBUG(@"menu::new callback end");
+             }];
+  [d addEventHandler:@"/menu/:menu"
+                name:@"updateDiffSetHandler"
+             handler:^(id argument,
+                       NSDictionary<NSString *, NSString *> *parameter,
+                       int responceNo) {
+               LOG_DEBUG(@"menu::updateDiffSetHandler is called, call defer");
                defer(NSString *idstr = parameter[@"menu"];
                      NSDictionary *diff = argument;
                      Driver *driver = [Driver current];
@@ -169,7 +219,8 @@ enum {
                      [m populateWithDiffset:diff];
                      [driver responceEventResult:responceNo boolean:TRUE];);
              }];
-  [d addEventHandler:@"/menu/:menu/setApplicationMenu"
+  [d addEventHandler:@"/menu/:menu"
+                name:@"setApplicationMenu"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
@@ -178,7 +229,8 @@ enum {
                      LOG_INFO(@"setApplicationMenu: %@", idstr);
                      [NSApp setMainMenu:m.pMenu];);
              }];
-  [d addEventHandler:@"/menu/:menu/popupContextMenu"
+  [d addEventHandler:@"/menu/:menu"
+                name:@"popupContextMenu"
              handler:^(id argument,
                        NSDictionary<NSString *, NSString *> *parameter,
                        int responceNo) {
@@ -195,8 +247,8 @@ enum {
                    NSRect scrRect = NSMakeRect(
                        posX, parent.screen.frame.size.height - posY, 0.0, 0.0);
                    NSRect winRect = [parent convertRectFromScreen:scrRect];
-                   NSPoint pos =
-                       [contentView convertPoint:winRect.origin fromView:nil];
+                   NSPoint pos = [contentView convertPoint:winRect.origin
+                                                  fromView:nil];
                    [m.pMenu popUpMenuPositioningItem:m.pMenu.itemArray[0]
                                           atLocation:pos
                                               inView:parent.contentView];);
@@ -210,9 +262,18 @@ enum {
   return self;
 }
 
+- (instancetype)initWithID:(NSString *)menuId
+         popupMenuTemplate:(NSArray<NSDictionary *> *)json {
+  if ((self = [super init])) {
+    self.ID = menuId;
+  }
+  return self;
+}
+
 - (void)dealloc {
   Driver *d = [Driver current];
-  [d emitEvent:[NSString stringWithFormat:@"/menu/%@/finalize", self.ID]];
+  [d emitEvent:[NSString stringWithFormat:@"/menu/%@", self.ID]
+          name:@"finalize"];
   if (self.pMenu) {
     [self.pMenu setDelegate:nil];
   }
@@ -331,7 +392,7 @@ enum {
       break;
     case ditAddDataSet: {
       if (!curNode || ![curNode isKindOfClass:[MenuItem class]]) {
-        LOG_ERROR(@"ditAddEventListener: invalid target: %@", curNode);
+        LOG_ERROR(@"ditAddDataSet: invalid target: %@", curNode);
         return FALSE;
       }
       NSString *name = k;
@@ -496,68 +557,89 @@ enum {
 
 - (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item {
   LOG_INFO(@"validateUserInterfaceItem: %@", (id)item);
-  if (![(id)item isKindOfClass:[MenuItem class]]) {
-    LOG_ERROR(@"validateUserInterfaceItem not match: %@", (id)item);
-    // toolbar is not supported yet..
-    return NO;
+  if ([(id)item isKindOfClass:[MenuItem class]]) {
+    MenuItem *mi = (MenuItem *)item;
+    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+    __block BOOL result = YES;
+    LOG_INFO(@"==> %@", mi.ID);
+    [[Driver current] emitEvent:[NSString stringWithFormat:@"/menu/%@", self.ID] name:@"is-item-enabled" argument:mi.ID respCallback:^(id value, NSString* error) {
+      LOG_INFO(@"emitEvent: id:%@value:%@ error:%@", mi.ID, value, error);
+      result = [value boolValue];
+      dispatch_semaphore_signal(sem);
+    }];
+    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+#if !OS_OBJECT_USE_OBJC
+    dispatch_release(sem);
+#endif
+    return result;
   }
+  // toolbar is not supported yet..
+  LOG_ERROR(@"validateUserInterfaceItem not match: %@", (id)item);
 
-  return YES;
+  return NO;
 }
 
 - (void)itemSelected:(id)sender {
+  LOG_DEBUG(@"itemSelected called: %@", sender);
   if (![sender isKindOfClass:[MenuItem class]]) {
     return;
   }
+  LOG_DEBUG(@"itemSelected called2: %@", sender);
   MenuItem *mi = sender;
   NSPoint mousePt = [NSEvent mouseLocation];
   NSEventModifierFlags modifiers = [NSEvent modifierFlags];
 
-  NSDictionary *target = @{
-    @"menuId" : self.ID,
-    @"elementId" : mi.ID,
-  };
+  LOG_DEBUG(@"itemSelected called3: %@", mi);
 
-  NSDictionary *fakeEvent = @{
-    // Event
-    @"bubbles" : @NO,
-    @"cancelBubble" : @NO,
-    @"cancelable" : @NO,
-    @"composed" : @NO,
-    @"currentTarget" : target,
-    @"defaultPrevented" : @NO,
-    @"eventPhase" : @2,
-    @"target" : target,
-    @"timeStamp" : @0,
-    @"type" : @"click",
-    @"isTrusted" : @NO,
+  // NSDictionary *target = @{
+  //   @"menuId" : self.ID,
+  //   @"elementId" : mi.ID,
+  // };
 
-    // UIEvent
-    @"detail" : @0,
-    // TODO: アクティブウィンドウを取得出来るようにするべきか
-    //@"view":???
+  // LOG_DEBUG(@"itemSelected called4: %@", sender);
 
-    // MouseEvent
-    @"altKey" : (modifiers & NSEventModifierFlagOption) ? @YES : @NO,
-    @"button" : @0,
-    @"buttons" : @1,
-    @"clientX" : @0,
-    @"clientY" : @0,
-    @"ctrlKey" : (modifiers & NSEventModifierFlagControl) ? @YES : @NO,
-    @"metaKey" : (modifiers & NSEventModifierFlagCommand) ? @YES : @NO,
-    @"movementX" : @0.0,
-    @"movementY" : @0.0,
-    @"region" : [NSNull null],
-    //"relatedTarget":???
-    @"screenX" : [NSNumber numberWithFloat:mousePt.x],
-    @"screenY" : [NSNumber numberWithFloat:mousePt.y],
-    @"shiftKey" : (modifiers & NSEventModifierFlagShift) ? @YES : @NO
-  };
+  // NSDictionary *fakeEvent = @{
+  //   // Event
+  //   @"bubbles" : @NO,
+  //   @"cancelBubble" : @NO,
+  //   @"cancelable" : @NO,
+  //   @"composed" : @NO,
+  //   @"currentTarget" : target,
+  //   @"defaultPrevented" : @NO,
+  //   @"eventPhase" : @2,
+  //   @"target" : target,
+  //   @"timeStamp" : @0,
+  //   @"type" : @"click",
+  //   @"isTrusted" : @NO,
+
+  //   // UIEvent
+  //   @"detail" : @0,
+  //   // TODO: アクティブウィンドウを取得出来るようにするべきか
+  //   //@"view":???
+
+  //   // MouseEvent
+  //   @"altKey" : (modifiers & NSEventModifierFlagOption) ? @YES : @NO,
+  //   @"button" : @0,
+  //   @"buttons" : @1,
+  //   @"clientX" : @0,
+  //   @"clientY" : @0,
+  //   @"ctrlKey" : (modifiers & NSEventModifierFlagControl) ? @YES : @NO,
+  //   @"metaKey" : (modifiers & NSEventModifierFlagCommand) ? @YES : @NO,
+  //   @"movementX" : @0.0,
+  //   @"movementY" : @0.0,
+  //   @"region" : [NSNull null],
+  //   //"relatedTarget":???
+  //   @"screenX" : [NSNumber numberWithFloat:mousePt.x],
+  //   @"screenY" : [NSNumber numberWithFloat:mousePt.y],
+  //   @"shiftKey" : (modifiers & NSEventModifierFlagShift) ? @YES : @NO
+  // };
+  LOG_DEBUG(@"itemSelected called5: %@", sender);
   LOG_INFO(@"itemSelected: %@: %@,%@", mi, mi.ID, mi.onClick);
-  [[Driver current]
-      emitEvent:[NSString stringWithFormat:@"/menu/%@/html/%@/click", self.ID,
-                                           mi.onClick]
-       argument:fakeEvent];
+  // [[Driver current] emitEvent:[NSString stringWithFormat:@"/menu/%@/html/%@",
+  //                                                        self.ID, mi.onClick]
+  //                        name:@"click"
+  //                    argument:fakeEvent];
+  [[Driver current] emitEvent:[NSString stringWithFormat:@"/menu/%@", self.ID] name:@"emit" argument:mi.ID];
 }
 
 - (void)menuDidClose:(NSMenu *)menu {
@@ -567,9 +649,147 @@ enum {
 @end
 
 @implementation MenuContainer
+- (instancetype)initWithMenuTemplate:(NSArray<NSDictionary *> *)items
+                               title:(NSString *)title
+                            delegate:(Menu *)delegate {
+  if ((self = [super initWithTitle:title])) {
+    [self setDelegate:delegate];
+    __block BOOL isError = NO;
+    [items enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger idx,
+                                        BOOL *isStop) {
+      BOOL isSeparator = [[item objectForKey:@"separator"] boolValue];
+      if (isSeparator) {
+        NSMenuItem *mi = [NSMenuItem separatorItem];
+        [self addItem:mi];
+      } else {
+        MenuItem *mi = [[MenuItem alloc] initWithItemTemplate:item
+                                                     delegate:delegate];
+        if (mi == nil) {
+          isError = YES;
+          *isStop = YES;
+          return;
+        }
+        [self addItem:mi];
+      }
+    }];
+    if (isError) {
+      return nil;
+    }
+  }
+  return self;
+}
+
+- (instancetype)initWithAppMenuTemplate:(NSArray<NSDictionary *> *)items
+                                  title:(NSString *)title
+                               delegate:(Menu *)delegate {
+  if ((self = [super initWithTitle:title])) {
+    [self setDelegate:delegate];
+    __block BOOL isError = NO;
+    [items enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger idx,
+                                        BOOL *isStop) {
+      MenuItem *mi = [[MenuItem alloc] initWithItemTemplate:item
+                                                   delegate:delegate];
+      if (mi == nil) {
+        isError = YES;
+        *isStop = YES;
+        return;
+      }
+      [self addItem:mi];
+    }];
+    if (isError) {
+      return nil;
+    }
+  }
+  return self;
+}
 @end
 
 @implementation MenuItem
+- (instancetype)initWithItemTemplate:(NSDictionary *)item
+                            delegate:(Menu *)delegate {
+  if ((self = [super init])) {
+    [self setTarget:delegate];
+    [self setTag:1];
+    [self setEnabled:YES];
+    NSString *label = [item objectForKey:@"label"];
+    NSArray<NSDictionary *> *subMenu = [item objectForKey:@"subMenu"];
+    if (subMenu != nil) {
+      MenuContainer *mc = [[MenuContainer alloc] initWithMenuTemplate:subMenu
+                                                                title:@""
+                                                             delegate:delegate];
+      if (mc == nil) {
+        return nil;
+      }
+      self.submenu = mc;
+      mc.hostItem = self;
+    }
+    NSString *accel = [item objectForKey:@"acclerator"];
+    NSString *role = [item objectForKey:@"role"];
+    self.ID = [item objectForKey:@"id"];
+    if (0 < [role length]) {
+      SEL sel = [Menu getRole:role];
+      if (!sel) {
+        if ([role isEqualToString:@"window"]) {
+          if (self.submenu == nil) {
+            MenuContainer *mc = [[MenuContainer alloc] initWithTitle:@""];
+            self.submenu = mc;
+            mc.hostItem = self;
+          }
+          [NSApp setWindowsMenu:self.submenu];
+        } else if ([role isEqualToString:@"help"]) {
+          if (self.submenu == nil) {
+            MenuContainer *mc = [[MenuContainer alloc] initWithTitle:@""];
+            self.submenu = mc;
+            mc.hostItem = self;
+          }
+          [NSApp setHelpMenu:self.submenu];
+        } else if ([role isEqualToString:@"services"]) {
+          if (self.submenu == nil) {
+            MenuContainer *mc = [[MenuContainer alloc] initWithTitle:@""];
+            self.submenu = mc;
+            mc.hostItem = self;
+          }
+          [NSApp setServicesMenu:self.submenu];
+        } else {
+          LOG_ERROR(@"ditAddDataSet: unsupported role name: %@", role);
+          return nil;
+        }
+      } else {
+        [self setTarget:nil];
+        [self setAction:sel];
+        NSString *acc = [Menu getRoleDefaultAccelerator:role];
+        if (acc != nil && (0 == [accel length])) {
+          accel = acc;
+        }
+
+        NSString *rl = [Menu getRoleDefaultLabel:role];
+        if (rl != nil && (0 == [label length])) {
+          label = rl;
+        }
+      }
+    } else if (!self.submenu) {
+      LOG_DEBUG(@"----------------> itemSelecteed set: %@\n", label);
+      [self setAction:@selector(itemSelected:)];
+    }
+    if (0 < [label length]) {
+      [self setTitle:label];
+      if (self.submenu != nil) {
+        [self.submenu setTitle:label];
+      }
+    }
+    if (0 < [accel length]) {
+      NSUInteger modifier;
+      NSString *a = nil;
+      if ([[Accelerator current] parseString:accel
+                                 accelerator:&a
+                                    modifier:&modifier]) {
+        [self setKeyEquivalent:a];
+        [self setKeyEquivalentModifierMask:modifier];
+      }
+    }
+  }
+  return self;
+}
 @end
 
 void Menu_Init() { [Menu initEventHandlers]; }

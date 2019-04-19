@@ -15,6 +15,12 @@ func initializeMenu(serializer driver.DriverEventSerializer) error {
 	menu.MenuClass.AddHandlerWithResult("new", func(e* event.Event, callback event.ResponceCallback) {
 		serializer.RelayEventWithResult(e, callback)
 	})
+	menu.MenuClass.AddHandlerWithResult("newPopupMenu", func(e* event.Event, callback event.ResponceCallback) {
+		serializer.RelayEventWithResult(e, callback)
+	})
+	menu.MenuClass.AddHandlerWithResult("newApplicationMenu", func(e* event.Event, callback event.ResponceCallback) {
+		serializer.RelayEventWithResult(e, callback)
+	})
 	menu.MenuClass.AddHandlerWithResult("updateDiffSetHandler", func(e *event.Event, callback event.ResponceCallback) {
 		serializer.RelayEventWithResult(e, callback)
 	})

@@ -73,10 +73,11 @@ func (d *windows) relayEventToNative(e *event.Event) {
 			panic(err)
 		}
 	}
-	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	drvEvtPath, params := event.ToDriverEventPath(e.Target)
 	driverLogDebug("relayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
 	drvEvt := driver.DriverEvent{
-		Name:      drvEvtPath,
+		TargetPath:      drvEvtPath,
+		Name: e.Name,
 		Argument:  arg,
 		Parameter: params,
 	}
@@ -95,11 +96,12 @@ func (d *windows) relayEventWithResultToNative(e *event.Event, respCallback even
 	if err != nil {
 		panic(err)
 	}
-	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	drvEvtPath, params := event.ToDriverEventPath(e.Target)
 	driverLogDebug("replayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
 
 	drvEvt := driver.DriverEvent{
-		Name:      drvEvtPath,
+		TargetPath: drvEvtPath,
+		Name:      e.Name,
 		Argument:  arg,
 		Parameter: params,
 		ResponceCallbackNo: d.addRespCallbackCallback(func(result event.Result) {
@@ -121,14 +123,43 @@ func (d *windows) requestEventEmit(devt *driver.DriverEvent) error {
 	driverLogDebug("requestEventEmit: %v", devt)
 	if devt.ResponceCallbackNo < 0 {
 		v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
-		t, name, err := event.StringToEventTarget(devt.Name)
+		t, err := event.StringToEventTarget(devt.TargetPath)
 		if err != nil {
 			return err
 		}
-		go event.Emit(t, name, v)
+		go event.Emit(t, devt.Name, v)
+		return nil
+	} else {
+		v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
+		t, err := event.StringToEventTarget(devt.TargetPath)
+		if err != nil {
+			return err
+		}
+		go event.EmitWithCallback(t, devt.Name, v, func(result event.Result) {
+			der := driver.DriverEventResponse{}
+			e := result.Error()
+			if e == nil {
+				b, err := result.Value().Encode()
+				if err != nil {
+					e = err
+				} else {
+					der.Result = b
+				}
+			}
+			if e != nil {
+				der.Error = e.Error()
+			}
+			jb, err := json.Marshal(&der)
+			if err != nil {
+				panic(err)
+			}
+			if C.Driver_ResponseEvent(C.int(devt.ResponceCallbackNo), C.CBytes(jb), C.int(len(jb))) == 0 {
+				driverLogError("Error: Driver_EmitEvent")
+				//TODO: error responce!
+			}
+		})
 		return nil
 	}
-	panic("not implement yet.")
 }
 
 func (d *windows) Init() error {

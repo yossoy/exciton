@@ -1,6 +1,8 @@
 package menu
 
 import (
+	"fmt"
+
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/geom"
 	"github.com/yossoy/exciton/markup"
@@ -25,11 +27,25 @@ func (m *MenuInstance) Popup(mousePt geom.Point, parent *window.Window) error {
 }
 
 func PopupMenu(menu MenuTemplate, mousePt geom.Point, w *window.Window) error {
-	m, err := toPopupMenuSub(menu)
+	mi, err := newPopupMenu(w.Owner(), w, menu)
 	if err != nil {
 		return err
 	}
-	mi, err := newInstance(w.Owner(), contextMenu(m...))
+	return mi.Popup(mousePt, w)
+}
+
+func PopupMenuOnComponent(menu MenuTemplate, mousePt geom.Point, c markup.Component) error {
+	// m, err := toPopupMenuSub(menu)
+	// if err != nil {
+	// 	return err
+	// }
+	b := c.Builder().Buildable()
+	w, ok := b.(*window.Window)
+	if !ok {
+		return fmt.Errorf("invalid target")
+	}
+
+	mi, err := newPopupMenu(w.Owner(), c, menu)
 	if err != nil {
 		return err
 	}

@@ -11,9 +11,9 @@ ee(Exciton.prototype);
 
 const exciton = new Exciton();
 
-nsobj.callNativeMethod = (method, arg) => {
+nsobj.callNativeMethod = (path2, method, arg) => {
   nsobj.callnative(
-      {path: '/window/' + nsobj.ID + '/' + method, arg: JSON.stringify(arg)});
+      {path: '/window/' + nsobj.ID + path2, name: method, arg: JSON.stringify(arg)});
 };
 
 nsobj.requestBrowserEvent = function(method, jsonArg) {
@@ -36,12 +36,12 @@ nsobj.findModuleFunction = function(localJSKey, funcName) {
 
 window.addEventListener('popstate', function(e) {
   const s = e.state;
-  nsobj.callNativeMethod('changeRoute', {'route': s.redirectRoute});
+  nsobj.callNativeMethod('', 'changeRoute', {'route': s.redirectRoute});
 });
 
 nsobj.redirectTo = function(route) {
   window.history.pushState({'redirectRoute': route}, route, route);
-  nsobj.callNativeMethod('changeRoute', {'route': route});
+  nsobj.callNativeMethod('', 'changeRoute', {'route': route});
 };
 
 nsobj.onClickRedirectTo = function(e, route) {
@@ -98,7 +98,7 @@ nsobj.requestBrowerEventSync = function(method, jsonArg) {
 exciton.on('requestAnimationFrame', function(e) {
   const timestamp = e.detail;
   window.requestAnimationFrame(function(timestamp) {
-    nsobj.callNativeMethod('onRequestAnimationFrame', timestamp);
+    nsobj.callNativeMethod('', 'onRequestAnimationFrame', timestamp);
   });
 });
 
@@ -162,19 +162,19 @@ const loadComponentsScripts = function() {
     window.history.replaceState({'redirectRoute': '/'}, '/', '/');
   }
   window.removeEventListener('load', loadComponentsScripts, false);
-  nsobj.callNativeMethod('ready', null);
+  nsobj.callNativeMethod('', 'ready', null);
 };
 
 import translateEvent from './events';
 
 const onWindowKeydown = function(e) {
   const ee = translateEvent(e);
-  nsobj.callNativeMethod('keydown', ee);
+  nsobj.callNativeMethod('', 'keydown', ee);
 
 };
 const onWindowKeyup = function(e) {
   const ee = translateEvent(e);
-  nsobj.callNativeMethod('keyup', ee);
+  nsobj.callNativeMethod('', 'keyup', ee);
 };
 
 window.addEventListener('load', loadComponentsScripts, false);

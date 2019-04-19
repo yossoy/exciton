@@ -16,11 +16,21 @@
 @interface MenuItem : NSMenuItem
 @property NSString *ID;
 @property NSString *onClick;
+
+- (instancetype)initWithItemTemplate:(NSDictionary *)item
+                            delegate:(Menu *)delegate;
 @end
 
 @interface MenuContainer : NSMenu
 @property NSString *ID;
 @property(nonatomic, weak) MenuItem *hostItem;
+
+- (instancetype)initWithMenuTemplate:(NSArray<NSDictionary *> *)items
+                               title:(NSString *)title
+                            delegate:(Menu *)delegate;
+- (instancetype)initWithAppMenuTemplate:(NSArray<NSDictionary *> *)items
+                                  title:(NSString *)title
+                               delegate:(Menu *)delegate;
 @end
 
 extern void Menu_Init();

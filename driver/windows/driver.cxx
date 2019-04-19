@@ -54,16 +54,16 @@ bool Driver::Emit(std::string_view name, std::string_view jsonEncodedArgument)
             std::string(jsonEncodedArgument).c_str());
   return false;
 }
-void Driver::addEventHandler(const std::string &name,
+void Driver::addEventHandler(const std::string& path, const std::string &name,
                              NativeEventHandler handler)
 {
-  handlers_[name] = handler;
+  handlers_[path][name] = handler;
 }
-void Driver::addDeferEventHandler(const std::string &name,
+void Driver::addDeferEventHandler(const std::string& path, const std::string &name,
                                   NativeEventHandler handler)
 {
-  handlers_[name] = handler;
-  deferEventNames_.insert(name);
+  handlers_[path][name] = handler;
+  deferEventNames_[path].insert(name);
 }
 
 int Driver::emitEvent(const void *bytes, int length)
@@ -76,21 +76,52 @@ int Driver::emitEvent(const void *bytes, int length)
     LOG_ERROR("emitEvent: error: %s", err.c_str());
     return FALSE;
   }
+  auto path = jsonValue.get("target").get<std::string>();
   auto name = jsonValue.get("name").get<std::string>();
-  if (deferEventNames_.find(name) != deferEventNames_.end())
-  {
-    PushDelayProc([this, jsonValue]() { emitEvent(jsonValue); });
-    return TRUE;
+  auto fpath = deferEventNames_.find(path);
+  if (fpath != deferEventNames_.end()) {
+    auto fname = (*fpath).second.find(name);
+    if (fname != (*fpath).second.end()) {
+      PushDelayProc([this, jsonValue]() { emitEvent(jsonValue); });
+      return TRUE;
+    }
   }
   return emitEvent(jsonValue);
 }
 
-int Driver::emitEvent(const std::string &name, const std::string &argument)
+int Driver::responseEvent(int respNo, const void *bytes, int length)
+{
+  std::string jsonStr(reinterpret_cast<const char *>(bytes), length);
+  picojson::value jsonValue;
+  auto err = picojson::parse(jsonValue, jsonStr);
+  ::EnterCriticalSection(&m_cs);
+  NativeResponseHandler callback;
+  {
+    auto fresponse = responses_.find(respNo);
+    if (fresponse != responses_.end()) {
+      callback = (*fresponse).second;
+      responses_.erase(fresponse);
+    }
+  }
+  ::LeaveCriticalSection(&m_cs);
+  if (!callback) {
+    LOG_ERROR("responseEvent: handler not found:[%d]\n", respNo);
+    return FALSE;
+  }
+  auto result = jsonValue.get("result");
+  auto error = jsonValue.get("error").get<std::string>();
+  callback(result, error);
+  return TRUE;
+}
+
+int Driver::emitEvent(const std::string& target, const std::string &name, const std::string &argument)
 {
   LOG_INFO("[%d] Driver::emitEvent(%s, %s)", __LINE__, name.c_str(),
            argument.c_str());
   std::stringstream ss;
-  ss << "{\"name\":\"";
+  ss << "{\"target\":\"";
+  ss << target,
+  ss << "\",\"name\":\"";
   ss << name;
   ss << "\",\"argument\":";
   ss << argument;
@@ -102,12 +133,20 @@ int Driver::emitEvent(const std::string &name, const std::string &argument)
 
 int Driver::emitEvent(const picojson::value &jsonValue)
 {
+  auto target = jsonValue.get("target").get<std::string>();
   auto name = jsonValue.get("name").get<std::string>();
-  auto fiter = handlers_.find(name);
-  if (fiter == handlers_.end())
+  auto ftarget = handlers_.find(target);
+  if (ftarget == handlers_.end()) {
+    LOG_ERROR("[%d] Driver::emitEvent: event not found[%s/%s]", __LINE__,
+              target.c_str(), name.c_str());
+    return FALSE;
+
+  }
+  auto fiter = (*ftarget).second.find(name);
+  if (fiter == (*ftarget).second.end())
   {
-    LOG_ERROR("[%d] Driver::emitEvent: event not found[%s]", __LINE__,
-              name.c_str());
+    LOG_ERROR("[%d] Driver::emitEvent: event not found[%s/%s]", __LINE__,
+              target.c_str(), name.c_str());
     return FALSE;
   }
   auto parameter = jsonValue.get("parameter").get<picojson::object>();
@@ -292,6 +331,13 @@ int Driver_EmitEvent(void *bytes, int length)
   LOG_DEBUG("Driver_EventEmit(%p, %d)\n", bytes, length);
   return Driver::Current().emitEvent(bytes, length);
 }
+
+int Driver_ResponseEvent(int respNo, void* bytes, int length)
+{
+  LOG_DEBUG("Driver_ResponseEvent(%d, %p, %d)\n", respNo, bytes, length);
+  return Driver::Current().responseEvent(respNo, bytes, length);
+}
+
 
 struct ResFileItem Driver_GetResFile(int resNo)
 {

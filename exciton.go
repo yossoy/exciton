@@ -1,8 +1,6 @@
 package exciton
 
 import (
-	"fmt"
-
 	"github.com/yossoy/exciton/app"
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/window"
@@ -18,9 +16,9 @@ func Init(info *app.StartupInfo, initFunc InternalInitFunc) error {
 		return nil
 	})
 	app.AppClass.AddHandler("finalizedWindow", func(e *event.Event) error {
-		a := app.GetAppFromEvent(e)
-		if a == nil {
-			fmt.Errorf("invalid target: %v", e.Target)
+		a, err := app.GetAppFromEvent(e)
+		if err != nil {
+			return err
 		}
 		var win *window.Window
 		if err := e.Argument.Decode(&win); err != nil {
@@ -32,11 +30,11 @@ func Init(info *app.StartupInfo, initFunc InternalInitFunc) error {
 		return nil
 	})
 	app.AppClass.AddHandler("init", func(e *event.Event) error {
-		a := app.GetAppFromEvent(e)
-		if a == nil {
-			return fmt.Errorf("invalid target: %v", e.Target)
+		a, err := app.GetAppFromEvent(e)
+		if err != nil {
+			return err
 		}
-		err := initFunc(a, info)
+		err = initFunc(a, info)
 		if err != nil {
 			return err
 		}

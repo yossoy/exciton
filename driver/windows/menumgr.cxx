@@ -163,52 +163,10 @@ void CMenuMgr::handleMenuEvent(
     std::shared_ptr<exciton::menu::MenuItem> menuItem) {
   LOG_INFO("[%d] handleMenuEvent: %s", __LINE__, menuItem->EventName().c_str());
 
-  picojson::object target;
-  target.emplace("menuId", pMenu->ID());
-  target.emplace("elementId", menuItem->ID());
-
-  picojson::object fakeEvent;
-  // Event
-  fakeEvent.emplace("bubbles", false);
-  fakeEvent.emplace("cancelBubble", false);
-  fakeEvent.emplace("cancelable", false);
-  fakeEvent.emplace("composed", false);
-  fakeEvent.emplace("currentTarget", target);
-  fakeEvent.emplace("defaultPrevented", false);
-  fakeEvent.emplace("eventPhase", 2LL);
-  fakeEvent.emplace("target", target);
-  fakeEvent.emplace("timeStamp", 0LL);
-  fakeEvent.emplace("type", "click");
-  fakeEvent.emplace("isTrusted", false);
-
-  // UIEvent
-  fakeEvent.emplace("detail", 0LL);
-  // TODO: アクティブウィンドウを取得出来るようにするべきか
-  //@"view":???
-
-  // MouseEvent
-  fakeEvent.emplace("altKey", GetAsyncKeyState(VK_MENU) < 0);
-  fakeEvent.emplace("button", 0LL);
-  fakeEvent.emplace("buttons", 1LL);
-  fakeEvent.emplace("clientX", 0LL);
-  fakeEvent.emplace("clientY", 0LL);
-  fakeEvent.emplace("ctrlKey", GetAsyncKeyState(VK_CONTROL) < 0);
-  fakeEvent.emplace("metaKey", GetAsyncKeyState(VK_LWIN) < 0);
-  fakeEvent.emplace("movementX", 0.0);
-  fakeEvent.emplace("movementY", 0.0);
-  fakeEvent.emplace("region", picojson::value());
-  //"relatedTarget":???
-  POINT pt;
-  GetCursorPos(&pt);
-  fakeEvent.emplace("screenX", static_cast<double>(pt.x));
-  fakeEvent.emplace("screenY", static_cast<double>(pt.y));
-  fakeEvent.emplace("shiftKey", GetAsyncKeyState(VK_SHIFT) < 0);
-
-  picojson::value val(fakeEvent);
+  picojson::value val(menuItem->ID());
   auto json = val.serialize();
-  auto name = exciton::util::FormatString(
-      "/menu/%s/html/%s/click", pMenu->ID().c_str(), menuItem->ID().c_str());
-  Driver::Current().emitEvent(name, json);
+  auto name = exciton::util::FormatString("/menu/%s", pMenu->ID().c_str());
+  Driver::Current().emitEvent(name, "emit", json);
 }
 
 void CMenuMgr::OnMenuCommand(

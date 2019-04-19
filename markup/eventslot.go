@@ -13,8 +13,20 @@ func (es *EventSlot) Core() *event.Slot {
 	return &es.core
 }
 
-func (es *EventSlot) Bind(handler event.Handler) {
-	es.core.Bind(handler)
+func (es *EventSlot) Bind(h event.Handler) {
+	es.core.Bind(h)
+}
+
+func (es *EventSlot) BindWithResult(h event.HandlerWithResult) {
+	es.core.BindWithResult(h)
+}
+
+func (es *EventSlot) IsEnabled() bool {
+	return es.core.IsEnabled()
+}
+
+func (es *EventSlot) SetValidateEnabledHandler(validator func(name string) bool) {
+	es.core.SetValidateEnabledHandler(validator)
 }
 
 type EventSignal struct {

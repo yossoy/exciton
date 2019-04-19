@@ -36,15 +36,16 @@ type Klass interface {
 
 type klass struct {
 	Klass
-	name         string
-	pathInfo     *klassPathInfo
-	Type         reflect.Type
-	Properties   map[string]int
-	Signals      map[string]int
-	Slots        map[string]int
-	localCSSFile string
-	localJSFile  string
-	cssIsGlobal  bool
+	name              string
+	pathInfo          *klassPathInfo
+	Type              reflect.Type
+	Properties        map[string]int
+	Signals           map[string]int
+	Slots             map[string]int
+	localCSSFile      string
+	localJSFile       string
+	cssIsGlobal       bool
+	componentHandlers map[string]event.Handler
 }
 
 func (k *klass) Name() string {

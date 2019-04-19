@@ -15,8 +15,8 @@ import (
 	"github.com/yossoy/exciton/window"
 )
 
-func onOpenFile(e *html.MouseEvent) error {
-	app, err := app.GetAppFromEventTarget(e.Target)
+func onOpenFile(e *event.Event) error {
+	app, err := app.GetAppFromEvent(e)
 	if err != nil {
 		return err
 	}
@@ -47,8 +47,8 @@ func onOpenFile(e *html.MouseEvent) error {
 	return err
 }
 
-func onSaveFile(e *html.MouseEvent) error {
-	app, err := app.GetAppFromEventTarget(e.Target)
+func onSaveFile(e *event.Event) error {
+	app, err := app.GetAppFromEvent(e)
 	if err != nil {
 		return err
 	}
@@ -89,8 +89,8 @@ func appMenu(isDarwin bool) menu.AppMenuTemplate {
 
 		{Label: "File",
 			SubMenu: menu.MenuTemplate{
-				{Label: "Open", Acclerator: "CommandOrControl+O", Handler: onOpenFile},
-				{Label: "Save", Acclerator: "CommandOrControl+S", Handler: onSaveFile},
+				{Label: "Open", Acclerator: "CommandOrControl+O", Action: "app.onOpenFile"},
+				{Label: "Save", Acclerator: "CommandOrControl+S", Action: "app.onSaveFile"},
 				{Hidden: isDarwin, Role: menu.RoleClose},
 				menu.Separator,
 				{Hidden: isDarwin, Role: menu.RoleQuit},
@@ -122,19 +122,44 @@ func appMenu(isDarwin bool) menu.AppMenuTemplate {
 	}
 }
 
-func onClickPopupItem(e *html.MouseEvent) error {
-	log.PrintInfo("select Item: %#v", e.Target.ElementID)
+func onClickPopupItem(e *event.Event) error {
+	log.PrintInfo("select Item: %#v", e.Argument)
+	a, err := app.GetAppFromEvent(e)
+	if err != nil {
+		return err
+	}
+	event.Emit(a, "about", event.NewValue(nil))
 	return nil
 }
 
 var popupMenu = menu.MenuTemplate{
-	{Label: "Item1", Handler: onClickPopupItem},
+	{Label: "Item1", Action: "component.hoge"},
 	{Label: "Item2", Handler: onClickPopupItem},
+	{Role: menu.RoleToggleFullscreen},
+	{Role: menu.RoleCopy},
+	{Role: menu.RoleCut},
 }
 
 type testChildComponent struct {
 	markup.Core
-	Text string `exciton:"text"`
+	Text string           `exciton:"text"`
+	Hoge markup.EventSlot `exciton:"hoge"`
+}
+
+func (c *testChildComponent) Initialize() {
+	c.Hoge.Bind(c.hogeHandler)
+	c.Hoge.SetValidateEnabledHandler(func(name string) bool {
+		return false
+	})
+}
+
+func (c *testChildComponent) hogeHandler(e *event.Event) error {
+	w, err := window.GetWindowFromBuilder(c.Builder())
+	if err != nil {
+		return err
+	}
+	_, err = w.ShowMessageBox("hoge", "hogehoge", dialog.MessageBoxTypeInfo, nil)
+	return err
 }
 
 func (c *testChildComponent) Render() markup.RenderResult {
@@ -147,12 +172,13 @@ func (c *testChildComponent) Render() markup.RenderResult {
 }
 
 func (c *testChildComponent) OnContextMenu(e *html.MouseEvent) error {
-	w, err := window.GetWindowFromEventTarget(e.Target)
+	// w, err := window.GetWindowFromEventTarget(e.Target)
+	// if err != nil {
+	// 	return err
+	// }
+	err := menu.PopupMenuOnComponent(popupMenu, e.ScreenPos(), c)
 	if err != nil {
-		return err
-	}
-	err = menu.PopupMenu(popupMenu, e.ScreenPos(), w)
-	if err != nil {
+		panic(err)
 		return err
 	}
 	return nil
@@ -168,6 +194,11 @@ type testComponent struct {
 
 func (c *testComponent) clickSlotHandler(e *event.Event) error {
 	log.PrintDebug("component clickSlotHandler is called: %v", *e)
+	a, err := app.GetAppFromEvent(e)
+	if err != nil {
+		return err
+	}
+	event.Emit(a, "about", event.NewValue(nil))
 	return nil
 }
 
@@ -186,6 +217,7 @@ func (c *testComponent) clickHandler(e *html.MouseEvent) error {
 	}
 	c.Text = c.Text + "@"
 	c.Context().Builder().Rerender(c)
+
 	return nil
 }
 
@@ -257,6 +289,8 @@ func onNewWindow(app *app.App, cfg *window.WindowConfig) (markup.RenderResult, e
 
 func onAppStart(app *app.App, info *app.StartupInfo) error {
 	log.PrintInfo("onAppStart")
+	app.RegisterEventSlot("onOpenFile", onOpenFile)
+	app.RegisterEventSlot("onSaveFile", onSaveFile)
 	return nil
 }
 

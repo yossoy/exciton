@@ -1,9 +1,14 @@
 package event
 
+type signalPathItem struct {
+	path  string
+	names []string
+}
+
 type Signal struct {
 	name        string
 	hostTarget  EventSignalTarget
-	targetPaths []string
+	targetPaths []*signalPathItem
 }
 
 type EventSignalTarget interface {
@@ -16,22 +21,29 @@ func (sig *Signal) Register(name string, target EventSignalTarget) {
 	sig.hostTarget = target
 }
 
-func (sig *Signal) connect(slotPath string) {
+func (sig *Signal) connect(slotPath string, name string) {
 	// TODO: lock
 	for _, s := range sig.targetPaths {
-		if s == slotPath {
-			// already connected
+		if s.path == slotPath {
+			// already connected target
+			for _, n := range s.names {
+				if n == name {
+					// alredy connect by same name
+					return
+				}
+			}
+			s.names = append(s.names, name)
 			return
 		}
 	}
-	sig.targetPaths = append(sig.targetPaths, slotPath)
+	sig.targetPaths = append(sig.targetPaths, &signalPathItem{path: slotPath, names: []string{name}})
 }
 
-func (sig *Signal) EventPathString() string {
+func (sig *Signal) eventPathNameString() (string, string) {
 	if sig.hostTarget == nil {
-		return ""
+		return "", ""
 	}
-	return EventTargetToPathString(sig.hostTarget, sig.name)
+	return EventTargetToPathString(sig.hostTarget), sig.name
 }
 
 func (sig *Signal) Self() *Signal {
@@ -41,34 +53,76 @@ func (sig *Signal) Self() *Signal {
 func (sig *Signal) Emit(v Value) error {
 	tps := sig.targetPaths // need clone or lock?
 	for _, tp := range tps {
-		t, n, err := StringToEventTarget(tp)
+		t, err := StringToEventTarget(tp.path)
 		if err != nil {
 			return err
 		}
-		if err := Emit(t, n, v); err != nil {
-			return err
+		for _, n := range tp.names {
+			b, err := IsEnableEvent(t, n)
+			if err != nil {
+				return err
+			}
+			if b {
+				if err := Emit(t, n, v); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
 }
 
-func (sig *Signal) targets() []string {
+func (sig *Signal) IsEnabled() bool {
+	tps := sig.targetPaths // need clone or lock?
+	enabled := false
+	for _, tp := range tps {
+		t, err := StringToEventTarget(tp.path)
+		if err != nil {
+			continue
+		}
+		for _, n := range tp.names {
+			b, err := IsEnableEvent(t, n)
+			if err == nil {
+				enabled = enabled || b
+			}
+		}
+	}
+	return enabled
+}
+
+func (sig *Signal) targets() []*signalPathItem {
 	return sig.targetPaths
 }
 
-func (sig *Signal) Disconnect(slotPath string) {
-	idx := -1
+func (sig *Signal) Disconnect(slotPath string, name string) {
+	pathIdx := -1
 	for i, p := range sig.targetPaths {
-		if p == slotPath {
-			idx = i
+		if p.path == slotPath {
+			pathIdx = i
 			break
 		}
 	}
-	if idx < 0 {
+	if pathIdx < 0 {
 		return
 	}
-	sig.targetPaths = append(sig.targetPaths[:idx], sig.targetPaths[idx+1:]...)
-	t, n, err := StringToEventTarget(slotPath)
+	sp := sig.targetPaths[pathIdx]
+	nameIdx := -1
+	for i, n := range sp.names {
+		if n == name {
+			nameIdx = i
+			break
+		}
+	}
+	if nameIdx < 0 {
+		return
+	}
+	if len(sp.names) == 1 {
+		sig.targetPaths = append(sig.targetPaths[:pathIdx], sig.targetPaths[pathIdx+1:]...)
+	} else {
+		sp.names = append(sp.names[:nameIdx], sp.names[nameIdx+1:]...)
+	}
+
+	t, err := StringToEventTarget(slotPath)
 	if err != nil {
 		return
 	}
@@ -76,19 +130,19 @@ func (sig *Signal) Disconnect(slotPath string) {
 	if !ok {
 		return
 	}
-	slot := st.GetEventSlot(n)
+	slot := st.GetEventSlot(name)
 	if slot == nil {
 		return
 	}
-	slot.Disconnect(sig.EventPathString())
+	slot.Disconnect(sig.eventPathNameString())
 }
 
 func (sig *Signal) DisconnectAll() {
-	sigPath := sig.EventPathString()
+	sigPath, name := sig.eventPathNameString()
 	tp := sig.targetPaths
 	sig.targetPaths = nil
 	for _, s := range tp {
-		t, n, err := StringToEventTarget(s)
+		t, err := StringToEventTarget(s.path)
 		if err != nil || t == nil {
 			continue
 		}
@@ -96,10 +150,12 @@ func (sig *Signal) DisconnectAll() {
 		if !ok {
 			continue
 		}
-		slot := st.GetEventSlot(n)
-		if slot == nil {
-			continue
+		for _, n := range s.names {
+			slot := st.GetEventSlot(n)
+			if slot == nil {
+				continue
+			}
+			slot.Disconnect(sigPath, name)
 		}
-		slot.Disconnect(sigPath)
 	}
 }

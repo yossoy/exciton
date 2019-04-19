@@ -112,13 +112,12 @@ func (d *web) responceCallbackError(err error, responceNo int) {
 }
 
 func (d *web) relayEventToNative(e *event.Event) {
-	a := app.GetAppFromEvent(e)
-	if a == nil {
-		panic(fmt.Errorf("app [%v] not found", e.Target))
+	a, err := app.GetAppFromEvent(e)
+	if err != nil {
+		panic(fmt.Errorf("app [%v] not found(%v)", e.Target, err))
 	}
 	ao := a.Owner().(*appOwner)
 	var arg []byte
-	var err error
 	if e.Argument != nil {
 		arg, err = e.Argument.Encode()
 		if err != nil {
@@ -126,37 +125,40 @@ func (d *web) relayEventToNative(e *event.Event) {
 		}
 	}
 	// omit app Path?
-	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	drvEvtPath, params := event.ToDriverEventPath(e.Target)
+	driverLogDebug("relayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
 	item := &sendMessageItem{
 		Sync: false,
 		Data: driver.DriverEvent{
-			Name:      drvEvtPath,
-			Argument:  arg,
-			Parameter: params,
+			TargetPath: drvEvtPath,
+			Name:       e.Name,
+			Argument:   arg,
+			Parameter:  params,
 		},
 	}
 	ao.sendChan <- item
 }
 
 func (d *web) relayEventWithResultToNative(e *event.Event, respCallback event.ResponceCallback) {
-	a := app.GetAppFromEvent(e)
-	if a == nil {
-		panic(fmt.Errorf("app [%v] not found", e.Target))
+	a, err := app.GetAppFromEvent(e)
+	if err != nil {
+		panic(fmt.Errorf("app [%v] not found (%v)", e.Target, err))
 	}
 	ao := a.Owner().(*appOwner)
 	arg, err := e.Argument.Encode()
 	if err != nil {
 		panic(err)
 	}
-	drvEvtPath, params := event.ToDriverEventPath(e.Target, e.Name)
+	drvEvtPath, params := event.ToDriverEventPath(e.Target)
 	driverLogDebug("relayEventWithResultToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
 
 	item := &sendMessageItem{
 		Sync: true,
 		Data: driver.DriverEvent{
-			Name:      drvEvtPath,
-			Argument:  arg,
-			Parameter: params,
+			TargetPath: drvEvtPath,
+			Name:       e.Name,
+			Argument:   arg,
+			Parameter:  params,
 			ResponceCallbackNo: d.addRespCallbackCallback(func(result event.Result) {
 				driverLogDebug("responce...........%v\n", result)
 				respCallback(result)
@@ -168,8 +170,8 @@ func (d *web) relayEventWithResultToNative(e *event.Event, respCallback event.Re
 
 func (d *web) Init() error {
 	app.AppClass.AddHandler("quit", func(e *event.Event) error {
-		a := app.GetAppFromEvent(e)
-		if a != nil {
+		_, err := app.GetAppFromEvent(e)
+		if err == nil {
 			driverLogDebug("driver::terminate!!")
 			//TODO: これ変だな。。。 platform.quitChanに送って良いのは全てのchannelが終了した時だけの筈
 			platform.quitChan <- true
@@ -263,13 +265,16 @@ func newDriver() *web {
 }
 
 func internalInitFunc(app *app.App, info *app.StartupInfo) error {
+	driverLogDebug("initializeInitFunc: 1")
 	menu.SetApplicationMenu(app, info.AppMenu)
+	driverLogDebug("initializeInitFunc: 2")
 	if info.OnAppStart != nil {
 		err := info.OnAppStart(app, info)
 		if err != nil {
 			return err
 		}
 	}
+	driverLogDebug("initializeInitFunc: 3")
 	cfg := &window.WindowConfig{}
 	var rr markup.RenderResult
 	if info.OnNewWindow != nil {
@@ -387,19 +392,20 @@ func driverWebSockHandler(si *app.StartupInfo) http.HandlerFunc {
 			driverLogDebug("driverEvent ==> %v", devt)
 			if devt.ResponceCallbackNo < 0 {
 				v := event.NewJSONEncodedValueByEncodedBytes(devt.Argument)
-				et, en, err := event.StringToEventTarget(devt.Name)
+				et, err := event.StringToEventTarget(devt.TargetPath)
 				if err != nil {
 					driverLogDebug("event.Emit drv event error: %v", err)
 					panic(err)
 				}
 				go func() {
-					if err = event.Emit(et, en, v); err != nil {
+					driverLogDebug("target: %v, name: %q, arg: %v", et, devt.Name, v)
+					if err = event.Emit(et, devt.Name, v); err != nil {
 						driverLogDebug("event.Emit error: %v", err)
 						//panic(err)
 					}
 				}()
 			} else {
-				if devt.Name == "/responceEventResult" {
+				if devt.TargetPath == "" && devt.Name == "responceEventResult" {
 					//TODO: error
 					driverLogDebug("/responceEventResult: %s", string(devt.Argument))
 					r := event.NewValueResult(event.NewJSONEncodedValueByEncodedBytes(devt.Argument))
@@ -435,14 +441,18 @@ func Startup(startup app.StartupFunc) error {
 		return err
 	}
 	sf := func() error {
+		driverLogDebug("called init func: 1")
 		if err := startup(si); err != nil {
 			return err
 		}
+		driverLogDebug("called init func: 2")
 		if err := exciton.Init(si, internalInitFunc); err != nil {
 			return err
 		}
+		driverLogDebug("called init func: 3")
 		si.Router.HandleFunc("/app/{appid}/ws", driverWebSockHandler(si))
 		si.Router.HandleFunc("/", rootHTMLHandler(si))
+		driverLogDebug("called init func: 4")
 		return nil
 	}
 	driver.AddInitProc(driver.InitProcTimingPostStartup, addWebRootResources)

@@ -109,7 +109,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
 + (void)initEventHandlers {
   Driver *d = [Driver current];
 
-  [d addEventHandler:@"/app/showMessageBox"
+  [d addEventHandler:@"/app" name:@"showMessageBox"
               handler:^(id argument,
                         NSDictionary<NSString *, NSString *> *parameter,
                         int responceNo) {
@@ -117,7 +117,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
                                    parameter:parameter
                                   responceNo:responceNo];);
               }];
-  [d addEventHandler:@"/app/showOpenDialog"
+  [d addEventHandler:@"/app" name:@"showOpenDialog"
               handler:^(id argument,
                         NSDictionary<NSString *, NSString *> *parameter,
                         int responceNo) {
@@ -126,7 +126,7 @@ void setupDialog(NSSavePanel *dialog, NSDictionary *params) {
                                   responceNo:responceNo];);
 
               }];
-  [d addEventHandler:@"/app/showSaveDialog"
+  [d addEventHandler:@"/app" name:@"showSaveDialog"
               handler:^(id argument,
                         NSDictionary<NSString *, NSString *> *parameter,
                         int responceNo) {

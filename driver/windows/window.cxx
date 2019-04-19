@@ -146,13 +146,13 @@ void redirectTo(const picojson::value &argument,
 
 void Window_Init() {
   auto &d = Driver::Current();
-  d.addDeferEventHandler("/window/:window/new", newWindow);
-  d.addDeferEventHandler("/window/:window/requestAnimationFrame",
+  d.addDeferEventHandler("/window/:window", "new", newWindow);
+  d.addDeferEventHandler("/window/:window", "requestAnimationFrame",
                          requestAnimationFrame);
-  d.addDeferEventHandler("/window/:window/updateDiffSetHandler",
+  d.addDeferEventHandler("/window/:window", "updateDiffSetHandler",
                          updateDiffSetHandler);
-  d.addDeferEventHandler("/window/:window/browserSync", browserSync);
-  d.addDeferEventHandler("/window/:window/redirectTo", redirectTo);
+  d.addDeferEventHandler("/window/:window", "browserSync", browserSync);
+  d.addDeferEventHandler("/window/:window", "redirectTo", redirectTo);
 
   if (!CMenuMgr::InitClass()) {
     LOG_ERROR("menumgr::initclass failed\n");

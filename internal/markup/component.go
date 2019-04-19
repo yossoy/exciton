@@ -67,6 +67,7 @@ type Component interface {
 	event.EventTarget
 	event.EventTargetWithSignal
 	event.EventTargetWithSlot
+	event.EventTargetWithScopedNameResolver
 	Context() *Core
 	Builder() Builder
 	Key() interface{}
@@ -82,6 +83,16 @@ func (c *Core) Builder() Builder         { return c.builder }
 func (c *Core) Children() []RenderResult { return c.children }
 func (c *Core) ResourcesFilePath(fn string) string {
 	return path.Join(c.klass.ResourcePathBase(), "resources", fn)
+}
+
+func (c *Core) GetEventHandler(name string) event.Handler {
+	if c.klass.componentHandlers != nil {
+		h, ok := c.klass.componentHandlers[name]
+		if ok {
+			return h
+		}
+	}
+	return nil
 }
 func (c *Core) GetEventSignal(name string) *event.Signal {
 	if c.klass.Signals == nil {
@@ -362,16 +373,6 @@ type initInfo struct {
 
 type EventHandler func(c Component, args []event.Value)
 
-func addEventHandlerSub(eventRoot event.EventHost, timing driver.InitProcTiming) (event.EventHost, error) {
-	if timing == driver.InitProcTimingPreStartup {
-		return nil, fmt.Errorf("cannot initialize event in InitProcTimingPreStartup: %d", timing)
-	}
-	if ComponentClass.Owner() == nil {
-		event.InitHost(&ComponentClass, "components", eventRoot)
-	}
-	return &ComponentClass, nil
-}
-
 func eventToComponent(e *event.Event) (Component, error) {
 	t := e.Target
 	var c Component
@@ -390,11 +391,10 @@ func eventToComponent(e *event.Event) (Component, error) {
 }
 
 func (ii *initInfo) AddHandler(name string, handler EventHandler) error {
-	group, err := addEventHandlerSub(ii.si.WinEventHost, ii.timing)
-	if err != nil {
-		return err
+	if ii.timing == driver.InitProcTimingPreStartup {
+		return fmt.Errorf("cannot initialize event in InitProcTimingPreStartup: %d", ii.timing)
 	}
-	group.AddHandler(name, func(e *event.Event) error {
+	h := func(e *event.Event) error {
 		log.PrintDebug("InitInfo: handler called: %q, %v", name, e)
 		c, err := eventToComponent(e)
 		if err != nil {
@@ -413,7 +413,11 @@ func (ii *initInfo) AddHandler(name string, handler EventHandler) error {
 		}
 		handler(c, argValues)
 		return nil
-	})
+	}
+	if ii.Klass.componentHandlers == nil {
+		ii.Klass.componentHandlers = make(map[string]event.Handler)
+	}
+	ii.Klass.componentHandlers[name] = h
 	return nil
 }
 

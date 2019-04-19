@@ -20,7 +20,7 @@ const webapp = {
         uglifyOptions: {
           safari10: true,
           compress: {
-            drop_console: true,
+            drop_console: false,
           },
           sourceMap: false
         },

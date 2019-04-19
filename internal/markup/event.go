@@ -148,4 +148,5 @@ func InitEvents(owner event.EventHost) {
 	event.InitHost(whh, "html", owner)
 	//	mhh := &htmlEventHost{}
 	//	event.InitHost(mhh, "html", menuOwner)
+	event.InitHost(&ComponentClass, "components", owner)
 }

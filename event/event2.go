@@ -15,6 +15,15 @@ type EventPathItem struct {
 
 type EventPath []EventPathItem
 
+func (ep EventPath) String() string {
+	// for debug
+	var s string
+	for _, itm := range ep {
+		s += "/" + itm.Name + "/" + itm.Value
+	}
+	return s
+}
+
 func eventTargeetToPathStringCore(target EventTarget) []string {
 	var result []string
 	if target.ParentTarget() != nil {
@@ -26,9 +35,8 @@ func eventTargeetToPathStringCore(target EventTarget) []string {
 	return result
 }
 
-func EventTargetToPathString(target EventTarget, name string) string {
+func EventTargetToPathString(target EventTarget) string {
 	p := eventTargeetToPathStringCore(target)
-	p = append(p, name)
 	return "/" + strings.Join(p, "/")
 }
 
@@ -44,7 +52,7 @@ func toDriverEventPathCore(target EventTarget, params map[string]string) []strin
 	return result
 }
 
-func ToDriverEventPath(target EventTarget, name string) (string, map[string]string) {
+func ToDriverEventPath(target EventTarget) (string, map[string]string) {
 	params := make(map[string]string)
 	p := toDriverEventPathCore(target, params)
 	if len(p) == 0 {
@@ -53,7 +61,6 @@ func ToDriverEventPath(target EventTarget, name string) (string, map[string]stri
 		}
 		p = append(p, target.Host().Name())
 	}
-	p = append(p, name)
 	return "/" + strings.Join(p, "/"), params
 }
 
@@ -76,29 +83,27 @@ func ToEventPath(target EventTarget) EventPath {
 	return p
 }
 
-func StringToEventTarget(path string) (EventTarget, string, error) {
-	paths, n, err := StringToEventPath(path)
+func StringToEventTarget(path string) (EventTarget, error) {
+	paths, err := StringToEventPath(path)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	// log.Printf("paths = %v,  name = %q\n", paths, n)
 	_, t, _ := rootHost.Resolve(paths)
 	if t == nil {
-		return nil, "", fmt.Errorf("target is not found: %q", path)
+		return nil, fmt.Errorf("target is not found: %q", path)
 	}
-	return t, n, nil
+	return t, nil
 }
 
-func StringToEventPath(path string) (EventPath, string, error) {
+func StringToEventPath(path string) (EventPath, error) {
 	if path == "" {
-		return nil, "", errors.New("empty path")
+		return nil, errors.New("empty path")
 	}
 	paths := strings.Split(path, "/")
 	if paths[0] == "" {
 		paths = paths[1:]
 	}
-	eventName := paths[len(paths)-1]
-	paths = paths[:len(paths)-1]
 	p := make(EventPath, 0, len(paths))
 	var ph EventHost = rootHost.Host()
 	for len(paths) > 0 {
@@ -112,14 +117,14 @@ func StringToEventPath(path string) (EventPath, string, error) {
 					continue
 				}
 			}
-			return nil, "", fmt.Errorf("invalid path: %q", path)
+			return nil, fmt.Errorf("invalid path: %q", path)
 		}
 		if ph.IsSingleton() {
 			val = HostID
 			paths = paths[1:]
 		} else {
 			if len(paths) == 1 {
-				return nil, "", fmt.Errorf("invalid path: %q", path)
+				return nil, fmt.Errorf("invalid path: %q", path)
 			}
 			val = paths[1]
 			paths = paths[2:]
@@ -128,12 +133,12 @@ func StringToEventPath(path string) (EventPath, string, error) {
 			ph = ph.GetChild(paths[0])
 			// log.Printf("ph => %v, %q", ph, paths[0])
 			if ph == nil {
-				return nil, "", fmt.Errorf("invalid path: %q", path)
+				return nil, fmt.Errorf("invalid path: %q", path)
 			}
 		}
 		p = append(p, EventPathItem{Name: name, Value: val})
 	}
-	return p, eventName, nil
+	return p, nil
 }
 
 type EventTarget interface {
@@ -161,10 +166,10 @@ type EventTargetWithScopedNameResolver interface {
 
 type EventHandler interface {
 	Emit(e *Event, callback ResponceCallback) error
+	IsEnable() bool
 }
 
 type eventHandlerHandler struct {
-	EventHandler
 	handler Handler
 }
 
@@ -180,17 +185,61 @@ func (ehh *eventHandlerHandler) Emit(e *Event, callback ResponceCallback) error 
 	return err
 }
 
+func (ehh *eventHandlerHandler) IsEnable() bool {
+	return true
+}
+
 type eventHandlerHandlerWithResult struct {
-	EventHandler
 	handler HandlerWithResult
 }
 
 func (ehh *eventHandlerHandlerWithResult) Emit(e *Event, callback ResponceCallback) error {
-	// go func() {
 	ehh.handler(e, callback)
-	// }()
-	//	ehh.handler(e, callback)
 	return nil
+}
+
+func (ehh *eventHandlerHandlerWithResult) IsEnable() bool {
+	return true
+}
+
+type eventHandlerSignal struct {
+	signal *Signal
+}
+
+func (ehs *eventHandlerSignal) Emit(e *Event, callback ResponceCallback) error {
+	err := ehs.signal.Emit(e.Argument)
+	if callback != nil {
+		if err != nil {
+			callback(NewErrorResult(err))
+		} else {
+			callback(NewValueResult(nil))
+		}
+	}
+	return err
+}
+
+func (ehs *eventHandlerSignal) IsEnable() bool {
+	return ehs.signal.IsEnabled()
+}
+
+type eventHandlerSlot struct {
+	slot *Slot
+}
+
+func (ehs *eventHandlerSlot) Emit(e *Event, callback ResponceCallback) error {
+	err := ehs.slot.emit(e)
+	if callback != nil {
+		if err != nil {
+			callback(NewErrorResult(err))
+		} else {
+			callback(NewValueResult(NewValue(e.Result)))
+		}
+	}
+	return err
+}
+
+func (ehs *eventHandlerSlot) IsEnable() bool {
+	return ehs.slot.IsEnabled()
 }
 
 type EventHost interface {
@@ -207,7 +256,7 @@ type EventHost interface {
 	AddChild(child EventHost)
 	GetChild(name string) EventHost
 	Resolve(path EventPath) (EventHost, EventTarget, map[string]string)
-	Emit(path EventPath, name string, argument Value, callback ResponceCallback) error
+	// Emit(path EventPath, name string, argument Value, callback ResponceCallback) error
 	GetHandler(name string) EventHandler
 }
 
@@ -266,16 +315,136 @@ func Emit(target EventTarget, name string, argument Value) error {
 	if rootHost == nil {
 		return errors.New("event host is not registerd")
 	}
-	path := ToEventPath(target)
-	return rootHost.Emit(path, name, argument, nil)
+	return emitEventCore(target, name, argument, nil)
 }
 
 func EmitWithCallback(target EventTarget, name string, argument Value, callback ResponceCallback) error {
 	if rootHost == nil {
 		return errors.New("event host is not registerd")
 	}
-	path := ToEventPath(target)
-	return rootHost.Emit(path, name, argument, callback)
+	return emitEventCore(target, name, argument, callback)
+}
+
+func IsEnableEvent(target EventTarget, name string) (bool, error) {
+	eh, _, _, err := findEventHandler(target, name)
+	if err != nil {
+		return false, err
+	}
+	return eh.IsEnable(), nil
+}
+
+func findEventHandler(target EventTarget, name string) (EventHandler, EventTarget, EventHost, error) {
+	// TODO : change path to Target?
+	// log.Printf("EventHostCore::findEventHandler(%v, %q)", target, name)
+	host := target.Host()
+	if host == nil || target == nil {
+		return nil, nil, nil, errors.New("target not found in path")
+	}
+	if tsn, ok := target.(EventTargetWithScopedNameResolver); ok {
+		t, n := tsn.GetTargetByScopedName(name)
+		if t != nil {
+			target = t
+			host = t.Host()
+			name = n
+		}
+	}
+	// log.Printf("======> target: %v, host: %v\n", target, host)
+	if etlh, ok := target.(EventTargetWithLocalHandler); ok {
+		if h := etlh.GetEventHandler(name); h != nil {
+			return &eventHandlerHandler{handler: h}, target, host, nil
+		}
+	}
+	if ets, ok := target.(EventTargetWithSignal); ok {
+		if s := ets.GetEventSignal(name); s != nil {
+			return &eventHandlerSignal{signal: s}, target, host, nil
+		}
+	}
+	if ets, ok := target.(EventTargetWithSlot); ok {
+		if s := ets.GetEventSlot(name); s != nil {
+			return &eventHandlerSlot{slot: s}, target, host, nil
+		}
+	}
+	if h := host.GetHandler(name); h != nil {
+		return h, target, host, nil
+	}
+	return nil, nil, nil, fmt.Errorf("event %q not found in %v (host: %v)", name, target, host)
+}
+
+func emitEventCore(target EventTarget, name string, argument Value, callback ResponceCallback) error {
+	eh, target, host, err := findEventHandler(target, name)
+	if err != nil {
+		// log.Printf("*************** err: %v", err)
+		if callback != nil {
+			callback(NewErrorResult(err))
+		}
+		return err
+	}
+	e := &Event{
+		Name:     name,
+		Argument: argument,
+		Target:   target,
+		Host:     host,
+	}
+	return eh.Emit(e, callback)
+	// // TODO : change path to Target?
+	// //log.Printf("EventHostCore::Emit(%v, %q, %v, %v)", path, name, argument, callback)
+	// host := target.Host()
+	// if host == nil || target == nil {
+	// 	return errors.New("target not found in path")
+	// }
+	// if tsn, ok := target.(EventTargetWithScopedNameResolver); ok {
+	// 	t, n := tsn.GetTargetByScopedName(name)
+	// 	if t != nil {
+	// 		target = t
+	// 		host = t.Host()
+	// 		name = n
+	// 	}
+	// }
+	// //log.Printf("======> target: %v, host: %v, params: %v\n", target, host, params)
+	// e := &Event{
+	// 	Name:     name,
+	// 	Argument: argument,
+	// 	Target:   target,
+	// 	Host:     host,
+	// }
+	// if etlh, ok := target.(EventTargetWithLocalHandler); ok {
+	// 	if h := etlh.GetEventHandler(name); h != nil {
+	// 		if h != nil {
+	// 			h(e)
+	// 			if callback != nil {
+	// 				r := e.Result
+	// 				if e, ok := r.(error); ok {
+	// 					callback(NewErrorResult(e))
+	// 					return e
+	// 				}
+	// 				callback(NewValueResult(NewValue(r)))
+	// 			}
+	// 			return nil
+	// 		}
+	// 	}
+	// }
+	// if ets, ok := target.(EventTargetWithSignal); ok {
+	// 	if s := ets.GetEventSignal(name); s != nil {
+	// 		err := s.Emit(argument)
+	// 		if callback != nil {
+	// 			callback(NewErrorResult(err))
+	// 		}
+	// 		return err
+	// 	}
+	// }
+	// if ets, ok := target.(EventTargetWithSlot); ok {
+	// 	if s := ets.GetEventSlot(name); s != nil {
+	// 		err := s.emit(e)
+	// 		if callback != nil {
+	// 			callback(NewErrorResult(err))
+	// 		}
+	// 		return err
+	// 	}
+	// }
+	// if h := host.GetHandler(name); h != nil {
+	// 	return h.Emit(e, callback)
+	// }
+	// return fmt.Errorf("event %q not found in %v (host: %v)", name, target, host)
 }
 
 func EmitWithResult(target EventTarget, name string, argument Value) Result {
@@ -342,9 +511,11 @@ func (ehc *EventHostCore) Resolve(path EventPath) (EventHost, EventTarget, map[s
 	params := make(map[string]string)
 	// log.Printf("### path: %v", path)
 	for len(path) > 0 {
+		// log.Printf("#### Path: %q", path)
 		n := path[0].Name
 		v := path[0].Value
 
+		// log.Printf("##### Name: %q, v: %q", n, v)
 		if ph.Name() != n {
 			if ph.IsSingleton() {
 				ph = ph.GetChild(n)
@@ -367,67 +538,67 @@ func (ehc *EventHostCore) Resolve(path EventPath) (EventHost, EventTarget, map[s
 	return host, target, params
 }
 
-func (ehc *EventHostCore) Emit(path EventPath, name string, argument Value, callback ResponceCallback) error {
-	// TODO : change path to Target?
-	//log.Printf("EventHostCore::Emit(%v, %q, %v, %v)", path, name, argument, callback)
-	host, target, _ := ehc.Resolve(path) // params 要らんかも
-	if host == nil || target == nil {
-		return errors.New("target not found in path")
-	}
-	if tsn, ok := target.(EventTargetWithScopedNameResolver); ok {
-		t, n := tsn.GetTargetByScopedName(name)
-		if t != nil {
-			target = t
-			host = t.Host()
-			name = n
-		}
-	}
-	//log.Printf("======> target: %v, host: %v, params: %v\n", target, host, params)
-	e := &Event{
-		Name:     name,
-		Argument: argument,
-		Target:   target,
-		Host:     host,
-	}
-	if etlh, ok := target.(EventTargetWithLocalHandler); ok {
-		if h := etlh.GetEventHandler(name); h != nil {
-			if h != nil {
-				h(e)
-				if callback != nil {
-					r := e.Result
-					if e, ok := r.(error); ok {
-						callback(NewErrorResult(e))
-						return e
-					}
-					callback(NewValueResult(NewValue(r)))
-				}
-				return nil
-			}
-		}
-	}
-	if ets, ok := target.(EventTargetWithSignal); ok {
-		if s := ets.GetEventSignal(name); s != nil {
-			err := s.Emit(argument)
-			if callback != nil {
-				callback(NewErrorResult(err))
-			}
-			return err
-		}
-	}
-	if ets, ok := target.(EventTargetWithSlot); ok {
-		if s := ets.GetEventSlot(name); s != nil {
-			err := s.emit(e)
-			if callback != nil {
-				callback(NewErrorResult(err))
-			}
-			return err
-		}
-	}
-	if h := host.GetHandler(name); h != nil {
-		return h.Emit(e, callback)
-	}
-	return fmt.Errorf("event %q not found in %v (host: %v)", name, target, host)
-}
+// func (ehc *EventHostCore) Emit(path EventPath, name string, argument Value, callback ResponceCallback) error {
+// 	// TODO : change path to Target?
+// 	//log.Printf("EventHostCore::Emit(%v, %q, %v, %v)", path, name, argument, callback)
+// 	host, target, _ := ehc.Resolve(path) // params 要らんかも
+// 	if host == nil || target == nil {
+// 		return errors.New("target not found in path")
+// 	}
+// 	if tsn, ok := target.(EventTargetWithScopedNameResolver); ok {
+// 		t, n := tsn.GetTargetByScopedName(name)
+// 		if t != nil {
+// 			target = t
+// 			host = t.Host()
+// 			name = n
+// 		}
+// 	}
+// 	//log.Printf("======> target: %v, host: %v, params: %v\n", target, host, params)
+// 	e := &Event{
+// 		Name:     name,
+// 		Argument: argument,
+// 		Target:   target,
+// 		Host:     host,
+// 	}
+// 	if etlh, ok := target.(EventTargetWithLocalHandler); ok {
+// 		if h := etlh.GetEventHandler(name); h != nil {
+// 			if h != nil {
+// 				h(e)
+// 				if callback != nil {
+// 					r := e.Result
+// 					if e, ok := r.(error); ok {
+// 						callback(NewErrorResult(e))
+// 						return e
+// 					}
+// 					callback(NewValueResult(NewValue(r)))
+// 				}
+// 				return nil
+// 			}
+// 		}
+// 	}
+// 	if ets, ok := target.(EventTargetWithSignal); ok {
+// 		if s := ets.GetEventSignal(name); s != nil {
+// 			err := s.Emit(argument)
+// 			if callback != nil {
+// 				callback(NewErrorResult(err))
+// 			}
+// 			return err
+// 		}
+// 	}
+// 	if ets, ok := target.(EventTargetWithSlot); ok {
+// 		if s := ets.GetEventSlot(name); s != nil {
+// 			err := s.emit(e)
+// 			if callback != nil {
+// 				callback(NewErrorResult(err))
+// 			}
+// 			return err
+// 		}
+// 	}
+// 	if h := host.GetHandler(name); h != nil {
+// 		return h.Emit(e, callback)
+// 	}
+// 	return fmt.Errorf("event %q not found in %v (host: %v)", name, target, host)
+// }
 
 func (ehc *EventHostCore) GetHandler(name string) EventHandler {
 	if h, ok := ehc.handlers[name]; ok {
