@@ -124,6 +124,9 @@ func toWin32ResFileItem(files []*collectFileItem) (resfile.Items, []idAndFile, e
 	//fmt.Println("*** Res Files ***")
 	id := resfile.FileIDStart
 	for _, file := range files {
+		if file == nil {
+			continue
+		}
 		rootItem := items
 		if file.dstRelDir != "" {
 			for _, ss := range strings.Split(file.dstRelDir, string(filepath.Separator)) {
