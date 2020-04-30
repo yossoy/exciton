@@ -9,7 +9,7 @@
 
 namespace exciton {
 namespace util {
-std::string ToUTF8String(BSTR bstr) {
+std::string ToUTF8StringBSTR(BSTR bstr) {
   int iLen;
   iLen =
       ::WideCharToMultiByte(CP_UTF8, 0, static_cast<LPCWSTR>(bstr),
@@ -22,7 +22,7 @@ std::string ToUTF8String(BSTR bstr) {
   return data;
 }
 
-std::string ToUTF8String(const WCHAR *lpStr) {
+std::string ToUTF8StringWCHAR(const WCHAR *lpStr) {
   int iStrLen = ::wcslen(lpStr);
   int iLen;
   iLen = ::WideCharToMultiByte(CP_UTF8, 0, lpStr, iStrLen, nullptr, 0, nullptr,
@@ -31,6 +31,16 @@ std::string ToUTF8String(const WCHAR *lpStr) {
   data.resize(iLen, '\0');
   iLen = ::WideCharToMultiByte(CP_UTF8, 0, lpStr, iStrLen, data.data(),
                                data.length(), nullptr, nullptr);
+  return data;
+}
+
+std::string ToUTF8StringWstr(const std::wstring& str)
+{
+  int iLen;
+  iLen = ::WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), nullptr, 0, nullptr, nullptr);
+  std::string data;
+  data.resize(iLen, '\0');
+  iLen = ::WideCharToMultiByte(CP_UTF8, 0, str.c_str(), str.length(), data.data(), data.length(), nullptr, nullptr);
   return data;
 }
 
@@ -95,7 +105,7 @@ std::string FormatString(const WCHAR *fmt, ...) {
   va_start(ap, fmt);
   std::wstring ret = FormatStringV(fmt, ap);
   va_end(ap);
-  return ToUTF8String(ret.c_str());
+  return ToUTF8StringWstr(ret);
 }
 
 std::wstring FormatStringW(const char *fmt, ...) {

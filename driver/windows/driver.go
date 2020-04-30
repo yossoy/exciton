@@ -1,11 +1,10 @@
 package windows
 
 import (
-	"github.com/yossoy/exciton/lang"
-	"strings"
 	"encoding/json"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"unsafe"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/yossoy/exciton/event"
 	"github.com/yossoy/exciton/html"
 	"github.com/yossoy/exciton/internal/markup"
+	"github.com/yossoy/exciton/lang"
 	"github.com/yossoy/exciton/menu"
 	"github.com/yossoy/exciton/window"
 )
@@ -31,7 +31,7 @@ type windows struct {
 	lock            *sync.Mutex
 	respCallbacks   []event.ResponceCallback
 	lastCallbackPos int
-	serializer *event.EventSerializer
+	serializer      *event.EventSerializer
 }
 
 var (
@@ -56,10 +56,13 @@ func (d *windows) addRespCallbackCallback(callback event.ResponceCallback) int {
 }
 
 func (d *windows) responceCallback(jsonstr []byte, responceNo int) {
-	d.lock.Lock()
-	callback := d.respCallbacks[responceNo]
-	d.respCallbacks[responceNo] = nil
-	defer d.lock.Unlock()
+	callback := func() event.ResponceCallback {
+		d.lock.Lock()
+		defer d.lock.Unlock()
+		callback := d.respCallbacks[responceNo]
+		d.respCallbacks[responceNo] = nil
+		return callback
+	}()
 	driverLogDebug("responceEventResult: %d => %v", responceNo, string(jsonstr))
 	callback(event.NewValueResult(event.NewJSONEncodedValueByEncodedBytes(jsonstr)))
 }
@@ -76,10 +79,10 @@ func (d *windows) relayEventToNative(e *event.Event) {
 	drvEvtPath, params := event.ToDriverEventPath(e.Target)
 	driverLogDebug("relayEventToNative: drvEvtPath = %q, parms = %v", drvEvtPath, params)
 	drvEvt := driver.DriverEvent{
-		TargetPath:      drvEvtPath,
-		Name: e.Name,
-		Argument:  arg,
-		Parameter: params,
+		TargetPath: drvEvtPath,
+		Name:       e.Name,
+		Argument:   arg,
+		Parameter:  params,
 	}
 	jb, err := json.Marshal(&drvEvt)
 	if err != nil {
@@ -101,9 +104,9 @@ func (d *windows) relayEventWithResultToNative(e *event.Event, respCallback even
 
 	drvEvt := driver.DriverEvent{
 		TargetPath: drvEvtPath,
-		Name:      e.Name,
-		Argument:  arg,
-		Parameter: params,
+		Name:       e.Name,
+		Argument:   arg,
+		Parameter:  params,
 		ResponceCallbackNo: d.addRespCallbackCallback(func(result event.Result) {
 			driverLogDebug("responce...........%v\n", result)
 			respCallback(result)
@@ -192,8 +195,12 @@ func (d *windows) Init() error {
 func (d *windows) Run() {
 	d.running = true
 	//TODO: emit /init in native code
-	
-	event.Emit(&app.AppClass, "init", event.NewValue(nil))
+
+	t, err := event.StringToEventTarget("/app")
+	if err != nil {
+		panic(err)
+	}
+	go event.Emit(t, "init", event.NewValue(nil))
 	C.Driver_Run()
 }
 
@@ -210,9 +217,9 @@ func (d *windows) DriverType() string {
 }
 
 func preferredLanguages() lang.PreferredLanguages {
-	clangs := C.Driver_GetPreferrdLanguage();
-	langs := C.GoString(clangs);
-	C.free(unsafe.Pointer(clangs));
+	clangs := C.Driver_GetPreferrdLanguage()
+	langs := C.GoString(clangs)
+	C.free(unsafe.Pointer(clangs))
 	langAndLocales := strings.Split(langs, ";")
 	return lang.NewPreferredLanguages(langAndLocales...)
 }
@@ -350,7 +357,7 @@ func Startup(startup app.StartupFunc) error {
 		if err := startup(si); err != nil {
 			return err
 		}
-		appOwner := &appOwner {
+		appOwner := &appOwner{
 			preferredLanguages: preferredLanguages(),
 		}
 		app.NewSingletonApp(appOwner)

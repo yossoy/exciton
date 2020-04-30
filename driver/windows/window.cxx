@@ -49,7 +49,7 @@ void evaluateJavaScript(const std::string &id, const std::string &funcName,
     if (0 <= responceNo) {
       std::string retValue;
       if (vResult.vt == VT_BSTR) {
-        retValue = exciton::util::ToUTF8String(vResult.bstrVal);
+        retValue = exciton::util::ToUTF8StringBSTR(vResult.bstrVal);
       } else {
         LOG_ERROR("requestAnimationFrame: invalid result type: %d\n",
                   vResult.vt);

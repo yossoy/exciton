@@ -312,13 +312,13 @@ const std::wstring &Driver::GetProductVersion(void)
 char *Driver_GetProductName(void)
 {
   auto &appName = Driver::Current().GetProductName();
-  auto utf8AppName = exciton::util::ToUTF8String(appName.c_str());
+  auto utf8AppName = exciton::util::ToUTF8StringWstr(appName);
   return ::strdup(utf8AppName.c_str());
 }
 char *Driver_GetProductVersion(void)
 {
   auto &appVersion = Driver::Current().GetProductVersion();
-  auto utf8AppVersion = exciton::util::ToUTF8String(appVersion.c_str());
+  auto utf8AppVersion = exciton::util::ToUTF8StringWstr(appVersion);
   return ::strdup(utf8AppVersion.c_str());
 }
 
@@ -380,6 +380,6 @@ const char* Driver_GetPreferrdLanguage()
       *p = TEXT(';');
     }
   }
-  auto utf8Languages = exciton::util::ToUTF8String(pwszLanguagesBuffer.get());
+  auto utf8Languages = exciton::util::ToUTF8StringWCHAR(pwszLanguagesBuffer.get());
   return strdup(utf8Languages.c_str());
 }

@@ -15,7 +15,7 @@ type AppMenuItemTemplate struct {
 
 type appMenuItem struct {
 	Label   string      `json:"label"`
-	Role    MenuRole    `json:"role"`
+	Role    MenuRole    `json:"role,omitempty"`
 	SubMenu []*menuItem `json:"subMenu"`
 }
 

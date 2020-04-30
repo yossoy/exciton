@@ -203,7 +203,7 @@ STDMETHODIMP CWebBrowserHost::Invoke(DISPID dispIdMember, REFIID riid,
                                DISPATCH_PROPERTYGET, &dispparamsNoArgs,
                                &varProp, nullptr, nullptr);
         if (hr == S_OK) {
-          strPath = exciton::util::ToUTF8String(varProp.bstrVal);
+          strPath = exciton::util::ToUTF8StringBSTR(varProp.bstrVal);
         }
         ::VariantClear(&varProp);
       }
@@ -219,7 +219,7 @@ STDMETHODIMP CWebBrowserHost::Invoke(DISPID dispIdMember, REFIID riid,
                                DISPATCH_PROPERTYGET, &dispparamsNoArgs,
                                &varProp, nullptr, nullptr);
         if (hr == S_OK) {
-          strName = exciton::util::ToUTF8String(varProp.bstrVal);
+          strName = exciton::util::ToUTF8StringBSTR(varProp.bstrVal);
         }
         ::VariantClear(&varProp);
       }
@@ -234,7 +234,7 @@ STDMETHODIMP CWebBrowserHost::Invoke(DISPID dispIdMember, REFIID riid,
                                DISPATCH_PROPERTYGET, &dispparamsNoArgs,
                                &varProp, nullptr, nullptr);
         if (hr == S_OK) {
-          strArg = exciton::util::ToUTF8String(varProp.bstrVal);
+          strArg = exciton::util::ToUTF8StringBSTR(varProp.bstrVal);
         }
         ::VariantClear(&varProp);
       }

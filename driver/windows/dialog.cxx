@@ -425,7 +425,7 @@ void createFileDialog(bool forOpen, const picojson::value &argument,
             hr = pItemArray->GetItemAt(dwIdx, &psi);
             hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &lpszName);
             auto file =
-                exciton::util::ToUTF8String(const_cast<LPCWSTR>(lpszName));
+                exciton::util::ToUTF8StringWCHAR(lpszName);
             results.push_back(picojson::value(file));
             ::CoTaskMemFree(lpszName);
             psi->Release();
@@ -441,7 +441,7 @@ void createFileDialog(bool forOpen, const picojson::value &argument,
       if (SUCCEEDED(hr)) {
         LPWSTR lpszName = nullptr;
         hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &lpszName);
-        auto fname = exciton::util::ToUTF8String(const_cast<LPCWSTR>(lpszName));
+        auto fname = exciton::util::ToUTF8StringWCHAR(lpszName);
         if (forOpen) {
           picojson::array a;
           a.emplace_back(fname);

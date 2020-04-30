@@ -5,8 +5,9 @@
 
 namespace exciton {
 namespace util {
-std::string ToUTF8String(BSTR bstr);
-std::string ToUTF8String(const WCHAR* lpstr);
+std::string ToUTF8StringBSTR(BSTR bstr);
+std::string ToUTF8StringWCHAR(const WCHAR* lpstr);
+std::string ToUTF8StringWstr(const std::wstring& str);
 
 std::wstring ToUTF16String(BSTR bstr);
 std::wstring ToUTF16String(const std::string& str);

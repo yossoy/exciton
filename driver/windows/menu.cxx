@@ -215,12 +215,17 @@ std::shared_ptr<MenuItem> Menu::FindMenuItemFromId(int cmdId) const {
 MenuItem::MenuItem() : cmdId_(-1), enabled_(false), separator_(false) {}
 
 bool MenuItem::InitWithItemTemplate(const picojson::value& item) {
-  this->id_ = item.get("id").get<std::string>();
+  if (item.contains("id")) {
+    this->id_ = item.get("id").get<std::string>();
+  }
   this->separator_ = item.get("separator").evaluate_as_boolean();
   if (this->separator_) {
     return true;
   }
-  auto label = item.get("label").get<std::string>();
+  std::string label;
+  if (item.contains("label")) {
+    label = item.get("label").get<std::string>();
+  }
   if (item.contains("subMenu")) {
     auto m = std::make_shared<exciton::menu::Menu>();
     if (!m->InitWithMenuTemplate(item.get("subMenu").get<picojson::array>())) {
@@ -235,14 +240,14 @@ bool MenuItem::InitWithItemTemplate(const picojson::value& item) {
         LOG_WARNING("[%d] MenuItem::InitWithItemTemplate: "
                     "unsupported role name: %s",
                     __LINE__, role.c_str());
-        return false;
-    }
-    if (roleInfo->label) {
-        auto appNameW = Driver::Current().GetProductName();
-        auto appName = exciton::util::ToUTF8String(appNameW.c_str());
-        label = exciton::util::FormatString(roleInfo->label, appName.c_str());
-        this->cmdId_ = static_cast<int>(roleInfo->command);
-        this->enabled_ = true;
+    } else {
+      if (roleInfo->label) {
+          auto appNameW = Driver::Current().GetProductName();
+          auto appName = exciton::util::ToUTF8StringWstr(appNameW);
+          label = exciton::util::FormatString(roleInfo->label, appName.c_str());
+          this->cmdId_ = static_cast<int>(roleInfo->command);
+          this->enabled_ = true;
+      }
     }
   } else if (!this->subMenu_) {
     this->cmdId_ = CMenuModel::Instance().GetNewCommandId(this->id_);
@@ -419,7 +424,7 @@ bool MenuData::populateWithDiffset(const picojson::value &diffSet) {
         // TODO: roleの場合にItemに設定する値は??
         if (role->label) {
           auto appNameW = Driver::Current().GetProductName();
-          auto appName = exciton::util::ToUTF8String(appNameW.c_str());
+          auto appName = exciton::util::ToUTF8StringWstr(appNameW);
           auto labelStr =
               exciton::util::FormatString(role->label, appName.c_str());
           mi->title_ = labelStr;
@@ -598,7 +603,30 @@ void CMenuModel::NewAppMenu(const picojson::value &argument,
   Driver &d = Driver::Current();
   auto id = getIdFromParam(parameter);
   if (id.empty()) {
-    LOG_ERROR("[%d] CMenuModel::NewMenu: parameter['id'] not found", __LINE__);
+    LOG_ERROR("[%d] CMenuModel::NewAppMenu: parameter['id'] not found", __LINE__);
+    Driver::Current().responceEventBoolResult(responceNo, false);
+    return;
+  }
+  auto menuData = std::make_shared<exciton::menu::MenuData>();
+  auto items = argument.get<picojson::array>();
+  auto pMenu = std::make_shared<exciton::menu::Menu>();
+  if (!pMenu->InitWithMenuTemplate(items)) {
+    d.responceEventBoolResult(responceNo, false);
+  } else {
+    menus_[id] = menuData;
+    menuData->id = id;
+    menuData->pMenu = pMenu;
+    d.responceEventBoolResult(responceNo, true);
+  }
+}
+
+void CMenuModel::NewPopupMenu(const picojson::value &argument,
+                            const std::map<std::string, std::string> &parameter,
+                            int responceNo) {
+  Driver &d = Driver::Current();
+  auto id = getIdFromParam(parameter);
+  if (id.empty()) {
+    LOG_ERROR("[%d] CMenuModel::NewPopupMenu: parameter['id'] not found", __LINE__);
     Driver::Current().responceEventBoolResult(responceNo, false);
     return;
   }
@@ -735,6 +763,11 @@ void newAppMenu(const picojson::value &argument,
              int responceNo) {
   CMenuModel::Instance().NewAppMenu(argument, parameter, responceNo);
 }
+void newPopupMenu(const picojson::value &argument,
+             const std::map<std::string, std::string> &parameter,
+             int responceNo) {
+  CMenuModel::Instance().NewPopupMenu(argument, parameter, responceNo);
+}
 void updateDiffSetHandler(const picojson::value &argument,
                           const std::map<std::string, std::string> &parameter,
                           int responceNo) {
@@ -758,7 +791,8 @@ void popupContextMenu(const picojson::value &argument,
 void Menu_Init() {
   auto &d = Driver::Current();
   d.addEventHandler("/menu/:menu", "new", newMenu);
-  d.addEventHandler("/menu/:menu", "newAppMenu", newAppMenu);
+  d.addEventHandler("/menu/:menu", "newApplicationMenu", newAppMenu);
+  d.addEventHandler("/menu/:menu", "newPopupMenu", newPopupMenu);
   d.addEventHandler("/menu/:menu", "updateDiffSetHandler",
                     updateDiffSetHandler);
   d.addEventHandler("/menu/:menu", "setApplicationMenu", setApplicationMenu);
