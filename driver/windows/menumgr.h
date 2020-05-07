@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 class CWebBrowserContainer;
-
+class CWebBrowserHost;
 namespace exciton {
   namespace menu {
     struct Menu;
@@ -28,6 +28,7 @@ public:
   void Destroy();
   static void OnMenuCommand(int nId, CWebBrowserHost* pWebBrowserHost, std::shared_ptr<exciton::menu::Menu> pMenu, std::shared_ptr<exciton::menu::MenuItem> menuItem);
   void SetMenuState(HMENU hmenu, int nPos);
+  static void SetMenuState(CWebBrowserHost* pWebBrowserHost, HMENU hmenu);
   HWND GetWindow() const { return m_hwndRebar; }
 
 public:

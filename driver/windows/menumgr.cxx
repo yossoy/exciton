@@ -271,7 +271,7 @@ void CMenuMgr::OnMenuCommand(
   }
 }
 
-void CMenuMgr::SetMenuState(HMENU hMenu, int nPos) {
+void CMenuMgr::SetMenuState(CWebBrowserHost* pWebBrowserHost, HMENU hMenu) {
   using namespace exciton::menu;
   MENUINFO mi;
   mi.cbSize = sizeof(mi);
@@ -293,7 +293,6 @@ void CMenuMgr::SetMenuState(HMENU hMenu, int nPos) {
         ::SetMenuItem(hMenu, nId, item->enabled_ ? TRUE : FALSE, FALSE);
       }
     } else {
-      CWebBrowserHost *pWebBrowserHost = m_container.GetActiveBrowser();
       BOOL bEnable = pWebBrowserHost != NULL;
       BOOL bChecked = FALSE;
       if (pWebBrowserHost) {
@@ -329,6 +328,11 @@ void CMenuMgr::SetMenuState(HMENU hMenu, int nPos) {
       ::SetMenuItem(hMenu, nId, bEnable, bChecked);
     }
   }
+}
+
+void CMenuMgr::SetMenuState(HMENU hMenu, int nPos) {
+  CWebBrowserHost *pWebBrowserHost = m_container.GetActiveBrowser();
+  CMenuMgr::SetMenuState(pWebBrowserHost, hMenu);  
 }
 
 ///-----------------------------------------------------------

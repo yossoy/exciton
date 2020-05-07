@@ -711,6 +711,7 @@ void CMenuModel::PopupContextMenu(
   HWND hWnd = NULL;
   pWindow->GetWindow(&hWnd);
   HMENU hMenu = menu->GetHMenu();
+  CMenuMgr::SetMenuState(pWindow, hMenu);
   UINT pmflags = TPM_RETURNCMD | TPM_NONOTIFY;
   // if (m_bRTL) {
   //   pmflags |= TPM_LAYOUTRTL;

@@ -15,7 +15,7 @@ void GoLogOutW(enum EXCITON_LOG_LEVEL lvl, const WCHAR *str) {
 }
 #else
 void GoLogOut(enum EXCITON_LOG_LEVEL lvl, const char *str) {
-  GoLogOutW(lvl, exciton::util::ToUTF16StringWCHAR(std::string(str)).c_str());
+  GoLogOutW(lvl, exciton::util::ToUTF16String(std::string(str)).c_str());
 }
 void GoLogOutW(enum EXCITON_LOG_LEVEL lvl, const WCHAR *str) {
   std::wstring wstr;
